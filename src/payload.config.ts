@@ -10,6 +10,11 @@ import sharp from 'sharp'
 import { AccessProviders } from './collections/AccessProviders'
 import { Articles } from './collections/Articles'
 import { Bills } from './collections/Bills'
+import { Countries } from './collections/Countries'
+import { DatasetRows } from './collections/DatasetRows'
+import { Datasets } from './collections/Datasets'
+import { GuideFiles } from './collections/GuideFiles'
+import { Guides } from './collections/Guides'
 import { Locations } from './collections/Locations'
 import { Media } from './collections/Media'
 import { Products } from './collections/Products'
@@ -45,6 +50,11 @@ export default buildConfig({
     Articles,
     Bills,
     Trademarks,
+    Countries,
+    Datasets,
+    DatasetRows,
+    Guides,
+    GuideFiles,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

@@ -9,8 +9,9 @@ export const Media: CollectionConfig = {
     read: () => true,
   },
   upload: {
-    // Images for avatars/thumbnails, plus PDFs for trademark filings and sponsor logos.
-    mimeTypes: ['image/*', 'application/pdf'],
+    // Images for avatars/thumbnails, PDFs for trademark filings/sponsor logos,
+    // and CSVs archived from each dataset import.
+    mimeTypes: ['image/*', 'application/pdf', 'text/csv'],
   },
   fields: [
     {

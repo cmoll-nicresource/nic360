@@ -34,4 +34,13 @@ Without `MANDRILL_SMTP_HOST`/`MANDRILL_API_KEY` set, account emails (verificatio
 - Front end: `/articles`, `/bills` (filterable by sector/product/subject/location, via `src/lib/excerptFilters.ts`) and `/trademarks` (no filters, per the entity map), each with detail pages.
 - `pnpm seed` fills ~50 excerpts (25 articles, 15 bills, 10 trademarks) across the taxonomy.
 
-Next: Milestone 3 (Data and guides).
+### Milestone 3: data and guides
+
+- `datasets` (staff-defined columns, each with a stable `key` generated from its label), `dataset-rows` (JSON values, hidden from the admin nav, Premium-gated), `countries` (reference list for `country`-type columns, matched by name/alias/ISO code on import).
+- `guides` + `guide-files` (protected PDFs, served only through Payload's access-checked file route — Base+ required, same as the entity map's "no public URL" requirement).
+- Import: `src/lib/datasetImport.ts` (`parseCsv`, `suggestMapping`, `commitImport`) is the one shared pipeline used by **both** the staff upload wizard and `pnpm seed`, so seeding is a genuine exercise of the same code path, not a shortcut. Staff reach the wizard from a dataset's admin edit screen ("Import data →", via `admin.components.edit.beforeDocumentControls`) or directly at `/staff/datasets/[id]/import`; it previews headers/sample rows, lets staff adjust the header→column mapping, then confirms (bulk-inserting through the Local API — a production-scale import should go through the DB adapter directly instead, see the comment in `commitImport`).
+- **CSV only, not XLSX**: the npm `xlsx` package's last published version (0.18.5) is stale and carries known advisories; `papaparse` covers our actual need (we only need to read our own sample files and reader-facing exports) without that risk. "Excel download" is a CSV, which Excel opens natively.
+- `/datasets` (cards) → `/datasets/[slug]` (AG Grid, Premium-gated, CSV download) via `/api/datasets/[id]/rows` and `/api/datasets/[id]/export`. `/guides` → `/guides/[slug]` (Base+ gated).
+- `pnpm seed` imports two real sample spreadsheets (`docs/sample-data/*.csv`) into two datasets, and publishes two guides.
+
+Next: Milestone 4 (Publications and Mailchimp).

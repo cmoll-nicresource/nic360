@@ -209,6 +209,7 @@ export async function seedExcerptContent(payload: Payload) {
           `${title}. Placeholder excerpt summarizing the coverage for seed/demo purposes, including key figures, quoted officials, and industry reaction.`,
         ),
         ...indexTermsFor(i),
+        _status: 'published',
       },
       overrideAccess: true,
     })
@@ -270,6 +271,7 @@ export async function seedExcerptContent(payload: Payload) {
             actor: 'Committee on Public Health',
           },
         ],
+        _status: 'published',
       },
       overrideAccess: true,
     })
@@ -322,6 +324,7 @@ export async function seedExcerptContent(payload: Payload) {
         publishedDate,
         filedDate: new Date(new Date(publishedDate).getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
         image: placeholderImage.id,
+        _status: 'published',
       },
       overrideAccess: true,
     })

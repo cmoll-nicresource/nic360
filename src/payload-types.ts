@@ -80,6 +80,11 @@ export interface Config {
     articles: Article;
     bills: Bill;
     trademarks: Trademark;
+    countries: Country;
+    datasets: Dataset;
+    'dataset-rows': DatasetRow;
+    guides: Guide;
+    'guide-files': GuideFile;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -103,6 +108,11 @@ export interface Config {
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     bills: BillsSelect<false> | BillsSelect<true>;
     trademarks: TrademarksSelect<false> | TrademarksSelect<true>;
+    countries: CountriesSelect<false> | CountriesSelect<true>;
+    datasets: DatasetsSelect<false> | DatasetsSelect<true>;
+    'dataset-rows': DatasetRowsSelect<false> | DatasetRowsSelect<true>;
+    guides: GuidesSelect<false> | GuidesSelect<true>;
+    'guide-files': GuideFilesSelect<false> | GuideFilesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -575,6 +585,136 @@ export interface Trademark {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Reference list so dataset "country" columns show flags and names consistently.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "countries".
+ */
+export interface Country {
+  id: number;
+  name: string;
+  iso2: string;
+  iso3: string;
+  /**
+   * Alternate names matched against spreadsheet values on import, e.g. USA, United States of America.
+   */
+  aliases?:
+    | {
+        alias: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Staff-defined flat tables: define columns, then import a spreadsheet of rows.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "datasets".
+ */
+export interface Dataset {
+  id: number;
+  title: string;
+  description?: string | null;
+  /**
+   * An emoji or short icon name shown on the dataset card.
+   */
+  icon?: string | null;
+  slug: string;
+  /**
+   * Order here is the grid column order.
+   */
+  columns: {
+    label: string;
+    /**
+     * Generated from the label. Rows store values under this key.
+     */
+    key?: string | null;
+    type: 'text' | 'number' | 'percent' | 'year' | 'date' | 'country' | 'link';
+    filterable?: boolean | null;
+    sortable?: boolean | null;
+    defaultSort?: ('none' | 'asc' | 'desc') | null;
+    id?: string | null;
+  }[];
+  /**
+   * Set automatically by the import flow — see "Import data" on this document.
+   */
+  lastImport?: {
+    file?: (number | null) | Media;
+    /**
+     * Spreadsheet header -> column key.
+     */
+    mapping?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    importedAt?: string | null;
+    rowCount?: number | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dataset-rows".
+ */
+export interface DatasetRow {
+  id: number;
+  dataset: number | Dataset;
+  values:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guides".
+ */
+export interface Guide {
+  id: number;
+  title: string;
+  description?: string | null;
+  thumbnail?: (number | null) | Media;
+  file: number | GuideFile;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * PDFs for Guides. Served through Payload's access-checked file route, never a public URL.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guide-files".
+ */
+export interface GuideFile {
+  id: number;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -645,6 +785,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'trademarks';
         value: number | Trademark;
+      } | null)
+    | ({
+        relationTo: 'countries';
+        value: number | Country;
+      } | null)
+    | ({
+        relationTo: 'datasets';
+        value: number | Dataset;
+      } | null)
+    | ({
+        relationTo: 'dataset-rows';
+        value: number | DatasetRow;
+      } | null)
+    | ({
+        relationTo: 'guides';
+        value: number | Guide;
+      } | null)
+    | ({
+        relationTo: 'guide-files';
+        value: number | GuideFile;
       } | null);
   globalSlug?: string | null;
   user:
@@ -972,6 +1132,95 @@ export interface TrademarksSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "countries_select".
+ */
+export interface CountriesSelect<T extends boolean = true> {
+  name?: T;
+  iso2?: T;
+  iso3?: T;
+  aliases?:
+    | T
+    | {
+        alias?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "datasets_select".
+ */
+export interface DatasetsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  icon?: T;
+  slug?: T;
+  columns?:
+    | T
+    | {
+        label?: T;
+        key?: T;
+        type?: T;
+        filterable?: T;
+        sortable?: T;
+        defaultSort?: T;
+        id?: T;
+      };
+  lastImport?:
+    | T
+    | {
+        file?: T;
+        mapping?: T;
+        importedAt?: T;
+        rowCount?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dataset-rows_select".
+ */
+export interface DatasetRowsSelect<T extends boolean = true> {
+  dataset?: T;
+  values?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guides_select".
+ */
+export interface GuidesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  thumbnail?: T;
+  file?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guide-files_select".
+ */
+export interface GuideFilesSelect<T extends boolean = true> {
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

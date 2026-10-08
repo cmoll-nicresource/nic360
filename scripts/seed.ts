@@ -9,6 +9,7 @@ import { getPayload } from 'payload'
 import config from '../src/payload.config'
 import { getReaderPlan } from '../src/access/readerPlan'
 import { SEED_PASSWORD, seedAccounts } from './seed/accounts'
+import { seedCountries, seedDatasets, seedGuides } from './seed/data'
 import { seedExcerptContent } from './seed/excerpts'
 
 const ALL = { id: { exists: true } } as const
@@ -22,6 +23,11 @@ const WIPE_ORDER = [
   'sectors',
   'products',
   'sources',
+  'dataset-rows',
+  'datasets',
+  'guides',
+  'guide-files',
+  'countries',
   'users',
   'staff',
   'access-providers',
@@ -42,6 +48,9 @@ async function main() {
 
   await seedAccounts(payload)
   await seedExcerptContent(payload)
+  await seedCountries(payload)
+  await seedDatasets(payload)
+  await seedGuides(payload)
 
   console.log('\nAccess summary (via getReaderPlan, the shared helper):\n')
   const { docs: allUsers } = await payload.find({
