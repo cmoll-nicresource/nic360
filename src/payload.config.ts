@@ -8,8 +8,16 @@ import nodemailer from 'nodemailer'
 import sharp from 'sharp'
 
 import { AccessProviders } from './collections/AccessProviders'
+import { Articles } from './collections/Articles'
+import { Bills } from './collections/Bills'
+import { Locations } from './collections/Locations'
 import { Media } from './collections/Media'
+import { Products } from './collections/Products'
+import { Sectors } from './collections/Sectors'
+import { Sources } from './collections/Sources'
 import { Staff } from './collections/Staff'
+import { Subjects } from './collections/Subjects'
+import { Trademarks } from './collections/Trademarks'
 import { Users } from './collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
@@ -24,7 +32,20 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Staff, Users, AccessProviders, Media],
+  collections: [
+    Staff,
+    Users,
+    AccessProviders,
+    Media,
+    Sectors,
+    Products,
+    Subjects,
+    Locations,
+    Sources,
+    Articles,
+    Bills,
+    Trademarks,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

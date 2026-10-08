@@ -72,6 +72,14 @@ export interface Config {
     users: User;
     'access-providers': AccessProvider;
     media: Media;
+    sectors: Sector;
+    products: Product;
+    subjects: Subject;
+    locations: Location;
+    sources: Source;
+    articles: Article;
+    bills: Bill;
+    trademarks: Trademark;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -87,6 +95,14 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     'access-providers': AccessProvidersSelect<false> | AccessProvidersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    sectors: SectorsSelect<false> | SectorsSelect<true>;
+    products: ProductsSelect<false> | ProductsSelect<true>;
+    subjects: SubjectsSelect<false> | SubjectsSelect<true>;
+    locations: LocationsSelect<false> | LocationsSelect<true>;
+    sources: SourcesSelect<false> | SourcesSelect<true>;
+    articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    bills: BillsSelect<false> | BillsSelect<true>;
+    trademarks: TrademarksSelect<false> | TrademarksSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -308,6 +324,257 @@ export interface AccessProvider {
   createdAt: string;
 }
 /**
+ * Flat index-term list, e.g. Manufacturers, Retail & Distribution, Social.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sectors".
+ */
+export interface Sector {
+  id: number;
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Flat index-term list, including a catch-all "All Products".
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Hierarchical index terms, e.g. RETAIL, DISTRIBUTION, & SALES > Licensing (sales).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subjects".
+ */
+export interface Subject {
+  id: number;
+  name: string;
+  /**
+   * Leave blank for a top-level subject.
+   */
+  parent?: (number | null) | Subject;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One record per place, reused. Hierarchy (e.g. Pennsylvania > United States > North America) lets rules and filters match a place and everything inside it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "locations".
+ */
+export interface Location {
+  id: number;
+  name: string;
+  level: 'region' | 'country' | 'state' | 'city';
+  /**
+   * E.g. Pennsylvania's parent is United States, whose parent is North America.
+   */
+  parent?: (number | null) | Location;
+  /**
+   * Fed by the address autocomplete when staff add a location.
+   */
+  geo?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Article source publications, e.g. The Kenya Times (thekenyatimes.com).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sources".
+ */
+export interface Source {
+  id: number;
+  name: string;
+  domain?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * News found across the internet; we take the title and a preview and index it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles".
+ */
+export interface Article {
+  id: number;
+  title: string;
+  source?: (number | null) | Source;
+  sourceDate?: string | null;
+  sourceUrl?: string | null;
+  excerpt: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  locations: (number | Location)[];
+  sectors: (number | Sector)[];
+  products: (number | Product)[];
+  primarySubject: number | Subject;
+  subjects: (number | Subject)[];
+  ingestion?: {
+    source?: ('manual' | 'statenet' | 'uspto') | null;
+    externalId?: string | null;
+    importedAt?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Legislation tracked via StateNet, summarized and categorized.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bills".
+ */
+export interface Bill {
+  id: number;
+  billType: 'Bill' | 'Resolution' | 'Amendment' | 'Executive Order' | 'Regulation';
+  billNumber: string;
+  title: string;
+  locations: (number | Location)[];
+  session?: string | null;
+  governmentLevel: 'Federal' | 'State/Province' | 'Local' | 'International';
+  billDate: string;
+  approvalDate?: string | null;
+  effectiveDate?: string | null;
+  lawNumber?: string | null;
+  /**
+   * Sponsor.
+   */
+  carriedBy?: string | null;
+  actionUrl?: string | null;
+  billUrl?: {
+    title?: string | null;
+    url?: string | null;
+  };
+  abstract: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  fullText: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  sectors: (number | Sector)[];
+  products: (number | Product)[];
+  primarySubject: number | Subject;
+  subjects: (number | Subject)[];
+  relatedArticles?: (number | Article)[] | null;
+  latestActivity?: string | null;
+  latestText?: string | null;
+  statusText?: string | null;
+  /**
+   * Statute title / LexisNexis link.
+   */
+  statute?: {
+    title?: string | null;
+    url?: string | null;
+  };
+  committee?: string | null;
+  actions?:
+    | {
+        date: string;
+        action: string;
+        actor?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  ingestion?: {
+    source?: ('manual' | 'statenet' | 'uspto') | null;
+    externalId?: string | null;
+    importedAt?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Scraped weekly from the USPTO XML feed: filings, renewals, cancellations.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trademarks".
+ */
+export interface Trademark {
+  id: number;
+  title: string;
+  /**
+   * Proposed key for USPTO upsert.
+   */
+  serialNumber?: string | null;
+  /**
+   * Nice classification.
+   */
+  class?: string | null;
+  owner?: string | null;
+  ownerAddress?: string | null;
+  style?: ('yes' | 'no' | 'na') | null;
+  design?: ('yes' | 'no' | 'na') | null;
+  publishedDate?: string | null;
+  firstUsedDate?: string | null;
+  commercialUseDate?: string | null;
+  filedDate?: string | null;
+  registeredDate?: string | null;
+  registrationNumber?: string | null;
+  cancelledDate?: string | null;
+  renewedDate?: string | null;
+  renewal?: {
+    owner?: string | null;
+    address?: string | null;
+  };
+  image: number | Media;
+  ingestion?: {
+    source?: ('manual' | 'statenet' | 'uspto') | null;
+    externalId?: string | null;
+    importedAt?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -346,6 +613,38 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'sectors';
+        value: number | Sector;
+      } | null)
+    | ({
+        relationTo: 'products';
+        value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'subjects';
+        value: number | Subject;
+      } | null)
+    | ({
+        relationTo: 'locations';
+        value: number | Location;
+      } | null)
+    | ({
+        relationTo: 'sources';
+        value: number | Source;
+      } | null)
+    | ({
+        relationTo: 'articles';
+        value: number | Article;
+      } | null)
+    | ({
+        relationTo: 'bills';
+        value: number | Bill;
+      } | null)
+    | ({
+        relationTo: 'trademarks';
+        value: number | Trademark;
       } | null);
   globalSlug?: string | null;
   user:
@@ -495,6 +794,184 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sectors_select".
+ */
+export interface SectorsSelect<T extends boolean = true> {
+  name?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products_select".
+ */
+export interface ProductsSelect<T extends boolean = true> {
+  name?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subjects_select".
+ */
+export interface SubjectsSelect<T extends boolean = true> {
+  name?: T;
+  parent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "locations_select".
+ */
+export interface LocationsSelect<T extends boolean = true> {
+  name?: T;
+  level?: T;
+  parent?: T;
+  geo?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sources_select".
+ */
+export interface SourcesSelect<T extends boolean = true> {
+  name?: T;
+  domain?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles_select".
+ */
+export interface ArticlesSelect<T extends boolean = true> {
+  title?: T;
+  source?: T;
+  sourceDate?: T;
+  sourceUrl?: T;
+  excerpt?: T;
+  locations?: T;
+  sectors?: T;
+  products?: T;
+  primarySubject?: T;
+  subjects?: T;
+  ingestion?:
+    | T
+    | {
+        source?: T;
+        externalId?: T;
+        importedAt?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bills_select".
+ */
+export interface BillsSelect<T extends boolean = true> {
+  billType?: T;
+  billNumber?: T;
+  title?: T;
+  locations?: T;
+  session?: T;
+  governmentLevel?: T;
+  billDate?: T;
+  approvalDate?: T;
+  effectiveDate?: T;
+  lawNumber?: T;
+  carriedBy?: T;
+  actionUrl?: T;
+  billUrl?:
+    | T
+    | {
+        title?: T;
+        url?: T;
+      };
+  abstract?: T;
+  fullText?: T;
+  sectors?: T;
+  products?: T;
+  primarySubject?: T;
+  subjects?: T;
+  relatedArticles?: T;
+  latestActivity?: T;
+  latestText?: T;
+  statusText?: T;
+  statute?:
+    | T
+    | {
+        title?: T;
+        url?: T;
+      };
+  committee?: T;
+  actions?:
+    | T
+    | {
+        date?: T;
+        action?: T;
+        actor?: T;
+        id?: T;
+      };
+  ingestion?:
+    | T
+    | {
+        source?: T;
+        externalId?: T;
+        importedAt?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trademarks_select".
+ */
+export interface TrademarksSelect<T extends boolean = true> {
+  title?: T;
+  serialNumber?: T;
+  class?: T;
+  owner?: T;
+  ownerAddress?: T;
+  style?: T;
+  design?: T;
+  publishedDate?: T;
+  firstUsedDate?: T;
+  commercialUseDate?: T;
+  filedDate?: T;
+  registeredDate?: T;
+  registrationNumber?: T;
+  cancelledDate?: T;
+  renewedDate?: T;
+  renewal?:
+    | T
+    | {
+        owner?: T;
+        address?: T;
+      };
+  image?: T;
+  ingestion?:
+    | T
+    | {
+        source?: T;
+        externalId?: T;
+        importedAt?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -15,13 +15,16 @@ export default async function HomePage() {
     <>
       <nav className="topnav">
         <Link href="/">Nicotine360</Link>
+        <Link href="/articles">Articles</Link>
+        <Link href="/bills">Bills</Link>
+        <Link href="/trademarks">Trademarks</Link>
         <Link href="/account">Account</Link>
         <Link href="/access-check">Access check</Link>
         <Link href={payloadConfig.routes.admin}>Admin</Link>
       </nav>
       <div className="page">
         <h1>Nicotine360</h1>
-        <p className="muted">Skeleton prototype — Milestone 1: accounts and access.</p>
+        <p className="muted">Skeleton prototype — Milestone 2: excerpts (articles, bills, trademarks).</p>
         <div className="card">
           {user ? (
             <p>
