@@ -11,3 +11,4 @@ media
 guide-files
 tsconfig.tsbuildinfo
 next-env.d.ts
+docs/sample-data
