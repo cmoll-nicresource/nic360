@@ -29,6 +29,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
         <Link href="/datasets">Data</Link>
         <Link href="/guides">Guides</Link>
         <Link href="/publications">Publications</Link>
+        <Link href="/events">Events</Link>
       </nav>
       <div className="page">
         <p>

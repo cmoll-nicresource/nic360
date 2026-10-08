@@ -1,8 +1,7 @@
 import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
 
 import type { PublicationIssue } from '@/payload-types'
-
-const SITE_URL = process.env.SITE_URL || 'http://localhost:3000'
+import { SITE_URL } from '@/lib/env'
 
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)

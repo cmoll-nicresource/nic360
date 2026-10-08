@@ -36,6 +36,7 @@ export default async function IssueDetailPage({
         <Link href="/datasets">Data</Link>
         <Link href="/guides">Guides</Link>
         <Link href="/publications">Publications</Link>
+        <Link href="/events">Events</Link>
       </nav>
       <div className="page">
         <p>

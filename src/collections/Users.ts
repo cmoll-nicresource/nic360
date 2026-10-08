@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { assignAccessProviderOnVerify } from '@/hooks/assignAccessProviderOnVerify'
 import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
+import { SITE_URL } from '@/lib/env'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -17,6 +18,15 @@ export const Users: CollectionConfig = {
   },
   auth: {
     verify: true,
+    forgotPassword: {
+      // Payload's default reset-password link always points at /admin/reset,
+      // which only works for the admin.user collection (staff). Readers get
+      // their own front-end page instead.
+      generateEmailHTML: ({ token } = {}) =>
+        `<p>You are receiving this because you (or someone else) requested a password reset.</p>
+<p><a href="${SITE_URL}/reset-password/${token}">${SITE_URL}/reset-password/${token}</a></p>
+<p>If you did not request this, you can ignore this email.</p>`,
+    },
   },
   access: {
     read: ({ req }) => {
@@ -135,6 +145,16 @@ export const Users: CollectionConfig = {
       admin: {
         description:
           'Checkboxes on the account page. Only shown to readers with an active Base or Premium plan.',
+      },
+    },
+    {
+      name: 'registrations',
+      label: 'Products purchased',
+      type: 'join',
+      collection: 'event-registrations',
+      on: 'attendee',
+      admin: {
+        description: 'Event registrations where this user is the attendee. Old product orders are not migrated.',
       },
     },
   ],

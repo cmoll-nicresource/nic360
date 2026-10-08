@@ -95,7 +95,53 @@ export default async function AccountPage() {
           </p>
         )}
       </div>
+
+      <div className="card">
+        <h2>Products purchased</h2>
+        <EventRegistrationsAsync payload={payload} userId={fullUser.id} />
+      </div>
     </div>
+  )
+}
+
+async function EventRegistrationsAsync({ payload, userId }: { payload: Payload; userId: number }) {
+  const { docs: registrations } = await payload.find({
+    collection: 'event-registrations',
+    where: { attendee: { equals: userId } },
+    depth: 1,
+    limit: 100,
+    overrideAccess: true,
+  })
+
+  if (registrations.length === 0) return <p className="muted">No event registrations yet.</p>
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Ticket type</th>
+          <th>Attendance</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {registrations.map((r) => (
+          <tr key={r.id}>
+            <td>
+              {typeof r.event === 'object' ? (
+                <Link href={`/events/${r.event.id}`}>{r.event.name}</Link>
+              ) : (
+                r.event
+              )}
+            </td>
+            <td>{r.ticketType}</td>
+            <td>{r.attendance}</td>
+            <td>{r.status}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 

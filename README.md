@@ -14,7 +14,7 @@ pnpm dev                 # http://localhost:3000
 
 Admin panel: `/admin`. Every seeded account's password is `ChangeMe123!` (printed by `pnpm seed`).
 
-Without `MANDRILL_SMTP_HOST`/`MANDRILL_API_KEY` set, account emails (verification, password reset) are logged instead of sent — fine for local dev.
+Without `MANDRILL_SMTP_HOST`/`MANDRILL_API_KEY` set, account emails (verification, password reset, event invites) print to the console instead of sending — fine for local dev. Without `STRIPE_SECRET_KEY`, event ticket checkout fails at the point of creating a Stripe session (everything up to and including 100%-off/free tickets still works, since those skip Stripe entirely).
 
 ## Status
 
@@ -54,5 +54,13 @@ Without `MANDRILL_SMTP_HOST`/`MANDRILL_API_KEY` set, account emails (verificatio
 - `src/lib/trademarkReportJob.ts`: a fixture stands in for the USPTO feed (`docs/sample-data/uspto-fixture.json`); upserts Trademarks by serial number, and drafts the Weekly/Monthly trademark report issues when there's something to report. Triggered manually at `/staff/trademark-reports` (a real deployment would run this on a schedule) and logged to `trademark-import-runs`.
 - `/publications` → `/publications/[slug]` → `/publications/[slug]/issues/[id]` (Base+ gated, draft issues hidden from readers).
 - `pnpm seed` creates 5 publications, builds one issue from rules and sends it for real (same code path as the admin buttons) so the outbox has a genuine example, plus a ready-to-try draft issue, an EmailFlag, and sets two readers' preferences (exercising the sync hook).
+
+### Milestone 5: events and ticketing
+
+- Channels (`src/config/channels.ts`: ATNF, GTNF, InFocus) are code, not a collection. `events` (ticket types, days regenerated from the start/end range via a `beforeChange` hook, sponsors), `sessions` (agenda items, with a `replayEmbed` field gated to registered attendees once the event's Replay flag is on), `speakers`, `sponsors`, `discount-codes`, `orders`, `event-registrations` — the last three gatekeeper-managed per the brief.
+- `src/lib/eventCheckout.ts` is the pricing/validation core (ticket price by attendance + subscriber status, discount-code validation including remaining-uses and event/ticket-type scoping) shared by the checkout route and `pnpm seed`'s demo purchase. `POST /api/events/[id]/checkout` creates a pending Order and its EventRegistrations, then either skips Stripe entirely for a 100%-off/free ticket (marks paid immediately) or creates a Stripe Checkout Session. `POST /api/stripe/webhook` marks the order paid on `checkout.session.completed` and, for any attendee without an account yet, creates one and invites them by email via Payload's built-in forgot-password email (`src/lib/orderFulfillment.ts`) — a genuine "buy for colleagues" flow, not a shortcut.
+- `/events` → `/events/[id]` (ticket purchase form, agenda with replay gating) → `/events/[id]/success`. The account page lists a reader's registrations ("Products purchased").
+- **Found and fixed while testing this milestone**: Payload's default password-reset email always links to `/admin/reset`, which only works for the `admin.user` collection (`staff`) — readers' reset tokens silently went nowhere. `users` now has its own `auth.forgotPassword.generateEmailHTML` pointing at a real `/reset-password/[token]` page, and the dev email fallback was changed from nodemailer's silent `jsonTransport` to a small transport that actually prints the email (both bugs had been invisible until this milestone's invite-by-email flow required reading one).
+- `pnpm seed` seeds speakers, sponsors, three events across all three channels (one with `hasReplay`), sessions, a discount code, and a demo two-ticket purchase with that code applied (reusing the real pricing/validation functions, not hand-rolled numbers).
 
 This completes every milestone in CLAUDE.md's prototype scope.

@@ -13,23 +13,31 @@ import { Bills } from './collections/Bills'
 import { Countries } from './collections/Countries'
 import { DatasetRows } from './collections/DatasetRows'
 import { Datasets } from './collections/Datasets'
+import { DiscountCodes } from './collections/DiscountCodes'
 import { EmailFlags } from './collections/EmailFlags'
+import { EventRegistrations } from './collections/EventRegistrations'
+import { Events } from './collections/Events'
 import { GuideFiles } from './collections/GuideFiles'
 import { Guides } from './collections/Guides'
 import { Locations } from './collections/Locations'
 import { MailchimpOutbox } from './collections/MailchimpOutbox'
 import { Media } from './collections/Media'
+import { Orders } from './collections/Orders'
 import { Products } from './collections/Products'
 import { PublicationIssues } from './collections/PublicationIssues'
 import { Publications } from './collections/Publications'
 import { Sectors } from './collections/Sectors'
+import { Sessions } from './collections/Sessions'
 import { Sources } from './collections/Sources'
+import { Speakers } from './collections/Speakers'
+import { Sponsors } from './collections/Sponsors'
 import { Staff } from './collections/Staff'
 import { Subjects } from './collections/Subjects'
 import { TrademarkImportRuns } from './collections/TrademarkImportRuns'
 import { Trademarks } from './collections/Trademarks'
 import { Users } from './collections/Users'
 import { MailchimpSettings } from './globals/MailchimpSettings'
+import { consoleEmailTransport } from './lib/consoleEmailTransport'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -66,6 +74,13 @@ export default buildConfig({
     EmailFlags,
     TrademarkImportRuns,
     MailchimpOutbox,
+    Speakers,
+    Sponsors,
+    Events,
+    Sessions,
+    DiscountCodes,
+    Orders,
+    EventRegistrations,
   ],
   globals: [MailchimpSettings],
   editor: lexicalEditor(),
@@ -94,8 +109,8 @@ export default buildConfig({
     : nodemailerAdapter({
         defaultFromAddress: 'no-reply@nicotine360.org',
         defaultFromName: 'Nicotine360 (dev)',
-        // No MANDRILL_* env set: log emails to the console instead of sending them.
-        transport: nodemailer.createTransport({ jsonTransport: true }),
+        // No MANDRILL_* env set: print emails to the console instead of sending them.
+        transport: nodemailer.createTransport(consoleEmailTransport),
       }),
   sharp,
 })

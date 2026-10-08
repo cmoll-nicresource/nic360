@@ -90,14 +90,36 @@ export interface Config {
     'email-flags': EmailFlag;
     'trademark-import-runs': TrademarkImportRun;
     'mailchimp-outbox': MailchimpOutbox;
+    speakers: Speaker;
+    sponsors: Sponsor;
+    events: Event;
+    sessions: Session;
+    'discount-codes': DiscountCode;
+    orders: Order;
+    'event-registrations': EventRegistration;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    users: {
+      registrations: 'event-registrations';
+    };
     'access-providers': {
       users: 'users';
+    };
+    sponsors: {
+      events: 'events';
+    };
+    events: {
+      sessions: 'sessions';
+    };
+    'discount-codes': {
+      uses: 'event-registrations';
+    };
+    orders: {
+      registrations: 'event-registrations';
     };
   };
   collectionsSelect: {
@@ -123,6 +145,13 @@ export interface Config {
     'email-flags': EmailFlagsSelect<false> | EmailFlagsSelect<true>;
     'trademark-import-runs': TrademarkImportRunsSelect<false> | TrademarkImportRunsSelect<true>;
     'mailchimp-outbox': MailchimpOutboxSelect<false> | MailchimpOutboxSelect<true>;
+    speakers: SpeakersSelect<false> | SpeakersSelect<true>;
+    sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    sessions: SessionsSelect<false> | SessionsSelect<true>;
+    'discount-codes': DiscountCodesSelect<false> | DiscountCodesSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
+    'event-registrations': EventRegistrationsSelect<false> | EventRegistrationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -272,6 +301,14 @@ export interface User {
    * Checkboxes on the account page. Only shown to readers with an active Base or Premium plan.
    */
   emailPublications?: (number | Publication)[] | null;
+  /**
+   * Event registrations where this user is the attendee. Old product orders are not migrated.
+   */
+  registrations?: {
+    docs?: (number | EventRegistration)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -474,6 +511,326 @@ export interface Subject {
    * Leave blank for a top-level subject.
    */
   parent?: (number | null) | Subject;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One ticket for one attendee.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-registrations".
+ */
+export interface EventRegistration {
+  id: number;
+  order: number | Order;
+  event: number | Event;
+  /**
+   * Set once the attendee has an account.
+   */
+  attendee?: (number | null) | User;
+  attendeeName: string;
+  attendeeEmail: string;
+  ticketType: string;
+  attendance: 'in-person' | 'virtual';
+  priceBasis: 'standard' | 'subscriber';
+  amountPaid: number;
+  discountCode?: (number | null) | DiscountCode;
+  status: 'active' | 'cancelled';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One checkout by one buyer, which can include tickets for colleagues.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  buyer: number | User;
+  event: number | Event;
+  registrations?: {
+    docs?: (number | EventRegistration)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  discountCode?: (number | null) | DiscountCode;
+  subtotal: number;
+  discount: number;
+  total: number;
+  status: 'pending' | 'paid' | 'cancelled' | 'refunded';
+  paidAt?: string | null;
+  paymentRef?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  name: string;
+  channel: 'atnf' | 'gtnf' | 'infocus';
+  startsAt: string;
+  endDate: string;
+  timezone?:
+    | (
+        | 'Pacific/Honolulu'
+        | 'America/Anchorage'
+        | 'America/Los_Angeles'
+        | 'America/Denver'
+        | 'America/Chicago'
+        | 'America/New_York'
+        | 'America/Sao_Paulo'
+        | 'Europe/London'
+        | 'Europe/Paris'
+        | 'Africa/Nairobi'
+        | 'Asia/Dubai'
+        | 'Asia/Kolkata'
+        | 'Asia/Shanghai'
+        | 'Asia/Tokyo'
+        | 'Australia/Sydney'
+      )
+    | null;
+  hasReplay?: boolean | null;
+  tagline?: string | null;
+  image?: (number | null) | Media;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  venue?: {
+    address?: string | null;
+    description?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
+  accommodation?: {
+    phone?: string | null;
+    email?: string | null;
+    bookingUrl?: string | null;
+    description?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
+  /**
+   * Regenerated from the start/end dates on save; typed names are kept.
+   */
+  days?:
+    | {
+        date: string;
+        name?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  ticketTypes?:
+    | {
+        name: string;
+        /**
+         * Buyer self-declares eligibility (Public Health, Academia); no check is made.
+         */
+        honorSystem?: boolean | null;
+        onSale?: boolean | null;
+        capacity?: number | null;
+        /**
+         * Leave both blank for no in-person option (e.g. InFocus).
+         */
+        inPerson?: {
+          price?: number | null;
+          /**
+           * Blank = same as standard.
+           */
+          subscriberPrice?: number | null;
+        };
+        virtual?: {
+          price?: number | null;
+          subscriberPrice?: number | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  sponsors?: (number | Sponsor)[] | null;
+  /**
+   * Build the agenda from here.
+   */
+  sessions?: {
+    docs?: (number | Session)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * One shared pool, assigned to events. No sponsor levels — all sponsors of an event display the same way.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sponsors".
+ */
+export interface Sponsor {
+  id: number;
+  name: string;
+  logo: number | Media;
+  description: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  website?: string | null;
+  /**
+   * Reverse of each event's Sponsors field.
+   */
+  events?: {
+    docs?: (number | Event)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Agenda items for all events.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions".
+ */
+export interface Session {
+  id: number;
+  event: number | Event;
+  title: string;
+  description?: string | null;
+  /**
+   * Pick one of the event's days.
+   */
+  day: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  type: 'Keynote' | 'Panel' | 'Break' | 'Other';
+  room?: string | null;
+  moderators?: (number | Speaker)[] | null;
+  speakers?: (number | Speaker)[] | null;
+  speakerGroups?:
+    | {
+        label: string;
+        speakers?: (number | Speaker)[] | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Choices should be limited to the event's own sponsors.
+   */
+  sponsors?: (number | Sponsor)[] | null;
+  /**
+   * Readable only by attendees registered for the event, once the event's Replay flag is on.
+   */
+  replayEmbed?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Shared across events; used for both moderators and speakers. Shows current role/company, including on past events.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "speakers".
+ */
+export interface Speaker {
+  id: number;
+  name: string;
+  role?: string | null;
+  company?: string | null;
+  headshot?: (number | null) | Media;
+  bio?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Given to certain companies for 25-100% off a set number of tickets.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discount-codes".
+ */
+export interface DiscountCode {
+  id: number;
+  code: string;
+  event: number | Event;
+  /**
+   * The company it was given to.
+   */
+  accessProvider?: (number | null) | AccessProvider;
+  /**
+   * 100 = comped ticket.
+   */
+  percentOff: number;
+  /**
+   * The given number of tickets; each ticket uses one.
+   */
+  maxUses: number;
+  /**
+   * Count = tickets used so far.
+   */
+  uses?: {
+    docs?: (number | EventRegistration)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * Leave empty to allow any ticket type on the event.
+   */
+  ticketTypes?:
+    | {
+        name: string;
+        id?: string | null;
+      }[]
+    | null;
+  expiresAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1065,6 +1422,34 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'mailchimp-outbox';
         value: number | MailchimpOutbox;
+      } | null)
+    | ({
+        relationTo: 'speakers';
+        value: number | Speaker;
+      } | null)
+    | ({
+        relationTo: 'sponsors';
+        value: number | Sponsor;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'sessions';
+        value: number | Session;
+      } | null)
+    | ({
+        relationTo: 'discount-codes';
+        value: number | DiscountCode;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'event-registrations';
+        value: number | EventRegistration;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1159,6 +1544,7 @@ export interface UsersSelect<T extends boolean = true> {
   status?: T;
   accessProvider?: T;
   emailPublications?: T;
+  registrations?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1620,6 +2006,180 @@ export interface MailchimpOutboxSelect<T extends boolean = true> {
   segment?: T;
   payload?: T;
   html?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "speakers_select".
+ */
+export interface SpeakersSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  company?: T;
+  headshot?: T;
+  bio?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sponsors_select".
+ */
+export interface SponsorsSelect<T extends boolean = true> {
+  name?: T;
+  logo?: T;
+  description?: T;
+  website?: T;
+  events?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  name?: T;
+  channel?: T;
+  startsAt?: T;
+  endDate?: T;
+  timezone?: T;
+  hasReplay?: T;
+  tagline?: T;
+  image?: T;
+  description?: T;
+  venue?:
+    | T
+    | {
+        address?: T;
+        description?: T;
+      };
+  accommodation?:
+    | T
+    | {
+        phone?: T;
+        email?: T;
+        bookingUrl?: T;
+        description?: T;
+      };
+  days?:
+    | T
+    | {
+        date?: T;
+        name?: T;
+        id?: T;
+      };
+  ticketTypes?:
+    | T
+    | {
+        name?: T;
+        honorSystem?: T;
+        onSale?: T;
+        capacity?: T;
+        inPerson?:
+          | T
+          | {
+              price?: T;
+              subscriberPrice?: T;
+            };
+        virtual?:
+          | T
+          | {
+              price?: T;
+              subscriberPrice?: T;
+            };
+        id?: T;
+      };
+  sponsors?: T;
+  sessions?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions_select".
+ */
+export interface SessionsSelect<T extends boolean = true> {
+  event?: T;
+  title?: T;
+  description?: T;
+  day?: T;
+  startTime?: T;
+  endTime?: T;
+  type?: T;
+  room?: T;
+  moderators?: T;
+  speakers?: T;
+  speakerGroups?:
+    | T
+    | {
+        label?: T;
+        speakers?: T;
+        id?: T;
+      };
+  sponsors?: T;
+  replayEmbed?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discount-codes_select".
+ */
+export interface DiscountCodesSelect<T extends boolean = true> {
+  code?: T;
+  event?: T;
+  accessProvider?: T;
+  percentOff?: T;
+  maxUses?: T;
+  uses?: T;
+  ticketTypes?:
+    | T
+    | {
+        name?: T;
+        id?: T;
+      };
+  expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  buyer?: T;
+  event?: T;
+  registrations?: T;
+  discountCode?: T;
+  subtotal?: T;
+  discount?: T;
+  total?: T;
+  status?: T;
+  paidAt?: T;
+  paymentRef?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-registrations_select".
+ */
+export interface EventRegistrationsSelect<T extends boolean = true> {
+  order?: T;
+  event?: T;
+  attendee?: T;
+  attendeeName?: T;
+  attendeeEmail?: T;
+  ticketType?: T;
+  attendance?: T;
+  priceBasis?: T;
+  amountPaid?: T;
+  discountCode?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }

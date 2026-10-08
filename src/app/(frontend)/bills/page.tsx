@@ -53,6 +53,7 @@ export default async function BillsPage({
         <Link href="/datasets">Data</Link>
         <Link href="/guides">Guides</Link>
         <Link href="/publications">Publications</Link>
+        <Link href="/events">Events</Link>
       </nav>
       <div className="page">
         <h1>Bills</h1>

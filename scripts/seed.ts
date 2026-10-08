@@ -17,10 +17,18 @@ import {
   seedMailchimpSettings,
   seedPublications,
 } from './seed/publications'
+import { seedDiscountCodeAndDemoPurchase, seedEvents, seedSpeakersAndSponsors } from './seed/events'
 
 const ALL = { id: { exists: true } } as const
 
 const WIPE_ORDER = [
+  'orders',
+  'event-registrations',
+  'discount-codes',
+  'sessions',
+  'events',
+  'speakers',
+  'sponsors',
   'mailchimp-outbox',
   'email-flags',
   'publication-issues',
@@ -80,6 +88,13 @@ async function main() {
       })
     }
   }
+
+  const { speakers, sponsors } = await seedSpeakersAndSponsors(payload)
+  const { gtnf } = await seedEvents(payload, speakers, sponsors)
+  await seedDiscountCodeAndDemoPurchase(payload, gtnf.id, async (name) => {
+    const { docs } = await payload.find({ collection: 'access-providers', where: { name: { equals: name } }, limit: 1, overrideAccess: true })
+    return docs[0]?.id
+  })
 
   console.log('\nAccess summary (via getReaderPlan, the shared helper):\n')
   const { docs: allUsers } = await payload.find({
