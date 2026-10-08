@@ -1,18 +1,15 @@
 import { headers as getHeaders } from 'next/headers.js'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
-import { DatasetGrid } from '@/components/DatasetGrid'
 
 export const dynamic = 'force-dynamic'
 
-export default async function DatasetViewerPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
+export default async function PublicationsPage() {
   const headers = await getHeaders()
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })
@@ -20,16 +17,7 @@ export default async function DatasetViewerPage({ params }: { params: Promise<{ 
 
   const isStaff = staffHasRole(user, 'editor')
   const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
-  const canRead = isStaff || planSatisfies(plan, 'premium')
-
-  const { docs } = await payload.find({
-    collection: 'datasets',
-    where: { slug: { equals: slug } },
-    limit: 1,
-    overrideAccess: true,
-  })
-  const dataset = docs[0]
-  if (!dataset) notFound()
+  const canRead = isStaff || planSatisfies(plan, 'base')
 
   return (
     <>
@@ -41,31 +29,41 @@ export default async function DatasetViewerPage({ params }: { params: Promise<{ 
         <Link href="/publications">Publications</Link>
       </nav>
       <div className="page">
-        <p>
-          <Link href="/datasets">&larr; All datasets</Link>
-        </p>
-        <h1>
-          {dataset.icon ? `${dataset.icon} ` : ''}
-          {dataset.title}
-        </h1>
-        {dataset.description && <p className="muted">{dataset.description}</p>}
+        <h1>Publications</h1>
+        <p className="muted">Newsletters, readable by any Base or Premium subscriber.</p>
 
         {!canRead ? (
           <div className="locked-content">
-            A Premium subscription is required to view this data.{' '}
+            Sign in with a Base or Premium subscription to view publications.{' '}
             <Link href="/account">Sign in</Link>
           </div>
         ) : (
-          <>
-            <p>
-              <a href={`/api/datasets/${dataset.id}/export`}>Download CSV</a>
-            </p>
-            <div className="card">
-              <DatasetGrid datasetId={String(dataset.id)} />
-            </div>
-          </>
+          <PublicationList payload={payload} />
         )}
       </div>
     </>
+  )
+}
+
+async function PublicationList({ payload }: { payload: Awaited<ReturnType<typeof getPayload>> }) {
+  const { docs: publications } = await payload.find({
+    collection: 'publications',
+    limit: 100,
+    sort: 'title',
+    overrideAccess: true,
+  })
+
+  return (
+    <div className="card">
+      {publications.map((p) => (
+        <Link key={p.id} href={`/publications/${p.slug}`} className="excerpt-list-item">
+          <h3>{p.title}</h3>
+          <div className="excerpt-meta">
+            {p.description} · {p.frequency}
+          </div>
+        </Link>
+      ))}
+      {publications.length === 0 && <p className="muted">No publications yet.</p>}
+    </div>
   )
 }

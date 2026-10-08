@@ -11,10 +11,21 @@ import { getReaderPlan } from '../src/access/readerPlan'
 import { SEED_PASSWORD, seedAccounts } from './seed/accounts'
 import { seedCountries, seedDatasets, seedGuides } from './seed/data'
 import { seedExcerptContent } from './seed/excerpts'
+import {
+  seedEmailFlags,
+  seedIssuesAndSendDemo,
+  seedMailchimpSettings,
+  seedPublications,
+} from './seed/publications'
 
 const ALL = { id: { exists: true } } as const
 
 const WIPE_ORDER = [
+  'mailchimp-outbox',
+  'email-flags',
+  'publication-issues',
+  'publications',
+  'trademark-import-runs',
   'bills',
   'articles',
   'trademarks',
@@ -51,6 +62,24 @@ async function main() {
   await seedCountries(payload)
   await seedDatasets(payload)
   await seedGuides(payload)
+
+  await seedMailchimpSettings(payload)
+  const publications = await seedPublications(payload)
+  await seedIssuesAndSendDemo(payload, publications)
+  await seedEmailFlags(payload, publications)
+
+  console.log('Setting a couple of readers\' publication preferences (exercises the Mailchimp sync hook)...')
+  for (const email of ['megan.clarke@altria.com', 'elena.rossi@pmi.com']) {
+    const { docs } = await payload.find({ collection: 'users', where: { email: { equals: email } }, limit: 1, overrideAccess: true })
+    if (docs[0]) {
+      await payload.update({
+        collection: 'users',
+        id: docs[0].id,
+        data: { emailPublications: [publications['us-news-clippings'], publications['monthly-research-digest']] },
+        overrideAccess: true,
+      })
+    }
+  }
 
   console.log('\nAccess summary (via getReaderPlan, the shared helper):\n')
   const { docs: allUsers } = await payload.find({

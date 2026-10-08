@@ -13,17 +13,23 @@ import { Bills } from './collections/Bills'
 import { Countries } from './collections/Countries'
 import { DatasetRows } from './collections/DatasetRows'
 import { Datasets } from './collections/Datasets'
+import { EmailFlags } from './collections/EmailFlags'
 import { GuideFiles } from './collections/GuideFiles'
 import { Guides } from './collections/Guides'
 import { Locations } from './collections/Locations'
+import { MailchimpOutbox } from './collections/MailchimpOutbox'
 import { Media } from './collections/Media'
 import { Products } from './collections/Products'
+import { PublicationIssues } from './collections/PublicationIssues'
+import { Publications } from './collections/Publications'
 import { Sectors } from './collections/Sectors'
 import { Sources } from './collections/Sources'
 import { Staff } from './collections/Staff'
 import { Subjects } from './collections/Subjects'
+import { TrademarkImportRuns } from './collections/TrademarkImportRuns'
 import { Trademarks } from './collections/Trademarks'
 import { Users } from './collections/Users'
+import { MailchimpSettings } from './globals/MailchimpSettings'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -55,7 +61,13 @@ export default buildConfig({
     DatasetRows,
     Guides,
     GuideFiles,
+    Publications,
+    PublicationIssues,
+    EmailFlags,
+    TrademarkImportRuns,
+    MailchimpOutbox,
   ],
+  globals: [MailchimpSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

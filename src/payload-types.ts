@@ -85,6 +85,11 @@ export interface Config {
     'dataset-rows': DatasetRow;
     guides: Guide;
     'guide-files': GuideFile;
+    publications: Publication;
+    'publication-issues': PublicationIssue;
+    'email-flags': EmailFlag;
+    'trademark-import-runs': TrademarkImportRun;
+    'mailchimp-outbox': MailchimpOutbox;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -113,6 +118,11 @@ export interface Config {
     'dataset-rows': DatasetRowsSelect<false> | DatasetRowsSelect<true>;
     guides: GuidesSelect<false> | GuidesSelect<true>;
     'guide-files': GuideFilesSelect<false> | GuideFilesSelect<true>;
+    publications: PublicationsSelect<false> | PublicationsSelect<true>;
+    'publication-issues': PublicationIssuesSelect<false> | PublicationIssuesSelect<true>;
+    'email-flags': EmailFlagsSelect<false> | EmailFlagsSelect<true>;
+    'trademark-import-runs': TrademarkImportRunsSelect<false> | TrademarkImportRunsSelect<true>;
+    'mailchimp-outbox': MailchimpOutboxSelect<false> | MailchimpOutboxSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -122,8 +132,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'mailchimp-settings': MailchimpSetting;
+  };
+  globalsSelect: {
+    'mailchimp-settings': MailchimpSettingsSelect<false> | MailchimpSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -254,6 +268,10 @@ export interface User {
    * Set automatically when a verified email matches a provider's allowed domains. Empty for event-only attendees.
    */
   accessProvider?: (number | null) | AccessProvider;
+  /**
+   * Checkboxes on the account page. Only shown to readers with an active Base or Premium plan.
+   */
+  emailPublications?: (number | Publication)[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -334,42 +352,64 @@ export interface AccessProvider {
   createdAt: string;
 }
 /**
- * Flat index-term list, e.g. Manufacturers, Retail & Distribution, Social.
+ * The newsletter itself, e.g. "US News Clippings". An Issue is one edition of it.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sectors".
+ * via the `definition` "publications".
  */
-export interface Sector {
+export interface Publication {
   id: number;
-  name: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Flat index-term list, including a catch-all "All Products".
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "products".
- */
-export interface Product {
-  id: number;
-  name: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Hierarchical index terms, e.g. RETAIL, DISTRIBUTION, & SALES > Licensing (sales).
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "subjects".
- */
-export interface Subject {
-  id: number;
-  name: string;
+  title: string;
+  slug: string;
+  description?: string | null;
+  thumbnail?: (number | null) | Media;
+  format: 'excerpt-list' | 'pdf-report' | 'custom-html';
+  frequency: 'daily' | 'weekly' | 'monthly';
   /**
-   * Leave blank for a top-level subject.
+   * Manual for every publication except the two automated trademark reports.
    */
-  parent?: (number | null) | Subject;
+  generator: 'manual' | 'weekly-trademark-report' | 'monthly-trademark-activity';
+  /**
+   * Defaults for building an issue; editors can still adjust each issue afterward.
+   */
+  selectionRules?: {
+    /**
+     * Defaults from frequency if left blank: 1/7/30.
+     */
+    window?: number | null;
+    excerptTypes?: ('articles' | 'bills' | 'trademarks')[] | null;
+    locations?: {
+      include?: (number | Location)[] | null;
+      exclude?: (number | Location)[] | null;
+    };
+    products?: {
+      include?: (number | Product)[] | null;
+      exclude?: (number | Product)[] | null;
+    };
+    sectors?: {
+      include?: (number | Sector)[] | null;
+      exclude?: (number | Sector)[] | null;
+    };
+    subjects?: {
+      include?: (number | Subject)[] | null;
+      exclude?: (number | Subject)[] | null;
+    };
+  };
+  groupingRules?: {
+    groupBy?: ('none' | 'region' | 'country' | 'primarySubject' | 'sector' | 'product' | 'excerptType') | null;
+    thenGroupBy?: ('none' | 'region' | 'country' | 'primarySubject' | 'sector' | 'product' | 'excerptType') | null;
+    sortBy?: ('sourceDateDesc' | 'sourceDateAsc' | 'title') | null;
+  };
+  mailchimp?: {
+    /**
+     * This publication's checkbox in the audience's Publications interest group.
+     */
+    interestId?: string | null;
+    /**
+     * The saved segment ("Publications one of …") used when sending.
+     */
+    segmentId?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -394,6 +434,46 @@ export interface Location {
     lat?: number | null;
     lng?: number | null;
   };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Flat index-term list, including a catch-all "All Products".
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Flat index-term list, e.g. Manufacturers, Retail & Distribution, Social.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sectors".
+ */
+export interface Sector {
+  id: number;
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Hierarchical index terms, e.g. RETAIL, DISTRIBUTION, & SALES > Licensing (sales).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subjects".
+ */
+export interface Subject {
+  id: number;
+  name: string;
+  /**
+   * Leave blank for a top-level subject.
+   */
+  parent?: (number | null) | Subject;
   updatedAt: string;
   createdAt: string;
 }
@@ -716,6 +796,166 @@ export interface GuideFile {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publication-issues".
+ */
+export interface PublicationIssue {
+  id: number;
+  publication: number | Publication;
+  issueDate: string;
+  title: string;
+  format: 'excerpt-list' | 'pdf-report' | 'custom-html';
+  intro?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * One group per section. "Build from rules" fills this in; reorder/edit freely after.
+   */
+  sections?:
+    | {
+        heading: string;
+        items?:
+          | (
+              | {
+                  relationTo: 'articles';
+                  value: number | Article;
+                }
+              | {
+                  relationTo: 'bills';
+                  value: number | Bill;
+                }
+              | {
+                  relationTo: 'trademarks';
+                  value: number | Trademark;
+                }
+            )[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  summary?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  file?: (number | null) | GuideFile;
+  /**
+   * Sanitized HTML, designed outside the CMS.
+   */
+  body?: string | null;
+  email?: {
+    /**
+     * Defaults to the issue title if left blank.
+     */
+    subject?: string | null;
+    previewText?: string | null;
+    /**
+     * Set when the campaign is created.
+     */
+    campaignId?: string | null;
+    status?: ('not sent' | 'sending' | 'sent' | 'failed') | null;
+    sentAt?: string | null;
+    sentBy?: (number | null) | Staff;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * A queue of unsubscribes and delivery problems to follow up on.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-flags".
+ */
+export interface EmailFlag {
+  id: number;
+  user: number | User;
+  reason: 'unsubscribed' | 'spam complaint' | 'cleaned';
+  occurredAt: string;
+  /**
+   * What they were receiving, so it can be restored.
+   */
+  publicationsBefore?: (number | Publication)[] | null;
+  status?: ('open' | 'following up' | 'resolved') | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A log of each automated USPTO pull, so failures are visible.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trademark-import-runs".
+ */
+export interface TrademarkImportRun {
+  id: number;
+  startedAt: string;
+  finishedAt?: string | null;
+  status: 'running' | 'succeeded' | 'failed';
+  feedSource?: string | null;
+  counts?: {
+    new?: number | null;
+    updated?: number | null;
+    renewals?: number | null;
+    cancellations?: number | null;
+  };
+  issuesCreated?: (number | PublicationIssue)[] | null;
+  error?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Simulated Mailchimp calls. In simulated mode this is how campaigns get reviewed — the full rendered HTML and target segment are logged here instead of being sent.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailchimp-outbox".
+ */
+export interface MailchimpOutbox {
+  id: number;
+  type: 'upsertMember' | 'createCampaign' | 'sendCampaign' | 'sendTest';
+  /**
+   * The target audience segment, or recipient for a test send.
+   */
+  segment?: string | null;
+  payload:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * The full rendered campaign HTML, for createCampaign and sendTest entries.
+   */
+  html?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -805,6 +1045,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'guide-files';
         value: number | GuideFile;
+      } | null)
+    | ({
+        relationTo: 'publications';
+        value: number | Publication;
+      } | null)
+    | ({
+        relationTo: 'publication-issues';
+        value: number | PublicationIssue;
+      } | null)
+    | ({
+        relationTo: 'email-flags';
+        value: number | EmailFlag;
+      } | null)
+    | ({
+        relationTo: 'trademark-import-runs';
+        value: number | TrademarkImportRun;
+      } | null)
+    | ({
+        relationTo: 'mailchimp-outbox';
+        value: number | MailchimpOutbox;
       } | null);
   globalSlug?: string | null;
   user:
@@ -898,6 +1158,7 @@ export interface UsersSelect<T extends boolean = true> {
   avatar?: T;
   status?: T;
   accessProvider?: T;
+  emailPublications?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1224,6 +1485,146 @@ export interface GuideFilesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publications_select".
+ */
+export interface PublicationsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  description?: T;
+  thumbnail?: T;
+  format?: T;
+  frequency?: T;
+  generator?: T;
+  selectionRules?:
+    | T
+    | {
+        window?: T;
+        excerptTypes?: T;
+        locations?:
+          | T
+          | {
+              include?: T;
+              exclude?: T;
+            };
+        products?:
+          | T
+          | {
+              include?: T;
+              exclude?: T;
+            };
+        sectors?:
+          | T
+          | {
+              include?: T;
+              exclude?: T;
+            };
+        subjects?:
+          | T
+          | {
+              include?: T;
+              exclude?: T;
+            };
+      };
+  groupingRules?:
+    | T
+    | {
+        groupBy?: T;
+        thenGroupBy?: T;
+        sortBy?: T;
+      };
+  mailchimp?:
+    | T
+    | {
+        interestId?: T;
+        segmentId?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publication-issues_select".
+ */
+export interface PublicationIssuesSelect<T extends boolean = true> {
+  publication?: T;
+  issueDate?: T;
+  title?: T;
+  format?: T;
+  intro?: T;
+  sections?:
+    | T
+    | {
+        heading?: T;
+        items?: T;
+        id?: T;
+      };
+  summary?: T;
+  file?: T;
+  body?: T;
+  email?:
+    | T
+    | {
+        subject?: T;
+        previewText?: T;
+        campaignId?: T;
+        status?: T;
+        sentAt?: T;
+        sentBy?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-flags_select".
+ */
+export interface EmailFlagsSelect<T extends boolean = true> {
+  user?: T;
+  reason?: T;
+  occurredAt?: T;
+  publicationsBefore?: T;
+  status?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trademark-import-runs_select".
+ */
+export interface TrademarkImportRunsSelect<T extends boolean = true> {
+  startedAt?: T;
+  finishedAt?: T;
+  status?: T;
+  feedSource?: T;
+  counts?:
+    | T
+    | {
+        new?: T;
+        updated?: T;
+        renewals?: T;
+        cancellations?: T;
+      };
+  issuesCreated?: T;
+  error?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailchimp-outbox_select".
+ */
+export interface MailchimpOutboxSelect<T extends boolean = true> {
+  type?: T;
+  segment?: T;
+  payload?: T;
+  html?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1261,6 +1662,39 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailchimp-settings".
+ */
+export interface MailchimpSetting {
+  id: number;
+  /**
+   * The single Mailchimp audience, e.g. "Nicotine360 Publications".
+   */
+  audienceId?: string | null;
+  /**
+   * The "Publications" interest category; one interest per Publication.
+   */
+  publicationsInterestCategoryId?: string | null;
+  /**
+   * Set via the MAILCHIMP_MODE env var, not editable here.
+   */
+  mode?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailchimp-settings_select".
+ */
+export interface MailchimpSettingsSelect<T extends boolean = true> {
+  audienceId?: T;
+  publicationsInterestCategoryId?: T;
+  mode?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

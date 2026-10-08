@@ -43,4 +43,16 @@ Without `MANDRILL_SMTP_HOST`/`MANDRILL_API_KEY` set, account emails (verificatio
 - `/datasets` (cards) → `/datasets/[slug]` (AG Grid, Premium-gated, CSV download) via `/api/datasets/[id]/rows` and `/api/datasets/[id]/export`. `/guides` → `/guides/[slug]` (Base+ gated).
 - `pnpm seed` imports two real sample spreadsheets (`docs/sample-data/*.csv`) into two datasets, and publishes two guides.
 
-Next: Milestone 4 (Publications and Mailchimp).
+### Milestone 4: publications and Mailchimp
+
+- `publications` (selection/grouping rules, Mailchimp ids, `generator`), `publication-issues` (three formats: excerpt list, PDF report, custom HTML — conditional fields per `format`), `email-flags`, `trademark-import-runs`, the `mailchimp-outbox` collection, and the `mailchimp-settings` global.
+- `src/lib/mailchimp/` defines the `MailchimpClient` interface (`upsertMember`, `createCampaign`, `sendCampaign`, `sendTest`, `parseUnsubscribeWebhook`) with a `simulated` implementation (writes every call, including the full rendered campaign HTML and target segment, to `mailchimp-outbox`) and a stubbed `live` one, chosen by `MAILCHIMP_MODE`.
+- `src/lib/publicationRules.ts` is "Build from rules": applies a publication's date window, include/exclude index-term filters (locations expand hierarchically — a rule for "United States" also matches "Pennsylvania", per the entity map), groups (region/country/primarySubject/sector/product/excerptType, with a second-level `thenGroupBy`) and sorts, producing `sections` ready to assign onto an Issue.
+- `src/lib/issueEmail.ts` renders an Issue into the email template for its format. Both "Build from rules" and "Send"/"Send test" are buttons on the Issue's admin edit screen (`admin.components.edit.beforeDocumentControls`), calling `/api/publication-issues/[id]/build-from-rules` and `/api/publication-issues/[id]/send`; Send asks for confirmation and locks the issue against re-sending once it reports `sent`.
+- `/api/mailchimp/webhook` is the one exception to "our site is the source of truth": an unsubscribe/spam-complaint/cleaned event clears the reader's `emailPublications` and opens an `EmailFlag`; its admin-screen "Re-add" button restores their prior choices (which re-triggers the sync hook) and resolves the flag.
+- `src/hooks/syncMailchimpOnUserChange.ts` keeps Mailchimp in sync whenever a reader's name, email, provider or publication choices change, and defensively clears preferences if they're no longer Base/Premium-eligible (e.g. their company's license expired) — the account page's preference picker is also gated on eligibility.
+- `src/lib/trademarkReportJob.ts`: a fixture stands in for the USPTO feed (`docs/sample-data/uspto-fixture.json`); upserts Trademarks by serial number, and drafts the Weekly/Monthly trademark report issues when there's something to report. Triggered manually at `/staff/trademark-reports` (a real deployment would run this on a schedule) and logged to `trademark-import-runs`.
+- `/publications` → `/publications/[slug]` → `/publications/[slug]/issues/[id]` (Base+ gated, draft issues hidden from readers).
+- `pnpm seed` creates 5 publications, builds one issue from rules and sends it for real (same code path as the admin buttons) so the outbox has a genuine example, plus a ready-to-try draft issue, an EmailFlag, and sets two readers' preferences (exercising the sync hook).
+
+This completes every milestone in CLAUDE.md's prototype scope.

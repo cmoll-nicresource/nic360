@@ -20,13 +20,14 @@ export default async function HomePage() {
         <Link href="/trademarks">Trademarks</Link>
         <Link href="/datasets">Data</Link>
         <Link href="/guides">Guides</Link>
+        <Link href="/publications">Publications</Link>
         <Link href="/account">Account</Link>
         <Link href="/access-check">Access check</Link>
         <Link href={payloadConfig.routes.admin}>Admin</Link>
       </nav>
       <div className="page">
         <h1>Nicotine360</h1>
-        <p className="muted">Skeleton prototype — Milestone 3: data and guides.</p>
+        <p className="muted">Skeleton prototype — Milestone 4: publications and Mailchimp.</p>
         <div className="card">
           {user ? (
             <p>

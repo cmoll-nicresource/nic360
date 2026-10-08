@@ -33,6 +33,7 @@ export default async function DatasetsPage() {
         <Link href="/articles">Articles</Link>
         <Link href="/datasets">Data</Link>
         <Link href="/guides">Guides</Link>
+        <Link href="/publications">Publications</Link>
       </nav>
       <div className="page">
         <h1>Data</h1>

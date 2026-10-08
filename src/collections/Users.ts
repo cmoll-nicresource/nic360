@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { assignAccessProviderOnVerify } from '@/hooks/assignAccessProviderOnVerify'
+import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
 
 export const Users: CollectionConfig = {
@@ -31,7 +32,7 @@ export const Users: CollectionConfig = {
     delete: staffHasMinRole('gatekeeper'),
   },
   hooks: {
-    afterChange: [assignAccessProviderOnVerify],
+    afterChange: [assignAccessProviderOnVerify, syncMailchimpOnUserChange],
   },
   fields: [
     {
@@ -123,6 +124,17 @@ export const Users: CollectionConfig = {
       access: {
         // Readers can see their own provider but not reassign themselves to another.
         update: staffHasMinRole('gatekeeper'),
+      },
+    },
+    {
+      name: 'emailPublications',
+      label: 'Publication email preferences',
+      type: 'relationship',
+      relationTo: 'publications',
+      hasMany: true,
+      admin: {
+        description:
+          'Checkboxes on the account page. Only shown to readers with an active Base or Premium plan.',
       },
     },
   ],

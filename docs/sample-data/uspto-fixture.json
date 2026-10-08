@@ -1,0 +1,48 @@
+[
+  {
+    "serialNumber": "88900001",
+    "title": "NICOFLEX",
+    "class": "34",
+    "owner": "Altria Group",
+    "ownerAddress": "6601 West Broad St, Richmond, VA",
+    "style": "no",
+    "design": "no",
+    "publishedDate": "DAYS_AGO:2",
+    "filedDate": "DAYS_AGO:95"
+  },
+  {
+    "serialNumber": "88900002",
+    "title": "VAPECREST RESERVE",
+    "class": "34",
+    "owner": "Juul Labs",
+    "ownerAddress": "1000 F Street, San Francisco, CA",
+    "style": "yes",
+    "design": "no",
+    "publishedDate": "DAYS_AGO:4",
+    "filedDate": "DAYS_AGO:100"
+  },
+  {
+    "serialNumber": "88900003",
+    "title": "EMBERLINE",
+    "class": "34",
+    "owner": "British American Tobacco",
+    "ownerAddress": "Globe House, 4 Temple Place, London",
+    "style": "na",
+    "design": "yes",
+    "publishedDate": "DAYS_AGO:40",
+    "filedDate": "DAYS_AGO:140",
+    "cancelledDate": "DAYS_AGO:10"
+  },
+  {
+    "serialNumber": "88900004",
+    "title": "PUREMENTHOL",
+    "class": "34",
+    "owner": "Philip Morris International",
+    "ownerAddress": "Avenue de Rhodanie 50, Lausanne",
+    "style": "no",
+    "design": "no",
+    "publishedDate": "DAYS_AGO:50",
+    "filedDate": "DAYS_AGO:150",
+    "renewedDate": "DAYS_AGO:15"
+  }
+]

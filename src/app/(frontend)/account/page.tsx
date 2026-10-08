@@ -4,7 +4,10 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import config from '@/payload.config'
-import { getReaderPlan } from '@/access/readerPlan'
+import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { PublicationPreferencesForm } from '@/components/PublicationPreferencesForm'
+import type { Payload } from 'payload'
+import type { User } from '@/payload-types'
 
 function PlanBadge({ plan }: { plan: 'none' | 'base' | 'premium' }) {
   return <span className={`badge badge-${plan}`}>{plan}</span>
@@ -84,11 +87,40 @@ export default async function AccountPage() {
 
       <div className="card">
         <h2>Publication email preferences</h2>
-        <p className="muted">
-          Coming in Milestone 4, once Publications exist. This is where you&apos;ll choose which
-          newsletters to receive.
-        </p>
+        {planSatisfies(plan, 'base') ? (
+          <PublicationPreferencesAsync payload={payload} fullUser={fullUser} />
+        ) : (
+          <p className="muted">
+            Available once your company has a Base or Premium subscription.
+          </p>
+        )}
       </div>
     </div>
+  )
+}
+
+async function PublicationPreferencesAsync({
+  payload,
+  fullUser,
+}: {
+  payload: Payload
+  fullUser: User
+}) {
+  const { docs: publications } = await payload.find({
+    collection: 'publications',
+    limit: 100,
+    sort: 'title',
+    overrideAccess: true,
+  })
+  const selectedIds = (fullUser.emailPublications ?? []).map((p: number | { id: number }) =>
+    typeof p === 'object' ? p.id : p,
+  )
+
+  return (
+    <PublicationPreferencesForm
+      userId={fullUser.id}
+      publications={publications.map((p) => ({ id: p.id, title: p.title, description: p.description }))}
+      initialSelectedIds={selectedIds}
+    />
   )
 }

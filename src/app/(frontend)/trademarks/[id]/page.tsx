@@ -27,6 +27,9 @@ export default async function TrademarkDetailPage({ params }: { params: Promise<
         <Link href="/articles">Articles</Link>
         <Link href="/bills">Bills</Link>
         <Link href="/trademarks">Trademarks</Link>
+        <Link href="/datasets">Data</Link>
+        <Link href="/guides">Guides</Link>
+        <Link href="/publications">Publications</Link>
       </nav>
       <div className="page">
         <p>

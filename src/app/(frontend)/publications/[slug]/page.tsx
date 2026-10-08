@@ -10,7 +10,7 @@ import { staffHasRole } from '@/access/staffRoles'
 
 export const dynamic = 'force-dynamic'
 
-export default async function GuideDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PublicationDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const headers = await getHeaders()
   const payloadConfig = await config
@@ -32,46 +32,64 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
       </nav>
       <div className="page">
         <p>
-          <Link href="/guides">&larr; All guides</Link>
+          <Link href="/publications">&larr; All publications</Link>
         </p>
         {!canRead ? (
           <div className="locked-content">
-            Sign in with a Base or Premium subscription to view this guide.{' '}
+            Sign in with a Base or Premium subscription to view this publication.{' '}
             <Link href="/account">Sign in</Link>
           </div>
         ) : (
-          <GuideDetail payload={payload} slug={slug} />
+          <PublicationDetail payload={payload} slug={slug} isStaff={isStaff} />
         )}
       </div>
     </>
   )
 }
 
-async function GuideDetail({ payload, slug }: { payload: Awaited<ReturnType<typeof getPayload>>; slug: string }) {
+async function PublicationDetail({
+  payload,
+  slug,
+  isStaff,
+}: {
+  payload: Awaited<ReturnType<typeof getPayload>>
+  slug: string
+  isStaff: boolean
+}) {
   const { docs } = await payload.find({
-    collection: 'guides',
+    collection: 'publications',
     where: { slug: { equals: slug } },
-    depth: 1,
     limit: 1,
     overrideAccess: true,
   })
-  const guide = docs[0]
-  if (!guide) notFound()
+  const publication = docs[0]
+  if (!publication) notFound()
 
-  const file = guide.file && typeof guide.file === 'object' ? guide.file : null
+  const { docs: issues } = await payload.find({
+    collection: 'publication-issues',
+    where: isStaff
+      ? { publication: { equals: publication.id } }
+      : { and: [{ publication: { equals: publication.id } }, { _status: { equals: 'published' } }] },
+    sort: '-issueDate',
+    limit: 100,
+    overrideAccess: true,
+  })
 
   return (
     <>
-      <h1>{guide.title}</h1>
-      {guide.description && <p className="muted">{guide.description}</p>}
+      <h1>{publication.title}</h1>
+      {publication.description && <p className="muted">{publication.description}</p>}
+
       <div className="card">
-        {file?.url ? (
-          <a href={file.url} target="_blank" rel="noreferrer">
-            Download PDF
-          </a>
-        ) : (
-          <p className="muted">No file attached.</p>
-        )}
+        {issues.map((issue) => (
+          <Link key={issue.id} href={`/publications/${slug}/issues/${issue.id}`} className="excerpt-list-item">
+            <h3>{issue.title}</h3>
+            <div className="excerpt-meta">
+              {new Date(issue.issueDate).toLocaleDateString()} · {issue.email?.status ?? 'not sent'}
+            </div>
+          </Link>
+        ))}
+        {issues.length === 0 && <p className="muted">No issues yet.</p>}
       </div>
     </>
   )
