@@ -4,6 +4,7 @@
  *
  * Usage: pnpm seed
  */
+import 'dotenv/config' // next dev/build load .env automatically; running via tsx directly does not.
 import { getPayload } from 'payload'
 
 import config from '../src/payload.config'
