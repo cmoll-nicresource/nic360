@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { getPayload } from 'payload'
 import React from 'react'
+import { SiteNav } from '@/components/SiteNav'
 
 import config from '@/payload.config'
 import { CHANNELS } from '@/config/channels'
@@ -41,14 +42,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <nav className="topnav">
-        <Link href="/">Nicotine360</Link>
-        <Link href="/articles">Articles</Link>
-        <Link href="/datasets">Data</Link>
-        <Link href="/guides">Guides</Link>
-        <Link href="/publications">Publications</Link>
-        <Link href="/events">Events</Link>
-      </nav>
+      <SiteNav />
       <div className="page">
         <p>
           <Link href="/events">&larr; All events</Link>

@@ -50,8 +50,12 @@ export const Users: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        { name: 'firstName', type: 'text', required: true },
-        { name: 'lastName', type: 'text', required: true },
+        {
+          name: 'firstName',
+          type: 'text',
+          admin: { description: 'Not required until the reader completes sign-up.' },
+        },
+        { name: 'lastName', type: 'text' },
       ],
     },
     {
@@ -158,6 +162,27 @@ export const Users: CollectionConfig = {
       admin: {
         description: 'Event registrations where this user is the attendee. Old product orders are not migrated.',
       },
+    },
+    {
+      name: 'signup',
+      type: 'group',
+      admin: {
+        position: 'sidebar',
+        description: 'Internal sign-up flow state.',
+      },
+      access: {
+        read: staffHasMinRole('gatekeeper'),
+        update: staffHasMinRole('gatekeeper'),
+      },
+      fields: [
+        { name: 'code', type: 'text', admin: { readOnly: true } },
+        { name: 'codeExpiresAt', type: 'date', admin: { readOnly: true } },
+        {
+          name: 'completedAt',
+          type: 'date',
+          admin: { readOnly: true, description: 'Set once the reader finishes sign-up (password + profile).' },
+        },
+      ],
     },
   ],
 }

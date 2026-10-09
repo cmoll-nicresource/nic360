@@ -182,6 +182,7 @@ export async function seedAccounts(payload: Payload) {
         password: SEED_PASSWORD,
         accessProvider: u.accessProvider ?? undefined,
         _verified: true,
+        signup: { completedAt: new Date().toISOString() },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
       overrideAccess: true,

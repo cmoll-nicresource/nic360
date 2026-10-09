@@ -2,6 +2,7 @@ import { headers as getHeaders } from 'next/headers.js'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
+import { SiteNav } from '@/components/SiteNav'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
@@ -28,14 +29,7 @@ export default async function DatasetsPage() {
 
   return (
     <>
-      <nav className="topnav">
-        <Link href="/">Nicotine360</Link>
-        <Link href="/articles">Articles</Link>
-        <Link href="/datasets">Data</Link>
-        <Link href="/guides">Guides</Link>
-        <Link href="/publications">Publications</Link>
-        <Link href="/events">Events</Link>
-      </nav>
+      <SiteNav />
       <div className="page">
         <h1>Data</h1>
         <p className="muted">

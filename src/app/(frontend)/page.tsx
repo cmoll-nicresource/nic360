@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import config from '@/payload.config'
+import { SiteNav } from '@/components/SiteNav'
 
 export default async function HomePage() {
   const headers = await getHeaders()
@@ -11,32 +12,37 @@ export default async function HomePage() {
   const payload = await getPayload({ config: payloadConfig })
   const { user } = await payload.auth({ headers })
 
+  const isStaff = !!user && 'collection' in user && user.collection === 'staff'
+  const isReader = !!user && 'collection' in user && user.collection === 'users'
+
   return (
     <>
-      <nav className="topnav">
-        <Link href="/">Nicotine360</Link>
-        <Link href="/articles">Articles</Link>
-        <Link href="/bills">Bills</Link>
-        <Link href="/trademarks">Trademarks</Link>
-        <Link href="/datasets">Data</Link>
-        <Link href="/guides">Guides</Link>
-        <Link href="/publications">Publications</Link>
-        <Link href="/events">Events</Link>
-        <Link href="/account">Account</Link>
-        <Link href="/access-check">Access check</Link>
-        <Link href={payloadConfig.routes.admin}>Admin</Link>
-      </nav>
+      <SiteNav />
       <div className="page">
         <h1>Nicotine360</h1>
-        <p className="muted">Skeleton prototype — Milestone 5: events and ticketing.</p>
+        <p className="muted">
+          Industry news, legislation, trademarks, data and events for the nicotine and tobacco
+          industry.
+        </p>
         <div className="card">
-          {user ? (
+          {isReader && (
             <p>
-              Signed in as <strong>{'email' in user ? user.email : ''}</strong> (
-              {'collection' in user ? user.collection : 'unknown'})
+              Welcome back. <Link href="/dashboard">Go to your dashboard →</Link>
             </p>
-          ) : (
-            <p>Not signed in.</p>
+          )}
+          {isStaff && (
+            <p>
+              Signed in as staff. <Link href={payloadConfig.routes.admin}>Go to admin →</Link>
+            </p>
+          )}
+          {!user && (
+            <p>
+              <Link href="/signup" className="btn">
+                Create an account
+              </Link>{' '}
+              or browse Articles, Bills and Trademarks above — full content requires a company
+              subscription.
+            </p>
           )}
         </div>
       </div>

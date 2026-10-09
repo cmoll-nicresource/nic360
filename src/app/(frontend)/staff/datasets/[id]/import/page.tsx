@@ -6,6 +6,7 @@ import React from 'react'
 import config from '@/payload.config'
 import { staffHasRole } from '@/access/staffRoles'
 import { ImportWizard } from '@/components/ImportWizard'
+import { SiteNav } from '@/components/SiteNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,10 +19,13 @@ export default async function ImportDatasetPage({ params }: { params: Promise<{ 
 
   if (!staffHasRole(user, 'editor')) {
     return (
-      <div className="page">
-        <h1>Import data</h1>
-        <p>Staff sign-in required. Use the admin panel login, then reopen this link.</p>
-      </div>
+      <>
+        <SiteNav />
+        <div className="page">
+          <h1>Import data</h1>
+          <p>Staff sign-in required. Use the admin panel login, then reopen this link.</p>
+        </div>
+      </>
     )
   }
 
@@ -29,12 +33,15 @@ export default async function ImportDatasetPage({ params }: { params: Promise<{ 
   if (!dataset) notFound()
 
   return (
-    <div className="page">
-      <h1>Import data: {dataset.title}</h1>
-      <p className="muted">
-        Upload a CSV, map its headers to this dataset&apos;s columns, preview, then confirm.
-      </p>
-      <ImportWizard datasetId={String(dataset.id)} datasetSlug={dataset.slug} />
-    </div>
+    <>
+      <SiteNav />
+      <div className="page">
+        <h1>Import data: {dataset.title}</h1>
+        <p className="muted">
+          Upload a CSV, map its headers to this dataset&apos;s columns, preview, then confirm.
+        </p>
+        <ImportWizard datasetId={String(dataset.id)} datasetSlug={dataset.slug} />
+      </div>
+    </>
   )
 }

@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import Link from 'next/link'
 import React from 'react'
+import { SiteNav } from '@/components/SiteNav'
 
 import config from '@/payload.config'
 import { CHANNELS } from '@/config/channels'
@@ -20,14 +21,7 @@ export default async function EventsPage() {
 
   return (
     <>
-      <nav className="topnav">
-        <Link href="/">Nicotine360</Link>
-        <Link href="/articles">Articles</Link>
-        <Link href="/datasets">Data</Link>
-        <Link href="/guides">Guides</Link>
-        <Link href="/publications">Publications</Link>
-        <Link href="/events">Events</Link>
-      </nav>
+      <SiteNav />
       <div className="page">
         <h1>Events</h1>
         <div className="card">

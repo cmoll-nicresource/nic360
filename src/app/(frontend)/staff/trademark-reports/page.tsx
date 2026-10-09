@@ -5,6 +5,7 @@ import React from 'react'
 import config from '@/payload.config'
 import { staffHasRole } from '@/access/staffRoles'
 import { RunTrademarkReportButton } from '@/components/RunTrademarkReportButton'
+import { SiteNav } from '@/components/SiteNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,23 +17,29 @@ export default async function TrademarkReportsPage() {
 
   if (!staffHasRole(user, 'gatekeeper')) {
     return (
-      <div className="page">
-        <h1>Trademark reports</h1>
-        <p>Gatekeeper sign-in required.</p>
-      </div>
+      <>
+        <SiteNav />
+        <div className="page">
+          <h1>Trademark reports</h1>
+          <p>Gatekeeper sign-in required.</p>
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="page">
-      <h1>Trademark reports</h1>
-      <p className="muted">
-        Pulls the USPTO feed (a fixture stands in for it), upserts trademarks by serial number, and
-        drafts the Weekly US Trademark Report / Monthly US Trademark Activity issues. In production
-        this runs on a schedule; here it&apos;s manual. See <code>trademark-import-runs</code> in the
-        admin for the log.
-      </p>
-      <RunTrademarkReportButton />
-    </div>
+    <>
+      <SiteNav />
+      <div className="page">
+        <h1>Trademark reports</h1>
+        <p className="muted">
+          Pulls the USPTO feed (a fixture stands in for it), upserts trademarks by serial number,
+          and drafts the Weekly US Trademark Report / Monthly US Trademark Activity issues. In
+          production this runs on a schedule; here it&apos;s manual. See{' '}
+          <code>trademark-import-runs</code> in the admin for the log.
+        </p>
+        <RunTrademarkReportButton />
+      </div>
+    </>
   )
 }

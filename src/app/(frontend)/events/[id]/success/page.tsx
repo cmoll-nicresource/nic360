@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import config from '@/payload.config'
+import { SiteNav } from '@/components/SiteNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,9 @@ export default async function EventSuccessPage({
   }
 
   return (
-    <div className="page">
+    <>
+      <SiteNav />
+      <div className="page">
       <h1>Thank you!</h1>
       {order ? (
         <div className="card">
@@ -56,6 +59,7 @@ export default async function EventSuccessPage({
       <p>
         <Link href={`/events/${id}`}>&larr; Back to event</Link>
       </p>
-    </div>
+      </div>
+    </>
   )
 }

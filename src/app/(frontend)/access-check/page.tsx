@@ -3,6 +3,7 @@ import React from 'react'
 
 import config from '@/payload.config'
 import { getReaderPlan } from '@/access/readerPlan'
+import { SiteNav } from '@/components/SiteNav'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,9 @@ export default async function AccessCheckPage() {
   )
 
   return (
-    <div className="page">
+    <>
+      <SiteNav />
+      <div className="page">
       <h1>Access check</h1>
       <p className="muted">
         Internal test page (Milestone 1 &ldquo;done when&rdquo; criterion): what can each seeded
@@ -73,6 +76,7 @@ export default async function AccessCheckPage() {
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

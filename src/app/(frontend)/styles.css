@@ -3,7 +3,11 @@
   --nrc-muted: #5b6878;
   --nrc-border: #d8dee6;
   --nrc-bg: #f7f8fa;
-  --nrc-accent: #1f6f5c;
+  /* Brand colors sampled from the Nicotine360 logo. */
+  --nrc-primary: #285888;
+  --nrc-primary-dark: #1c4066;
+  --nrc-secondary: #5890b0;
+  --nrc-accent: var(--nrc-primary);
 }
 
 * {
@@ -24,11 +28,17 @@ body {
 }
 
 a {
-  color: var(--nrc-accent);
+  color: var(--nrc-primary);
 }
 
 .page {
   max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.page-wide {
+  max-width: 1100px;
   margin: 0 auto;
   padding: 48px 24px;
 }
@@ -77,24 +87,95 @@ th {
 
 .badge-base {
   background: #ddeaf5;
-  color: #1a5485;
+  color: var(--nrc-primary-dark);
 }
 
 .badge-premium {
-  background: #dcefe8;
-  color: #1f6f5c;
+  background: #dde9ee;
+  color: var(--nrc-secondary);
 }
 
 .muted {
   color: var(--nrc-muted);
 }
 
+/* Site nav */
 nav.topnav {
   display: flex;
-  gap: 16px;
-  padding: 16px 24px;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--nrc-border);
   background: #fff;
+}
+
+nav.topnav .brand {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+nav.topnav .brand img {
+  height: 28px;
+  display: block;
+}
+
+nav.topnav .nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  flex: 1;
+}
+
+nav.topnav .nav-links a {
+  color: var(--nrc-ink);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+nav.topnav .nav-links a:hover {
+  color: var(--nrc-primary);
+}
+
+nav.topnav .nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 9px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--nrc-primary);
+  background: var(--nrc-primary);
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn:hover {
+  background: var(--nrc-primary-dark);
+  border-color: var(--nrc-primary-dark);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--nrc-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--nrc-bg);
 }
 
 .filter-bar {
@@ -122,8 +203,8 @@ nav.topnav {
 .filter-bar button {
   padding: 7px 14px;
   border-radius: 6px;
-  border: 1px solid var(--nrc-accent);
-  background: var(--nrc-accent);
+  border: 1px solid var(--nrc-primary);
+  background: var(--nrc-primary);
   color: #fff;
   cursor: pointer;
 }
@@ -163,4 +244,120 @@ nav.topnav {
 
 .payload-richtext p {
   margin: 0 0 12px;
+}
+
+/* Signup wizard */
+.wizard-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: var(--nrc-muted);
+}
+
+.wizard-steps .step {
+  flex: 1;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 3px solid var(--nrc-border);
+}
+
+.wizard-steps .step.active {
+  color: var(--nrc-primary);
+  font-weight: 600;
+  border-bottom-color: var(--nrc-primary);
+}
+
+.wizard-steps .step.done {
+  color: var(--nrc-secondary);
+  border-bottom-color: var(--nrc-secondary);
+}
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  color: var(--nrc-muted);
+  margin-bottom: 4px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--nrc-border);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+/* Dashboard */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.product-card {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--nrc-border);
+  border-radius: 8px;
+  padding: 20px;
+  text-decoration: none;
+  color: var(--nrc-ink);
+}
+
+.product-card:hover {
+  border-color: var(--nrc-primary);
+}
+
+.product-card .icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.product-card h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.product-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--nrc-muted);
+}
+
+.product-card.locked {
+  opacity: 0.55;
+}
+
+/* Notices */
+.notice {
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.notice-info {
+  background: #eef5fa;
+  border: 1px solid #c9dfee;
+}
+
+.notice-promo {
+  background: #eef6f2;
+  border: 1px solid #c9e3d7;
 }

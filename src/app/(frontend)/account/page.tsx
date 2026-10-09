@@ -6,6 +6,7 @@ import React from 'react'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { PublicationPreferencesForm } from '@/components/PublicationPreferencesForm'
+import { SiteNav } from '@/components/SiteNav'
 import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
 
@@ -21,13 +22,16 @@ export default async function AccountPage() {
 
   if (!user || !('collection' in user) || user.collection !== 'users') {
     return (
-      <div className="page">
-        <h1>Account</h1>
-        <p>
-          You need to be signed in as a reader to see your account. Staff log in at{' '}
-          <Link href={payloadConfig.routes.admin}>/admin</Link> instead.
-        </p>
-      </div>
+      <>
+        <SiteNav />
+        <div className="page">
+          <h1>Account</h1>
+          <p>
+            You need to be signed in as a reader to see your account. Staff log in at{' '}
+            <Link href={payloadConfig.routes.admin}>/admin</Link> instead.
+          </p>
+        </div>
+      </>
     )
   }
 
@@ -44,7 +48,9 @@ export default async function AccountPage() {
       : null
 
   return (
-    <div className="page">
+    <>
+      <SiteNav />
+      <div className="page">
       <h1>Account</h1>
 
       <div className="card">
@@ -100,7 +106,8 @@ export default async function AccountPage() {
         <h2>Products purchased</h2>
         <EventRegistrationsAsync payload={payload} userId={fullUser.id} />
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 

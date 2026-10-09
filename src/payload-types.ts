@@ -251,8 +251,11 @@ export interface Staff {
  */
 export interface User {
   id: number;
-  firstName: string;
-  lastName: string;
+  /**
+   * Not required until the reader completes sign-up.
+   */
+  firstName?: string | null;
+  lastName?: string | null;
   salutation?: ('Mr.' | 'Ms.' | 'Mrs.' | 'Dr.' | 'Mx.') | null;
   department?: string | null;
   phone?: string | null;
@@ -308,6 +311,17 @@ export interface User {
     docs?: (number | EventRegistration)[];
     hasNextPage?: boolean;
     totalDocs?: number;
+  };
+  /**
+   * Internal sign-up flow state.
+   */
+  signup?: {
+    code?: string | null;
+    codeExpiresAt?: string | null;
+    /**
+     * Set once the reader finishes sign-up (password + profile).
+     */
+    completedAt?: string | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -1545,6 +1559,13 @@ export interface UsersSelect<T extends boolean = true> {
   accessProvider?: T;
   emailPublications?: T;
   registrations?: T;
+  signup?:
+    | T
+    | {
+        code?: T;
+        codeExpiresAt?: T;
+        completedAt?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;

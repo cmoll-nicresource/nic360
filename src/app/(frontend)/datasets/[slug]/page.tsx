@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
+import { SiteNav } from '@/components/SiteNav'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
@@ -33,14 +34,7 @@ export default async function DatasetViewerPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <nav className="topnav">
-        <Link href="/">Nicotine360</Link>
-        <Link href="/articles">Articles</Link>
-        <Link href="/datasets">Data</Link>
-        <Link href="/guides">Guides</Link>
-        <Link href="/publications">Publications</Link>
-        <Link href="/events">Events</Link>
-      </nav>
+      <SiteNav />
       <div className="page">
         <p>
           <Link href="/datasets">&larr; All datasets</Link>
