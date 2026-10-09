@@ -1,10 +1,14 @@
 import type { GlobalConfig } from 'payload'
 
 import { staffHasMinRole } from '@/access/staffRoles'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const MailchimpSettings: GlobalConfig = {
   slug: 'mailchimp-settings',
   label: 'Mailchimp settings',
+  admin: {
+    group: ADMIN_GROUPS.system,
+  },
   access: {
     read: staffHasMinRole('editor'),
     update: staffHasMinRole('admin'),

@@ -1,11 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
 import { anyoneCanRead, canReadReplay, staffCanManageEvents } from '@/access/eventAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Sessions: CollectionConfig = {
   slug: 'sessions',
   labels: { singular: 'Session', plural: 'Sessions' },
   admin: {
+    group: ADMIN_GROUPS.events,
     useAsTitle: 'title',
     defaultColumns: ['title', 'event', 'day', 'type'],
     description: 'Agenda items for all events.',

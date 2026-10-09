@@ -1,8 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
+import { ADMIN_GROUPS } from '@/config/adminGroups'
+
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: {
+    group: ADMIN_GROUPS.media,
     useAsTitle: 'alt',
   },
   access: {

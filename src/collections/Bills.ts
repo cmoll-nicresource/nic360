@@ -3,10 +3,12 @@ import type { CollectionConfig } from 'payload'
 import { anyoneCanReadTeaser, canReadFullContent, staffCanWrite } from '@/access/excerptAccess'
 import { indexTermFields } from '@/fields/indexTerms'
 import { ingestionField } from '@/fields/ingestion'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Bills: CollectionConfig = {
   slug: 'bills',
   admin: {
+    group: ADMIN_GROUPS.excerpts,
     useAsTitle: 'title',
     defaultColumns: ['title', 'billNumber', 'governmentLevel', 'billDate'],
     description: 'Legislation tracked via StateNet, summarized and categorized.',

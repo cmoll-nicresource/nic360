@@ -1,10 +1,12 @@
 import type { CollectionConfig } from 'payload'
 
 import { anyoneCanRead, staffCanManageEvents } from '@/access/eventAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Speakers: CollectionConfig = {
   slug: 'speakers',
   admin: {
+    group: ADMIN_GROUPS.events,
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'company'],
     description: 'Shared across events; used for both moderators and speakers. Shows current role/company, including on past events.',

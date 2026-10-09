@@ -1,11 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
 import { staffHasMinRole } from '@/access/staffRoles'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const EmailFlags: CollectionConfig = {
   slug: 'email-flags',
   labels: { singular: 'Email flag', plural: 'Email flags' },
   admin: {
+    group: ADMIN_GROUPS.accounts,
     useAsTitle: 'id',
     defaultColumns: ['user', 'reason', 'status', 'occurredAt'],
     description: 'A queue of unsubscribes and delivery problems to follow up on.',

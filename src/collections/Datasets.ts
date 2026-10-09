@@ -1,6 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { staffCanManageData } from '@/access/dataAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 function slugifyKey(label: string): string {
   return label
@@ -26,6 +27,7 @@ const fillColumnKeys: CollectionBeforeChangeHook = ({ data }) => {
 export const Datasets: CollectionConfig = {
   slug: 'datasets',
   admin: {
+    group: ADMIN_GROUPS.data,
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug'],
     description: 'Staff-defined flat tables: define columns, then import a spreadsheet of rows.',

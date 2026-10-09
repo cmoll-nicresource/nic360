@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { staffHasMinRole } from '@/access/staffRoles'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const AccessProviders: CollectionConfig = {
   slug: 'access-providers',
@@ -9,6 +10,7 @@ export const AccessProviders: CollectionConfig = {
     plural: 'Access providers',
   },
   admin: {
+    group: ADMIN_GROUPS.accounts,
     useAsTitle: 'name',
     defaultColumns: ['name', 'plan', 'status', 'licenseExpiresAt'],
     description: "The employer organizations whose subscriptions members inherit.",

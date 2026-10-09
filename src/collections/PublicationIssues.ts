@@ -1,6 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 const defaultFormatFromPublication: CollectionBeforeChangeHook = async ({ data, req, operation }) => {
   if (operation !== 'create' || data.format || !data.publication) return data
@@ -15,6 +16,7 @@ export const PublicationIssues: CollectionConfig = {
   slug: 'publication-issues',
   labels: { singular: 'Issue', plural: 'Issues' },
   admin: {
+    group: ADMIN_GROUPS.publishing,
     useAsTitle: 'title',
     defaultColumns: ['title', 'publication', 'issueDate', 'email'],
     components: {

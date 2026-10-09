@@ -2,6 +2,7 @@ import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { CHANNEL_OPTIONS } from '@/config/channels'
 import { anyoneCanRead, staffCanManageEvents } from '@/access/eventAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 type DayRow = { date: string; name?: string | null }
 
@@ -29,6 +30,7 @@ const fillEventDays: CollectionBeforeChangeHook = ({ data }) => {
 export const Events: CollectionConfig = {
   slug: 'events',
   admin: {
+    group: ADMIN_GROUPS.events,
     useAsTitle: 'name',
     defaultColumns: ['name', 'channel', 'startsAt', 'endDate'],
   },

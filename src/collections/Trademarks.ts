@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
 import { ingestionField } from '@/fields/ingestion'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 const yesNoNA = [
   { label: 'Yes', value: 'yes' },
@@ -12,6 +13,7 @@ const yesNoNA = [
 export const Trademarks: CollectionConfig = {
   slug: 'trademarks',
   admin: {
+    group: ADMIN_GROUPS.excerpts,
     useAsTitle: 'title',
     defaultColumns: ['title', 'serialNumber', 'owner', 'publishedDate'],
     description: 'Scraped weekly from the USPTO XML feed: filings, renewals, cancellations.',

@@ -1,11 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
 import { staffHasMinRole } from '@/access/staffRoles'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const TrademarkImportRuns: CollectionConfig = {
   slug: 'trademark-import-runs',
   labels: { singular: 'Trademark import run', plural: 'Trademark import runs' },
   admin: {
+    group: ADMIN_GROUPS.system,
     useAsTitle: 'id',
     defaultColumns: ['status', 'startedAt', 'finishedAt'],
     description: 'A log of each automated USPTO pull, so failures are visible.',

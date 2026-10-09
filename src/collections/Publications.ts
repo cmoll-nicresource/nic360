@@ -1,6 +1,7 @@
 import type { CollectionConfig, CollectionSlug, Field } from 'payload'
 
 import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 function includeExclude(name: string, relationTo: CollectionSlug): Field {
   return {
@@ -16,6 +17,7 @@ function includeExclude(name: string, relationTo: CollectionSlug): Field {
 export const Publications: CollectionConfig = {
   slug: 'publications',
   admin: {
+    group: ADMIN_GROUPS.publishing,
     useAsTitle: 'title',
     defaultColumns: ['title', 'format', 'frequency'],
     description: 'The newsletter itself, e.g. "US News Clippings". An Issue is one edition of it.',

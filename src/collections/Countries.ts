@@ -1,10 +1,12 @@
 import type { CollectionConfig } from 'payload'
 
 import { staffCanWrite } from '@/access/excerptAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Countries: CollectionConfig = {
   slug: 'countries',
   admin: {
+    group: ADMIN_GROUPS.taxonomy,
     useAsTitle: 'name',
     defaultColumns: ['name', 'iso2', 'iso3'],
     description: 'Reference list so dataset "country" columns show flags and names consistently.',

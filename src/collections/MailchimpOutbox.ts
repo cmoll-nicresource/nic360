@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { staffHasMinRole } from '@/access/staffRoles'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const MailchimpOutbox: CollectionConfig = {
   slug: 'mailchimp-outbox',
@@ -9,6 +10,7 @@ export const MailchimpOutbox: CollectionConfig = {
     plural: 'Mailchimp outbox',
   },
   admin: {
+    group: ADMIN_GROUPS.system,
     useAsTitle: 'type',
     defaultColumns: ['type', 'segment', 'createdAt'],
     description:

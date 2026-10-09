@@ -1,11 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
 import { staffCanManageRegistrations } from '@/access/eventAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const DiscountCodes: CollectionConfig = {
   slug: 'discount-codes',
   labels: { singular: 'Discount code', plural: 'Discount codes' },
   admin: {
+    group: ADMIN_GROUPS.events,
     useAsTitle: 'code',
     defaultColumns: ['code', 'event', 'percentOff', 'maxUses'],
     description: 'Given to certain companies for 25-100% off a set number of tickets.',

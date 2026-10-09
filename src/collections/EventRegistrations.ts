@@ -2,6 +2,7 @@ import type { Access, CollectionConfig, Where } from 'payload'
 
 import { staffCanManageRegistrations } from '@/access/eventAccess'
 import { staffHasRole } from '@/access/staffRoles'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 const readOwnOrManaged: Access = ({ req }) => {
   if (staffHasRole(req.user, 'gatekeeper')) return true
@@ -16,6 +17,7 @@ export const EventRegistrations: CollectionConfig = {
   slug: 'event-registrations',
   labels: { singular: 'Event registration', plural: 'Event registrations' },
   admin: {
+    group: ADMIN_GROUPS.events,
     useAsTitle: 'id',
     defaultColumns: ['event', 'attendeeName', 'ticketType', 'status'],
     description: 'One ticket for one attendee.',

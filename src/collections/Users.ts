@@ -4,6 +4,7 @@ import { assignAccessProviderOnVerify } from '@/hooks/assignAccessProviderOnVeri
 import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
 import { SITE_URL } from '@/lib/env'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -12,6 +13,7 @@ export const Users: CollectionConfig = {
     plural: 'Users',
   },
   admin: {
+    group: ADMIN_GROUPS.accounts,
     useAsTitle: 'email',
     defaultColumns: ['email', 'firstName', 'lastName', 'accessProvider', 'status'],
     description: 'Readers: members using a company subscription, or event attendees.',

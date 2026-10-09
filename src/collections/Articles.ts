@@ -3,10 +3,12 @@ import type { CollectionConfig } from 'payload'
 import { anyoneCanReadTeaser, canReadFullContent, staffCanWrite } from '@/access/excerptAccess'
 import { indexTermFields } from '@/fields/indexTerms'
 import { ingestionField } from '@/fields/ingestion'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Articles: CollectionConfig = {
   slug: 'articles',
   admin: {
+    group: ADMIN_GROUPS.excerpts,
     useAsTitle: 'title',
     defaultColumns: ['title', 'source', 'sourceDate', 'primarySubject'],
     description: 'News found across the internet; we take the title and a preview and index it.',

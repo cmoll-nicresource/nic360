@@ -1,10 +1,12 @@
 import type { CollectionConfig } from 'payload'
 
 import { staffCanWrite } from '@/access/excerptAccess'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Locations: CollectionConfig = {
   slug: 'locations',
   admin: {
+    group: ADMIN_GROUPS.taxonomy,
     useAsTitle: 'name',
     defaultColumns: ['name', 'level', 'parent'],
     description:

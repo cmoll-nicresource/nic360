@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
+import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Staff: CollectionConfig = {
   slug: 'staff',
@@ -9,6 +10,7 @@ export const Staff: CollectionConfig = {
     plural: 'Staff',
   },
   admin: {
+    group: ADMIN_GROUPS.accounts,
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'role'],
     description: 'The Nic360 employees who can log in to this admin panel.',
