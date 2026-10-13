@@ -26,5 +26,12 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    // One-off migration scripts (run via tsx, never imported by the app).
+    // Loosely typed by design — ids come from in-memory old-id -> new-id
+    // Maps, not Payload's own generated types — so they shouldn't block
+    // the production build's type check.
+    "migration"
+  ]
 }
