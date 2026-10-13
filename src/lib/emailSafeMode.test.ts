@@ -47,7 +47,9 @@ describe('applyEmailSafeMode', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     applyEmailSafeMode(transporter as any)
 
-    const mail = { data: { to: 'real.person@realcompany.com', subject: 'Your verification code' } }
+    const mail: { data: { to?: string; cc?: string; bcc?: string; subject: string } } = {
+      data: { to: 'real.person@realcompany.com', subject: 'Your verification code' },
+    }
     await new Promise<void>((resolve) => calls[0].plugin(mail, resolve))
 
     expect(mail.data.to).toBe('cmoll@nicotineresource.org')
