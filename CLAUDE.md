@@ -17,7 +17,7 @@ A rebuild of Nicotine360 (nicotine360.org), a subscription news and intelligence
 | Hosting | Railway (app service + Postgres) |
 | File storage | S3-compatible bucket via `@payloadcms/storage-s3` (AWS S3 or Cloudflare R2; endpoint is config). Local disk in development |
 | Payments | Stripe (event tickets only) |
-| Account email | Mandrill (SMTP through Payload's nodemailer email adapter) |
+| Account email | AWS SES (through Payload's nodemailer email adapter; same credentials/system as the publication-issue sender below) |
 | Newsletters | Mailchimp Marketing API, behind an interface with a **simulated** implementation (see Mailchimp below) |
 | Data grids | AG Grid (Community) on the front end |
 | Background work | Payload jobs queue with scheduled tasks |
@@ -100,7 +100,8 @@ Our site is the source of truth for who receives what. Mailchimp only mirrors it
 - Use Payload drafts (`versions.drafts`) on content collections. Use `join` fields for reverse lists instead of storing both sides.
 - Seed scripts: `pnpm seed` resets and fills every collection with realistic placeholder data (tobacco and nicotine industry flavored, no real personal data).
 - Tests: `pnpm test` (Vitest, `src/**/*.test.ts`) covers pure logic — no DB or network. Add a test alongside any new pure function with real edge cases (parsing, pricing, classification, access rules), not just UI/collection code.
-- Secrets come only from env: `DATABASE_URI`, `PAYLOAD_SECRET`, `S3_*`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `MANDRILL_*`, `MAILCHIMP_API_KEY`, `MAILCHIMP_MODE`. Keep `.env.example` up to date.
+- Secrets come only from env: `DATABASE_URI`, `PAYLOAD_SECRET`, `S3_*`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SES_*`, `MAILCHIMP_API_KEY`, `MAILCHIMP_MODE`. Keep `.env.example` up to date.
+- Email safety: real migrated user data lives in non-local environments, so every outgoing account email is redirected to a safe address by default (`EMAIL_SAFE_MODE`, `src/lib/emailSafeMode.ts`) — requires an explicit `EMAIL_SAFE_MODE=off` to deliver to a real recipient. Keep the SES account in sandbox mode as a second, infrastructure-level backstop until real sending is actually wanted.
 - Keep it simple: this is a prototype for a five-person team. Prefer Payload built-ins over custom infrastructure.
 
 ## Out of scope for now

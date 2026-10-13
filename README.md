@@ -18,7 +18,7 @@ Admin panel: `/admin`. Every seeded account's password is `ChangeMe123!` (printe
 
 `pnpm test` runs the unit test suite (Vitest, `src/**/*.test.ts`) — no database or network needed; it covers pure logic only (reader access plan derivation, event ticket pricing, CSV import mapping, the TMOG trademark-feed parser and classifier). `pnpm test:watch` reruns on change. There's no integration/e2e layer yet — collection access rules, hooks and API routes are still verified manually.
 
-Without `MANDRILL_SMTP_HOST`/`MANDRILL_API_KEY` set, account emails (verification, password reset, event invites) print to the console instead of sending — fine for local dev. Without `STRIPE_SECRET_KEY`, event ticket checkout fails at the point of creating a Stripe session (everything up to and including 100%-off/free tickets still works, since those skip Stripe entirely).
+Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verification, password reset, event invites) print to the console instead of sending — fine for local dev. In any environment where they are set, real migrated user data means every outgoing account email is still redirected to a safe address by default (`EMAIL_SAFE_MODE`, on unless explicitly set to `off`) — see `src/lib/emailSafeMode.ts`. Without `STRIPE_SECRET_KEY`, event ticket checkout fails at the point of creating a Stripe session (everything up to and including 100%-off/free tickets still works, since those skip Stripe entirely).
 
 ## Status
 

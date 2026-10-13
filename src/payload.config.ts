@@ -1,3 +1,4 @@
+import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
@@ -8,6 +9,8 @@ import type { Plugin } from 'payload'
 import { fileURLToPath } from 'url'
 import nodemailer from 'nodemailer'
 import sharp from 'sharp'
+
+import { applyEmailSafeMode } from './lib/emailSafeMode'
 
 import { AccessProviders } from './collections/AccessProviders'
 import { Articles } from './collections/Articles'
@@ -49,7 +52,7 @@ import { tmogImportTask } from './jobs/tmogImportTask'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-const hasMandrillConfig = Boolean(process.env.MANDRILL_SMTP_HOST && process.env.MANDRILL_API_KEY)
+const hasSesConfig = Boolean(process.env.SES_ACCESS_KEY_ID && process.env.SES_SECRET_ACCESS_KEY)
 
 // S3-compatible file storage (AWS S3 or Cloudflare R2) — leave S3_BUCKET
 // unset in development to keep using local disk. Files stay served through
@@ -161,24 +164,43 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI || '',
     },
   }),
-  email: hasMandrillConfig
-    ? nodemailerAdapter({
-        defaultFromAddress: process.env.MANDRILL_FROM_ADDRESS || 'no-reply@nicotine360.org',
-        defaultFromName: 'Nicotine360',
-        transport: nodemailer.createTransport({
-          host: process.env.MANDRILL_SMTP_HOST,
-          port: Number(process.env.MANDRILL_SMTP_PORT) || 587,
-          auth: {
-            user: process.env.MANDRILL_SMTP_USER || 'apikey',
-            pass: process.env.MANDRILL_API_KEY,
-          },
-        }),
-      })
-    : nodemailerAdapter({
-        defaultFromAddress: 'no-reply@nicotine360.org',
-        defaultFromName: 'Nicotine360 (dev)',
-        // No MANDRILL_* env set: print emails to the console instead of sending them.
-        transport: nodemailer.createTransport(consoleEmailTransport),
-      }),
+  email: (() => {
+    // Everything moved to SES (no more Mandrill) — same AWS credentials the
+    // publication-issue bulk sender uses (src/lib/ses/), so there's one
+    // email-sending system end to end rather than two.
+    const transport = hasSesConfig
+      ? nodemailer.createTransport(
+          // @types/nodemailer's createTransport overloads don't cover the
+          // {SES: {...}} shorthand (it has no dependency on @aws-sdk/client-ses
+          // types) — this is still real, documented nodemailer behavior:
+          // https://nodemailer.com/transports/ses/
+          {
+            SES: {
+              ses: new SESClient({
+                region: process.env.SES_REGION || 'us-east-1',
+                credentials: {
+                  accessKeyId: process.env.SES_ACCESS_KEY_ID!,
+                  secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
+                },
+              }),
+              aws: { SendRawEmailCommand },
+            },
+          } as Parameters<typeof nodemailer.createTransport>[0],
+        )
+      : // No SES_* env set: print emails to the console instead of sending them.
+        nodemailer.createTransport(consoleEmailTransport)
+
+    // Real migrated user data lives in this environment — this is the hard
+    // safety net against ever emailing one of them by accident. See
+    // src/lib/emailSafeMode.ts; requires an explicit EMAIL_SAFE_MODE=off to
+    // actually deliver to a real recipient.
+    applyEmailSafeMode(transport)
+
+    return nodemailerAdapter({
+      defaultFromAddress: process.env.SES_FROM_ADDRESS || 'no-reply@nicotine360.org',
+      defaultFromName: 'Nicotine360',
+      transport,
+    })
+  })(),
   sharp,
 })
