@@ -201,7 +201,7 @@ export default buildConfig({
       // bulk sends, src/lib/ses/) — different MAIL FROM domain so a
       // newsletter send's bounce/complaint rate can't drag down deliverability
       // for password resets and other must-arrive account email.
-      defaultFromAddress: process.env.SES_ACCOUNT_FROM_ADDRESS || 'no-reply@nicotine360.org',
+      defaultFromAddress: process.env.SES_ACCOUNT_FROM_ADDRESS || 'no-reply@accounts.nicotine360.org',
       defaultFromName: 'Nicotine360',
       transport,
     })
