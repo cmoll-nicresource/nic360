@@ -1,8 +1,10 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import { s3Storage } from '@payloadcms/storage-s3'
 import path from 'path'
 import { buildConfig } from 'payload'
+import type { Plugin } from 'payload'
 import { fileURLToPath } from 'url'
 import nodemailer from 'nodemailer'
 import sharp from 'sharp'
@@ -48,6 +50,35 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 const hasMandrillConfig = Boolean(process.env.MANDRILL_SMTP_HOST && process.env.MANDRILL_API_KEY)
+
+// S3-compatible file storage (AWS S3 or Cloudflare R2) — leave S3_BUCKET
+// unset in development to keep using local disk. Files stay served through
+// Payload's own /api/{collection}/file route either way (no
+// disablePayloadAccessControl), so plan-gated files like guide-files still
+// go through real access control rather than a public bucket URL.
+const plugins: Plugin[] = []
+if (process.env.S3_BUCKET) {
+  plugins.push(
+    s3Storage({
+      collections: {
+        media: true,
+        'guide-files': true,
+      },
+      bucket: process.env.S3_BUCKET,
+      config: {
+        region: process.env.S3_REGION || 'auto',
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+        },
+        endpoint: process.env.S3_ENDPOINT,
+        // R2 and most non-AWS S3-compatible endpoints need path-style
+        // requests (bucket.s3.endpoint -> s3.endpoint/bucket).
+        forcePathStyle: true,
+      },
+    }),
+  )
+}
 
 export default buildConfig({
   admin: {
@@ -110,6 +141,7 @@ export default buildConfig({
     PageViews,
   ],
   globals: [MailchimpSettings],
+  plugins,
   jobs: {
     tasks: [tmogImportTask],
     // Ticks the 'tmog-import' queue every Friday at 12:00 UTC: picks up
