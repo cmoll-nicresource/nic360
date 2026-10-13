@@ -197,7 +197,11 @@ export default buildConfig({
     applyEmailSafeMode(transport)
 
     return nodemailerAdapter({
-      defaultFromAddress: process.env.SES_FROM_ADDRESS || 'no-reply@nicotine360.org',
+      // Deliberately separate from SES_FROM_ADDRESS (used for publication
+      // bulk sends, src/lib/ses/) — different MAIL FROM domain so a
+      // newsletter send's bounce/complaint rate can't drag down deliverability
+      // for password resets and other must-arrive account email.
+      defaultFromAddress: process.env.SES_ACCOUNT_FROM_ADDRESS || 'no-reply@nicotine360.org',
       defaultFromName: 'Nicotine360',
       transport,
     })
