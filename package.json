@@ -4,6 +4,7 @@
   "description": "Nicotine360 remake: Payload CMS 3 + Next.js",
   "license": "UNLICENSED",
   "type": "module",
+  "packageManager": "pnpm@12.10.1",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" payload build",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
