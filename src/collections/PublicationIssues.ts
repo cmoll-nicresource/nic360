@@ -18,7 +18,7 @@ export const PublicationIssues: CollectionConfig = {
   admin: {
     group: ADMIN_GROUPS.publishing,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'publication', 'issueDate', 'email'],
+    defaultColumns: ['title', '_status', 'publication', 'issueDate', 'email'],
     components: {
       edit: {
         beforeDocumentControls: [
@@ -118,9 +118,16 @@ export const PublicationIssues: CollectionConfig = {
         },
         { name: 'previewText', label: 'Preview text', type: 'text' },
         {
+          name: 'provider',
+          type: 'select',
+          admin: { readOnly: true, description: 'Which sender actually sent this issue.' },
+          options: ['mailchimp', 'ses'],
+        },
+        {
           name: 'campaignId',
+          label: 'Campaign/message ref',
           type: 'text',
-          admin: { readOnly: true, description: 'Set when the campaign is created.' },
+          admin: { readOnly: true, description: 'Mailchimp campaign id, or the SES send batch, set when sent.' },
         },
         {
           name: 'status',
@@ -131,6 +138,32 @@ export const PublicationIssues: CollectionConfig = {
         },
         { name: 'sentAt', type: 'date', admin: { readOnly: true } },
         { name: 'sentBy', type: 'relationship', relationTo: 'staff', admin: { readOnly: true } },
+      ],
+    },
+    {
+      name: 'legacyId',
+      type: 'text',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description: "Old site's publications.id (the per-issue table, confusingly not publication_categories), for migration idempotency.",
+      },
+    },
+    {
+      name: 'stats',
+      label: 'Delivery stats',
+      type: 'group',
+      admin: {
+        description:
+          "Engagement counts, filled in by whichever provider sent this issue (Mailchimp's reporting API, or the SES event webhook). See /admin/analytics for aggregate reporting.",
+      },
+      fields: [
+        { name: 'recipientCount', label: 'Recipients', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+        { name: 'delivered', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+        { name: 'opens', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+        { name: 'clicks', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+        { name: 'bounces', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+        { name: 'complaints', type: 'number', defaultValue: 0, admin: { readOnly: true } },
       ],
     },
   ],

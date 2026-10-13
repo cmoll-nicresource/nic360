@@ -93,6 +93,12 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
         },
       ],
       sponsors: [sponsors['Altria Group'], sponsors['Philip Morris International']],
+      speakers: [
+        speakers['Dr. Amara Nwosu'],
+        speakers['Carlos Mendez'],
+        speakers['Hiroshi Tanaka'],
+        speakers['Priya Ramaswamy'],
+      ],
       _status: 'published',
     },
     overrideAccess: true,
@@ -120,6 +126,7 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
         },
       ],
       sponsors: [sponsors['KT&G']],
+      speakers: [speakers['Dr. Lena Fischer']],
       _status: 'published',
     },
     overrideAccess: true,
@@ -143,6 +150,7 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
           virtual: { price: 0 },
         },
       ],
+      speakers: [speakers['Dr. Lena Fischer'], speakers['Priya Ramaswamy']],
       _status: 'published',
     },
     overrideAccess: true,
@@ -299,4 +307,123 @@ export async function seedDiscountCodeAndDemoPurchase(
     `  Order ${order.id}: 2 tickets to GTNF 2026 for ${buyer.email} + ${colleague.email}, ` +
       `discount code NRC25 applied, total $${pricing.total}.`,
   )
+}
+
+/**
+ * Turns on InFocus's livestream (one Vimeo embed for the whole event — see
+ * docs/entity-map.md's "Livestream attendance" section), registers a
+ * handful of virtual attendees, and seeds livestream-pings for most of them
+ * — so the attendee report (/staff/events/:id/manage) has real data to show
+ * right after `pnpm seed`, not just an empty table.
+ *
+ * Pings are real Payload `create()` calls, so their `createdAt` is "now" —
+ * there's no supported way to backdate it through the local API. The
+ * session's own day/startTime/endTime are therefore also set to bracket
+ * "now" (not whenever the event itself happens to be scheduled), purely so
+ * the seeded pings land inside the session's window for the report to match
+ * against; this is a seed-data compromise; real pings vs. real session
+ * schedules naturally need no such trick.
+ */
+export async function seedVirtualAttendeesAndWatchData(payload: Payload, infocusId: number) {
+  console.log('Seeding a livestream and virtual attendee presence data for InFocus...')
+
+  const infocus = await payload.findByID({ collection: 'events', id: infocusId, overrideAccess: true })
+  const ticketType = findTicketType(infocus, 'Webinar Access')
+  if (!ticketType) {
+    console.log('  Skipped: expected a "Webinar Access" ticket type on InFocus.')
+    return
+  }
+
+  const { docs: sessions } = await payload.find({
+    collection: 'sessions',
+    where: { event: { equals: infocusId } },
+    limit: 1,
+    overrideAccess: true,
+  })
+  const session = sessions[0]
+  if (!session) {
+    console.log('  Skipped: no session found for InFocus.')
+    return
+  }
+
+  // A real, embeddable public Vimeo video standing in for the livestream.
+  await payload.update({
+    collection: 'events',
+    id: infocusId,
+    data: { hasLivestream: true, livestreamUrl: 'https://vimeo.com/76979871' },
+    overrideAccess: true,
+  })
+
+  const now = new Date()
+  const sessionStart = new Date(now.getTime() - 30 * 60 * 1000)
+  const sessionEnd = new Date(now.getTime() + 30 * 60 * 1000)
+  await payload.update({
+    collection: 'sessions',
+    id: session.id,
+    data: { day: now.toISOString(), startTime: sessionStart.toISOString(), endTime: sessionEnd.toISOString() },
+    overrideAccess: true,
+  })
+
+  const { docs: users } = await payload.find({ collection: 'users', limit: 6, sort: 'email', overrideAccess: true })
+  if (users.length === 0) {
+    console.log('  Skipped: no seeded users found.')
+    return
+  }
+
+  const order = await payload.create({
+    collection: 'orders',
+    data: {
+      buyer: users[0].id,
+      event: infocusId,
+      subtotal: 0,
+      discount: 0,
+      total: 0,
+      status: 'paid',
+      paidAt: new Date().toISOString(),
+      paymentRef: 'seed_webinar_free',
+    },
+    overrideAccess: true,
+  })
+
+  // Varying engagement so the report shows a realistic mix: pinged in for
+  // most of the session, pinged in briefly, and never opened the stream.
+  // Each unit is one ping — matches LivestreamPresence's real 2-minute interval.
+  const pingCounts: (number | null)[] = [25, 10, 2, null, null]
+
+  let registeredCount = 0
+  let pingedCount = 0
+  for (let i = 0; i < Math.min(users.length, pingCounts.length); i++) {
+    const user = users[i]
+    await payload.create({
+      collection: 'event-registrations',
+      data: {
+        order: order.id,
+        event: infocusId,
+        attendee: user.id,
+        attendeeName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email,
+        attendeeEmail: user.email,
+        ticketType: ticketType.name,
+        attendance: 'virtual',
+        priceBasis: 'standard',
+        amountPaid: 0,
+        status: 'active',
+      },
+      overrideAccess: true,
+    })
+    registeredCount++
+
+    const count = pingCounts[i]
+    if (count) {
+      for (let p = 0; p < count; p++) {
+        await payload.create({
+          collection: 'livestream-pings',
+          data: { event: infocusId, user: user.id },
+          overrideAccess: true,
+        })
+      }
+      pingedCount++
+    }
+  }
+
+  console.log(`  Registered ${registeredCount} virtual attendee(s) for InFocus; ${pingedCount} have livestream presence data.`)
 }

@@ -35,15 +35,24 @@ export default async function DatasetViewerPage({ params }: { params: Promise<{ 
   return (
     <>
       <SiteNav />
-      <div className="page">
+      <div className="page-wide">
         <p>
           <Link href="/datasets">&larr; All datasets</Link>
         </p>
-        <h1>
-          {dataset.icon ? `${dataset.icon} ` : ''}
-          {dataset.title}
-        </h1>
-        {dataset.description && <p className="muted">{dataset.description}</p>}
+        <div className="dashboard-header">
+          <div>
+            <h1>
+              {dataset.icon ? `${dataset.icon} ` : ''}
+              {dataset.title}
+            </h1>
+            {dataset.description && <p className="muted">{dataset.description}</p>}
+          </div>
+          {canRead && (
+            <a href={`/api/datasets/${dataset.id}/export`} className="btn btn-secondary">
+              Download CSV
+            </a>
+          )}
+        </div>
 
         {!canRead ? (
           <div className="locked-content">
@@ -51,14 +60,9 @@ export default async function DatasetViewerPage({ params }: { params: Promise<{ 
             <Link href="/account">Sign in</Link>
           </div>
         ) : (
-          <>
-            <p>
-              <a href={`/api/datasets/${dataset.id}/export`}>Download CSV</a>
-            </p>
-            <div className="card">
-              <DatasetGrid datasetId={String(dataset.id)} />
-            </div>
-          </>
+          <div className="card">
+            <DatasetGrid datasetId={String(dataset.id)} />
+          </div>
         )}
       </div>
     </>

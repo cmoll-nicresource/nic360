@@ -1,4 +1,13 @@
 type Option = { id: number | string; name: string }
+type Filters = {
+  sector?: string
+  product?: string
+  subject?: string
+  location?: string
+  keyword?: string
+  dateFrom?: string
+  dateTo?: string
+}
 
 export function ExcerptFilterBar({
   basePath,
@@ -13,10 +22,24 @@ export function ExcerptFilterBar({
   products: Option[]
   subjects: Option[]
   locations: Option[]
-  filters: { sector?: string; product?: string; subject?: string; location?: string }
+  filters: Filters
 }) {
+  const hasAnyFilter = Object.values(filters).some(Boolean)
+
   return (
     <form method="get" action={basePath} className="card filter-bar">
+      <label>
+        Keyword
+        <input type="search" name="keyword" defaultValue={filters.keyword ?? ''} placeholder="Search…" />
+      </label>
+      <label>
+        From
+        <input type="date" name="dateFrom" defaultValue={filters.dateFrom ?? ''} />
+      </label>
+      <label>
+        To
+        <input type="date" name="dateTo" defaultValue={filters.dateTo ?? ''} />
+      </label>
       <label>
         Sector
         <select name="sector" defaultValue={filters.sector ?? ''}>
@@ -62,7 +85,7 @@ export function ExcerptFilterBar({
         </select>
       </label>
       <button type="submit">Apply filters</button>
-      {(filters.sector || filters.product || filters.subject || filters.location) && (
+      {hasAnyFilter && (
         <a href={basePath} className="clear-filters">
           Clear
         </a>

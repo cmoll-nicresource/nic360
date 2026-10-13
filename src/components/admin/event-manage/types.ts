@@ -1,0 +1,21 @@
+import type { DiscountCode, Event, EventRegistration, Session, Speaker, Sponsor } from '@/payload-types'
+import type { AttendeeReportRow, AttendeeReportTotals, SessionPopularityRow } from '@/lib/eventAnalytics'
+
+export type SimpleUser = { id: number; email: string; firstName?: string | null; lastName?: string | null }
+export type SimpleAccessProvider = { id: number; name: string }
+
+export type EventManageDashboardProps = {
+  event: Event
+  sessions: Session[]
+  allSponsors: Sponsor[]
+  allSpeakers: Speaker[]
+  allUsers: SimpleUser[]
+  discountCodes: DiscountCode[]
+  registrations: EventRegistration[]
+  accessProviders: SimpleAccessProvider[]
+  canManageRegistrations: boolean
+  adminEditUrl: string
+  attendeeReport: AttendeeReportRow[]
+  attendeeReportTotals: AttendeeReportTotals
+  sessionPopularity: SessionPopularityRow[]
+}

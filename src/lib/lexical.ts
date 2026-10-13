@@ -32,3 +32,20 @@ export function lexicalFromParagraphs(paragraphs: string[]) {
 export function lexicalFromText(text: string) {
   return lexicalFromParagraphs([text])
 }
+
+type LexicalNode = { text?: string; children?: LexicalNode[] }
+
+/** Strips a Lexical richText document down to plain text, for building a search index. Walks every node's children and joins all `text` leaves with spaces. */
+export function lexicalToPlainText(doc: unknown): string {
+  const root = (doc as { root?: LexicalNode } | null | undefined)?.root
+  if (!root) return ''
+
+  const parts: string[] = []
+  const visit = (node: LexicalNode) => {
+    if (typeof node.text === 'string' && node.text) parts.push(node.text)
+    node.children?.forEach(visit)
+  }
+  visit(root)
+
+  return parts.join(' ').replace(/\s+/g, ' ').trim()
+}

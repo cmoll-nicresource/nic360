@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import config from '@/payload.config'
 import { getMailchimpClient } from '@/lib/mailchimp'
+import { flagUserByEmail } from '@/lib/emailFlags'
 
 /**
  * Mailchimp's one exception to "our site is the source of truth": an
@@ -21,38 +22,10 @@ export async function POST(request: Request) {
   const event = client.parseUnsubscribeWebhook(body)
   if (!event) return NextResponse.json({ ok: true, ignored: true })
 
-  const { docs } = await payload.find({
-    collection: 'users',
-    where: { email: { equals: event.email } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  })
-  const user = docs[0]
-  if (!user) return NextResponse.json({ ok: true, userNotFound: true })
+  const flagId = await flagUserByEmail(payload, event.email, event.reason, event.occurredAt)
+  if (!flagId) return NextResponse.json({ ok: true, userNotFound: true })
 
-  const publicationsBefore = user.emailPublications ?? []
-
-  await payload.update({
-    collection: 'users',
-    id: user.id,
-    data: { emailPublications: [] },
-    overrideAccess: true,
-  })
-
-  const flag = await payload.create({
-    collection: 'email-flags',
-    data: {
-      user: user.id,
-      reason: event.reason,
-      occurredAt: event.occurredAt,
-      publicationsBefore,
-      status: 'open',
-    },
-    overrideAccess: true,
-  })
-
-  return NextResponse.json({ ok: true, flagId: flag.id })
+  return NextResponse.json({ ok: true, flagId })
 }
 
 // Mailchimp (and most webhook providers) GET the URL once to verify it exists.

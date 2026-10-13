@@ -31,5 +31,14 @@ export const Subjects: CollectionConfig = {
         description: 'Leave blank for a top-level subject.',
       },
     },
+    {
+      name: 'legacyId',
+      type: 'text',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Old site\'s taxonomies.id, for matching excerpt_indices during migration.',
+      },
+    },
   ],
 }

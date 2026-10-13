@@ -1,9 +1,9 @@
 import type { Field } from 'payload'
 
 /**
- * Lets importers (StateNet, the USPTO feed, a future articles crawler)
- * upsert by externalId without creating duplicates. Manual entry just
- * leaves this at its default.
+ * Lets importers (StateNet, the USPTO feed, the browser extension) upsert
+ * by externalId without creating duplicates. Manual entry just leaves this
+ * at its default.
  */
 export function ingestionField(): Field {
   return {
@@ -17,7 +17,7 @@ export function ingestionField(): Field {
         name: 'source',
         type: 'select',
         defaultValue: 'manual',
-        options: ['manual', 'statenet', 'uspto'],
+        options: ['manual', 'statenet', 'uspto', 'extension', 'migration'],
       },
       {
         name: 'externalId',

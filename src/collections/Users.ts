@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { assignAccessProviderOnVerify } from '@/hooks/assignAccessProviderOnVerify'
+import { setLastLoginAt } from '@/hooks/setLastLoginAt'
 import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
 import { SITE_URL } from '@/lib/env'
@@ -15,7 +16,7 @@ export const Users: CollectionConfig = {
   admin: {
     group: ADMIN_GROUPS.accounts,
     useAsTitle: 'email',
-    defaultColumns: ['email', 'firstName', 'lastName', 'accessProvider', 'status'],
+    defaultColumns: ['email', 'firstName', 'lastName', 'accessProvider', 'status', 'lastLoginAt'],
     description: 'Readers: members using a company subscription, or event attendees.',
   },
   auth: {
@@ -45,6 +46,7 @@ export const Users: CollectionConfig = {
   },
   hooks: {
     afterChange: [assignAccessProviderOnVerify, syncMailchimpOnUserChange],
+    afterLogin: [setLastLoginAt],
   },
   fields: [
     {
@@ -117,6 +119,17 @@ export const Users: CollectionConfig = {
       label: 'Profile picture',
       type: 'upload',
       relationTo: 'media',
+    },
+    {
+      name: 'lastLoginAt',
+      label: 'Last login',
+      type: 'date',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        date: { pickerAppearance: 'dayAndTime' },
+        description: 'Set automatically on login.',
+      },
     },
     {
       name: 'status',

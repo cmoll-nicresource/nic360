@@ -27,7 +27,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const isReader = !!user && 'collection' in user && user.collection === 'users'
   const plan = isReader ? await getReaderPlan(user, payload) : 'none'
   const isSubscriber = planSatisfies(plan, 'base')
-  const canSeeReplay = Boolean(event.hasReplay) && isReader && (await hasActiveRegistration(payload, user, event.id))
+  const isRegistered = isReader && (await hasActiveRegistration(payload, user, event.id))
+  const canSeeReplay = Boolean(event.hasReplay) && isRegistered
+  const canSeeLivestream = Boolean(event.hasLivestream) && isRegistered
 
   const { docs: sessions } = await payload.find({
     collection: 'sessions',
@@ -58,6 +60,21 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         {event.description && (
           <div className="card">
             <RichText data={event.description} />
+          </div>
+        )}
+
+        {event.hasLivestream && (
+          <div className="card">
+            <h2>Livestream</h2>
+            {canSeeLivestream ? (
+              <p>
+                <Link href={`/events/${event.id}/livestream`} className="btn">
+                  Watch the livestream →
+                </Link>
+              </p>
+            ) : (
+              <p className="muted">The livestream is available to registered attendees.</p>
+            )}
           </div>
         )}
 

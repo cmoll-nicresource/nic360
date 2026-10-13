@@ -6,6 +6,21 @@ import React, { useEffect, useMemo, useState } from 'react'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
+// Matches the brand palette in src/app/(frontend)/styles.css (--nrc-* vars)
+// instead of AG Grid Community's default look.
+const brandGridTheme = themeQuartz.withParams({
+  accentColor: 'var(--nrc-primary)',
+  borderColor: 'var(--nrc-border)',
+  fontFamily: 'var(--font-sans), system-ui, sans-serif',
+  headerBackgroundColor: 'var(--nrc-primary-dark)',
+  headerTextColor: '#ffffff',
+  headerFontWeight: 600,
+  oddRowBackgroundColor: 'var(--nrc-bg)',
+  rowHoverColor: '#e3eef8',
+  wrapperBorder: '1px solid var(--nrc-border)',
+  wrapperBorderRadius: 10,
+})
+
 type Column = {
   key?: string | null
   label: string
@@ -50,7 +65,7 @@ export function DatasetGrid({ datasetId }: { datasetId: string }) {
   return (
     <div style={{ height: 520 }}>
       <AgGridReact
-        theme={themeQuartz}
+        theme={brandGridTheme}
         columnDefs={columnDefs}
         rowData={rows}
         pagination

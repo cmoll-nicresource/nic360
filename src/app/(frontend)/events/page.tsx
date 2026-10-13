@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import Link from 'next/link'
 import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
+import { ScheduleIcon } from '@/components/brandIcons'
 
 import config from '@/payload.config'
 import { CHANNELS } from '@/config/channels'
@@ -23,7 +24,10 @@ export default async function EventsPage() {
     <>
       <SiteNav />
       <div className="page">
-        <h1>Events</h1>
+        <h1 className="page-heading">
+          <ScheduleIcon />
+          Events
+        </h1>
         <div className="card">
           {events.map((e) => (
             <Link key={e.id} href={`/events/${e.id}`} className="excerpt-list-item">

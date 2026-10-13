@@ -25,6 +25,11 @@ import { ImportDataLink as ImportDataLink_ad0ba29dad1742e54ea075b1abe92653 } fro
 import { BuildFromRulesButton as BuildFromRulesButton_98e18b5c6bc086120f80ba3668b17121 } from '../../../components/admin/BuildFromRulesButton'
 import { SendIssueButtons as SendIssueButtons_f2e6e440952be4366e071120771276c6 } from '../../../components/admin/SendIssueButtons'
 import { ReAddButton as ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705 } from '../../../components/admin/ReAddButton'
+import { ManageEventLink as ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c } from '../../../components/admin/ManageEventLink'
+import { Icon as Icon_16e62c7e42dfe7700742ba3a13bf8900 } from '../../../components/admin/graphics/Icon'
+import { Logo as Logo_13338d86bf8cb9661b50b401726320cd } from '../../../components/admin/graphics/Logo'
+import { AnalyticsNavLink as AnalyticsNavLink_dfaa68b15b5cb19cfd188d894db3d451 } from '../../../components/admin/AnalyticsNavLink'
+import { AnalyticsView as AnalyticsView_68c573d130feaef34f843da1220968e1 } from '../../../components/admin/analytics/AnalyticsView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -56,5 +61,10 @@ export const importMap = {
   "./components/admin/BuildFromRulesButton#BuildFromRulesButton": BuildFromRulesButton_98e18b5c6bc086120f80ba3668b17121,
   "./components/admin/SendIssueButtons#SendIssueButtons": SendIssueButtons_f2e6e440952be4366e071120771276c6,
   "./components/admin/ReAddButton#ReAddButton": ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705,
+  "./components/admin/ManageEventLink#ManageEventLink": ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c,
+  "./components/admin/graphics/Icon#Icon": Icon_16e62c7e42dfe7700742ba3a13bf8900,
+  "./components/admin/graphics/Logo#Logo": Logo_13338d86bf8cb9661b50b401726320cd,
+  "./components/admin/AnalyticsNavLink#AnalyticsNavLink": AnalyticsNavLink_dfaa68b15b5cb19cfd188d894db3d451,
+  "./components/admin/analytics/AnalyticsView#AnalyticsView": AnalyticsView_68c573d130feaef34f843da1220968e1,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

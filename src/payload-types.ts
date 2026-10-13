@@ -87,17 +87,22 @@ export interface Config {
     'guide-files': GuideFile;
     publications: Publication;
     'publication-issues': PublicationIssue;
+    'publication-ads': PublicationAd;
     'email-flags': EmailFlag;
     'trademark-import-runs': TrademarkImportRun;
     'mailchimp-outbox': MailchimpOutbox;
+    'ses-outbox': SesOutbox;
     speakers: Speaker;
     sponsors: Sponsor;
     events: Event;
     sessions: Session;
+    'livestream-pings': LivestreamPing;
     'discount-codes': DiscountCode;
     orders: Order;
     'event-registrations': EventRegistration;
+    'page-views': PageView;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -108,6 +113,9 @@ export interface Config {
     };
     'access-providers': {
       users: 'users';
+    };
+    speakers: {
+      events: 'events';
     };
     sponsors: {
       events: 'events';
@@ -142,17 +150,22 @@ export interface Config {
     'guide-files': GuideFilesSelect<false> | GuideFilesSelect<true>;
     publications: PublicationsSelect<false> | PublicationsSelect<true>;
     'publication-issues': PublicationIssuesSelect<false> | PublicationIssuesSelect<true>;
+    'publication-ads': PublicationAdsSelect<false> | PublicationAdsSelect<true>;
     'email-flags': EmailFlagsSelect<false> | EmailFlagsSelect<true>;
     'trademark-import-runs': TrademarkImportRunsSelect<false> | TrademarkImportRunsSelect<true>;
     'mailchimp-outbox': MailchimpOutboxSelect<false> | MailchimpOutboxSelect<true>;
+    'ses-outbox': SesOutboxSelect<false> | SesOutboxSelect<true>;
     speakers: SpeakersSelect<false> | SpeakersSelect<true>;
     sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
+    'livestream-pings': LivestreamPingsSelect<false> | LivestreamPingsSelect<true>;
     'discount-codes': DiscountCodesSelect<false> | DiscountCodesSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'event-registrations': EventRegistrationsSelect<false> | EventRegistrationsSelect<true>;
+    'page-views': PageViewsSelect<false> | PageViewsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -163,9 +176,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'mailchimp-settings': MailchimpSetting;
+    'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     'mailchimp-settings': MailchimpSettingsSelect<false> | MailchimpSettingsSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -173,7 +188,13 @@ export interface Config {
   };
   user: Staff | User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      'import-uspto-trademarks': TaskImportUsptoTrademarks;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -295,6 +316,10 @@ export interface User {
       )
     | null;
   avatar?: (number | null) | Media;
+  /**
+   * Set automatically on login.
+   */
+  lastLoginAt?: string | null;
   status: 'active' | 'suspended';
   /**
    * Set automatically when a verified email matches a provider's allowed domains. Empty for event-only attendees.
@@ -414,6 +439,10 @@ export interface Publication {
   slug: string;
   description?: string | null;
   thumbnail?: (number | null) | Media;
+  /**
+   * Which tracking categories this publication draws from — a publication can belong to more than one (e.g. an executive summary covering news and legislation). Groups this publication in the main nav's Publications dropdown and on the Publications page.
+   */
+  category: ('news' | 'legislation' | 'trademarks')[];
   format: 'excerpt-list' | 'pdf-report' | 'custom-html';
   frequency: 'daily' | 'weekly' | 'monthly';
   /**
@@ -451,6 +480,14 @@ export interface Publication {
     thenGroupBy?: ('none' | 'region' | 'country' | 'primarySubject' | 'sector' | 'product' | 'excerptType') | null;
     sortBy?: ('sourceDateDesc' | 'sourceDateAsc' | 'title') | null;
   };
+  /**
+   * Rendered before the tracking content / PDF download link in every issue (email and web). Trusted HTML (editor-role+ only), not sanitized further.
+   */
+  header?: string | null;
+  /**
+   * Rendered after the tracking content / PDF download link in every issue (email and web).
+   */
+  footer?: string | null;
   mailchimp?: {
     /**
      * This publication's checkbox in the audience's Publications interest group.
@@ -525,6 +562,10 @@ export interface Subject {
    * Leave blank for a top-level subject.
    */
   parent?: (number | null) | Subject;
+  /**
+   * Old site's taxonomies.id, for matching excerpt_indices during migration.
+   */
+  legacyId?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -608,6 +649,11 @@ export interface Event {
       )
     | null;
   hasReplay?: boolean | null;
+  hasLivestream?: boolean | null;
+  /**
+   * The event's one Vimeo livestream embed — update it as needed on each day of the event. Readable only by attendees registered for the event, once Livestream is on.
+   */
+  livestreamUrl?: string | null;
   tagline?: string | null;
   image?: (number | null) | Media;
   description?: {
@@ -701,6 +747,10 @@ export interface Event {
     | null;
   sponsors?: (number | Sponsor)[] | null;
   /**
+   * This event's speaker roster. Sessions pick moderators/speakers independently.
+   */
+  speakers?: (number | Speaker)[] | null;
+  /**
    * Build the agenda from here.
    */
   sessions?: {
@@ -721,7 +771,10 @@ export interface Event {
 export interface Sponsor {
   id: number;
   name: string;
-  logo: number | Media;
+  /**
+   * Blank for migrated sponsors — the old site never stored a logo image, only the company name.
+   */
+  logo?: (number | null) | Media;
   description: {
     root: {
       type: string;
@@ -740,6 +793,30 @@ export interface Sponsor {
   website?: string | null;
   /**
    * Reverse of each event's Sponsors field.
+   */
+  events?: {
+    docs?: (number | Event)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Shared across events; used for both moderators and speakers. Shows current role/company, including on past events.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "speakers".
+ */
+export interface Speaker {
+  id: number;
+  name: string;
+  role?: string | null;
+  company?: string | null;
+  headshot?: (number | null) | Media;
+  bio?: string | null;
+  /**
+   * Reverse of each event's Speakers field.
    */
   events?: {
     docs?: (number | Event)[];
@@ -788,22 +865,6 @@ export interface Session {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * Shared across events; used for both moderators and speakers. Shows current role/company, including on past events.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "speakers".
- */
-export interface Speaker {
-  id: number;
-  name: string;
-  role?: string | null;
-  company?: string | null;
-  headshot?: (number | null) | Media;
-  bio?: string | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * Given to certain companies for 25-100% off a set number of tickets.
@@ -888,16 +949,17 @@ export interface Article {
     };
     [k: string]: unknown;
   };
-  locations: (number | Location)[];
-  sectors: (number | Sector)[];
-  products: (number | Product)[];
-  primarySubject: number | Subject;
-  subjects: (number | Subject)[];
+  locations?: (number | Location)[] | null;
+  sectors?: (number | Sector)[] | null;
+  products?: (number | Product)[] | null;
+  primarySubject?: (number | null) | Subject;
+  subjects?: (number | Subject)[] | null;
   ingestion?: {
-    source?: ('manual' | 'statenet' | 'uspto') | null;
+    source?: ('manual' | 'statenet' | 'uspto' | 'extension' | 'migration') | null;
     externalId?: string | null;
     importedAt?: string | null;
   };
+  searchText?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -913,9 +975,9 @@ export interface Bill {
   billType: 'Bill' | 'Resolution' | 'Amendment' | 'Executive Order' | 'Regulation';
   billNumber: string;
   title: string;
-  locations: (number | Location)[];
+  locations?: (number | Location)[] | null;
   session?: string | null;
-  governmentLevel: 'Federal' | 'State/Province' | 'Local' | 'International';
+  governmentLevel?: ('Federal' | 'State/Province' | 'Local' | 'International') | null;
   billDate: string;
   approvalDate?: string | null;
   effectiveDate?: string | null;
@@ -959,10 +1021,10 @@ export interface Bill {
     };
     [k: string]: unknown;
   };
-  sectors: (number | Sector)[];
-  products: (number | Product)[];
-  primarySubject: number | Subject;
-  subjects: (number | Subject)[];
+  sectors?: (number | Sector)[] | null;
+  products?: (number | Product)[] | null;
+  primarySubject?: (number | null) | Subject;
+  subjects?: (number | Subject)[] | null;
   relatedArticles?: (number | Article)[] | null;
   latestActivity?: string | null;
   latestText?: string | null;
@@ -984,10 +1046,11 @@ export interface Bill {
       }[]
     | null;
   ingestion?: {
-    source?: ('manual' | 'statenet' | 'uspto') | null;
+    source?: ('manual' | 'statenet' | 'uspto' | 'extension' | 'migration') | null;
     externalId?: string | null;
     importedAt?: string | null;
   };
+  searchText?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1025,9 +1088,16 @@ export interface Trademark {
     owner?: string | null;
     address?: string | null;
   };
-  image: number | Media;
+  /**
+   * Every class's GoodsServicesDescriptionText, joined.
+   */
+  goods?: string | null;
+  /**
+   * Blank when the USPTO image endpoint 404s for this mark (word-only marks, or not yet available).
+   */
+  image?: (number | null) | Media;
   ingestion?: {
-    source?: ('manual' | 'statenet' | 'uspto') | null;
+    source?: ('manual' | 'statenet' | 'uspto' | 'extension' | 'migration') | null;
     externalId?: string | null;
     importedAt?: string | null;
   };
@@ -1068,6 +1138,10 @@ export interface Dataset {
   id: number;
   title: string;
   description?: string | null;
+  /**
+   * Groups this dataset under Policy / Markets / Trade in the main nav and the Data page.
+   */
+  category: 'policy' | 'markets' | 'trade';
   /**
    * An emoji or short icon name shown on the dataset card.
    */
@@ -1141,6 +1215,10 @@ export interface Guide {
   thumbnail?: (number | null) | Media;
   file: number | GuideFile;
   slug: string;
+  /**
+   * Most guides require Premium. Turn this off for the handful open to Base subscribers too.
+   */
+  requiresPremium?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1242,16 +1320,66 @@ export interface PublicationIssue {
     subject?: string | null;
     previewText?: string | null;
     /**
-     * Set when the campaign is created.
+     * Which sender actually sent this issue.
+     */
+    provider?: ('mailchimp' | 'ses') | null;
+    /**
+     * Mailchimp campaign id, or the SES send batch, set when sent.
      */
     campaignId?: string | null;
     status?: ('not sent' | 'sending' | 'sent' | 'failed') | null;
     sentAt?: string | null;
     sentBy?: (number | null) | Staff;
   };
+  /**
+   * Old site's publications.id (the per-issue table, confusingly not publication_categories), for migration idempotency.
+   */
+  legacyId?: string | null;
+  /**
+   * Engagement counts, filled in by whichever provider sent this issue (Mailchimp's reporting API, or the SES event webhook). See /admin/analytics for aggregate reporting.
+   */
+  stats?: {
+    recipientCount?: number | null;
+    delivered?: number | null;
+    opens?: number | null;
+    clicks?: number | null;
+    bounces?: number | null;
+    complaints?: number | null;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Image ads sold per publication. While its campaign is active, a ranked ad rotates into the slot before story 1, 3, 5… of every issue sent (rank 1 fills the earliest slot).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publication-ads".
+ */
+export interface PublicationAd {
+  id: number;
+  /**
+   * Internal label (the sponsor's name) — not shown to readers.
+   */
+  advertiser: string;
+  publication: number | Publication;
+  image: number | Media;
+  link: string;
+  /**
+   * Lower rank fills the earlier slot (before story 1, then 3, then 5…).
+   */
+  rank: number;
+  startDate: string;
+  endDate: string;
+  /**
+   * Filled in automatically. "Impressions" counts issue sends this ad was placed in (not reader-level opens — Mailchimp doesn't give us per-recipient delivery counts the way SES does).
+   */
+  stats?: {
+    impressions?: number | null;
+    clicks?: number | null;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * A queue of unsubscribes and delivery problems to follow up on.
@@ -1281,6 +1409,10 @@ export interface EmailFlag {
  */
 export interface TrademarkImportRun {
   id: number;
+  /**
+   * The Gazette issue (always a Tuesday) this run processed. Used to skip issues that already succeeded.
+   */
+  issueDate?: string | null;
   startedAt: string;
   finishedAt?: string | null;
   status: 'running' | 'succeeded' | 'failed';
@@ -1288,8 +1420,12 @@ export interface TrademarkImportRun {
   counts?: {
     new?: number | null;
     updated?: number | null;
+    published?: number | null;
+    registered?: number | null;
     renewals?: number | null;
     cancellations?: number | null;
+    imagesSaved?: number | null;
+    imagesMissing?: number | null;
   };
   issuesCreated?: (number | PublicationIssue)[] | null;
   error?: string | null;
@@ -1326,6 +1462,53 @@ export interface MailchimpOutbox {
   createdAt: string;
 }
 /**
+ * Simulated SES sends. In simulated mode this is how a publication send gets reviewed — the full rendered HTML is logged here instead of being sent.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ses-outbox".
+ */
+export interface SesOutbox {
+  id: number;
+  issue?: (number | null) | PublicationIssue;
+  subject: string;
+  recipientCount: number;
+  /**
+   * The full rendered email HTML.
+   */
+  html?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One row per attendee per ping while their livestream page tab is open — see src/components/LivestreamPresence.tsx. A presence log, not duration: the attendee report matches each attendee's ping timestamps against the session schedule to estimate which panels they were likely watching.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "livestream-pings".
+ */
+export interface LivestreamPing {
+  id: number;
+  event: number | Event;
+  user: number | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A log of which reader visited which front-end page and when, for first-party traffic reporting (no third-party analytics). Staff visits are not tracked. See /staff/analytics for the dashboard.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-views".
+ */
+export interface PageView {
+  id: number;
+  path: string;
+  /**
+   * Blank for a signed-out visitor. Staff visits are never logged.
+   */
+  visitor?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1341,6 +1524,107 @@ export interface PayloadKv {
     | number
     | boolean
     | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'import-uspto-trademarks';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'import-uspto-trademarks') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1426,6 +1710,10 @@ export interface PayloadLockedDocument {
         value: number | PublicationIssue;
       } | null)
     | ({
+        relationTo: 'publication-ads';
+        value: number | PublicationAd;
+      } | null)
+    | ({
         relationTo: 'email-flags';
         value: number | EmailFlag;
       } | null)
@@ -1436,6 +1724,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'mailchimp-outbox';
         value: number | MailchimpOutbox;
+      } | null)
+    | ({
+        relationTo: 'ses-outbox';
+        value: number | SesOutbox;
       } | null)
     | ({
         relationTo: 'speakers';
@@ -1454,6 +1746,10 @@ export interface PayloadLockedDocument {
         value: number | Session;
       } | null)
     | ({
+        relationTo: 'livestream-pings';
+        value: number | LivestreamPing;
+      } | null)
+    | ({
         relationTo: 'discount-codes';
         value: number | DiscountCode;
       } | null)
@@ -1464,6 +1760,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'event-registrations';
         value: number | EventRegistration;
+      } | null)
+    | ({
+        relationTo: 'page-views';
+        value: number | PageView;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1555,6 +1855,7 @@ export interface UsersSelect<T extends boolean = true> {
   businessSector?: T;
   timezone?: T;
   avatar?: T;
+  lastLoginAt?: T;
   status?: T;
   accessProvider?: T;
   emailPublications?: T;
@@ -1648,6 +1949,7 @@ export interface ProductsSelect<T extends boolean = true> {
 export interface SubjectsSelect<T extends boolean = true> {
   name?: T;
   parent?: T;
+  legacyId?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1700,6 +2002,7 @@ export interface ArticlesSelect<T extends boolean = true> {
         externalId?: T;
         importedAt?: T;
       };
+  searchText?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1759,6 +2062,7 @@ export interface BillsSelect<T extends boolean = true> {
         externalId?: T;
         importedAt?: T;
       };
+  searchText?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1789,6 +2093,7 @@ export interface TrademarksSelect<T extends boolean = true> {
         owner?: T;
         address?: T;
       };
+  goods?: T;
   image?: T;
   ingestion?:
     | T
@@ -1825,6 +2130,7 @@ export interface CountriesSelect<T extends boolean = true> {
 export interface DatasetsSelect<T extends boolean = true> {
   title?: T;
   description?: T;
+  category?: T;
   icon?: T;
   slug?: T;
   columns?:
@@ -1869,6 +2175,7 @@ export interface GuidesSelect<T extends boolean = true> {
   thumbnail?: T;
   file?: T;
   slug?: T;
+  requiresPremium?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1899,6 +2206,7 @@ export interface PublicationsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   thumbnail?: T;
+  category?: T;
   format?: T;
   frequency?: T;
   generator?: T;
@@ -1939,6 +2247,8 @@ export interface PublicationsSelect<T extends boolean = true> {
         thenGroupBy?: T;
         sortBy?: T;
       };
+  header?: T;
+  footer?: T;
   mailchimp?:
     | T
     | {
@@ -1973,14 +2283,47 @@ export interface PublicationIssuesSelect<T extends boolean = true> {
     | {
         subject?: T;
         previewText?: T;
+        provider?: T;
         campaignId?: T;
         status?: T;
         sentAt?: T;
         sentBy?: T;
       };
+  legacyId?: T;
+  stats?:
+    | T
+    | {
+        recipientCount?: T;
+        delivered?: T;
+        opens?: T;
+        clicks?: T;
+        bounces?: T;
+        complaints?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "publication-ads_select".
+ */
+export interface PublicationAdsSelect<T extends boolean = true> {
+  advertiser?: T;
+  publication?: T;
+  image?: T;
+  link?: T;
+  rank?: T;
+  startDate?: T;
+  endDate?: T;
+  stats?:
+    | T
+    | {
+        impressions?: T;
+        clicks?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2001,6 +2344,7 @@ export interface EmailFlagsSelect<T extends boolean = true> {
  * via the `definition` "trademark-import-runs_select".
  */
 export interface TrademarkImportRunsSelect<T extends boolean = true> {
+  issueDate?: T;
   startedAt?: T;
   finishedAt?: T;
   status?: T;
@@ -2010,8 +2354,12 @@ export interface TrademarkImportRunsSelect<T extends boolean = true> {
     | {
         new?: T;
         updated?: T;
+        published?: T;
+        registered?: T;
         renewals?: T;
         cancellations?: T;
+        imagesSaved?: T;
+        imagesMissing?: T;
       };
   issuesCreated?: T;
   error?: T;
@@ -2032,6 +2380,18 @@ export interface MailchimpOutboxSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ses-outbox_select".
+ */
+export interface SesOutboxSelect<T extends boolean = true> {
+  issue?: T;
+  subject?: T;
+  recipientCount?: T;
+  html?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "speakers_select".
  */
 export interface SpeakersSelect<T extends boolean = true> {
@@ -2040,6 +2400,7 @@ export interface SpeakersSelect<T extends boolean = true> {
   company?: T;
   headshot?: T;
   bio?: T;
+  events?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2067,6 +2428,8 @@ export interface EventsSelect<T extends boolean = true> {
   endDate?: T;
   timezone?: T;
   hasReplay?: T;
+  hasLivestream?: T;
+  livestreamUrl?: T;
   tagline?: T;
   image?: T;
   description?: T;
@@ -2113,6 +2476,7 @@ export interface EventsSelect<T extends boolean = true> {
         id?: T;
       };
   sponsors?: T;
+  speakers?: T;
   sessions?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2145,6 +2509,16 @@ export interface SessionsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "livestream-pings_select".
+ */
+export interface LivestreamPingsSelect<T extends boolean = true> {
+  event?: T;
+  user?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2206,11 +2580,53 @@ export interface EventRegistrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-views_select".
+ */
+export interface PageViewsSelect<T extends boolean = true> {
+  path?: T;
+  visitor?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  meta?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2267,12 +2683,40 @@ export interface MailchimpSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "mailchimp-settings_select".
  */
 export interface MailchimpSettingsSelect<T extends boolean = true> {
   audienceId?: T;
   publicationsInterestCategoryId?: T;
   mode?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -2286,6 +2730,22 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskImport-uspto-trademarks".
+ */
+export interface TaskImportUsptoTrademarks {
+  input: {
+    /**
+     * YYYYMMDD. Leave blank to auto-resolve the coming Tuesday (or the most recent postable issue).
+     */
+    issueDate?: string | null;
+  };
+  output: {
+    issueDate?: string | null;
+    skipped?: boolean | null;
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

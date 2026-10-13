@@ -27,8 +27,8 @@ export default async function AccountPage() {
         <div className="page">
           <h1>Account</h1>
           <p>
-            You need to be signed in as a reader to see your account. Staff log in at{' '}
-            <Link href={payloadConfig.routes.admin}>/admin</Link> instead.
+            You need to be signed in as a reader to see your account. <Link href="/login">Sign in</Link>, or
+            staff log in at <Link href={payloadConfig.routes.admin}>/admin</Link> instead.
           </p>
         </div>
       </>

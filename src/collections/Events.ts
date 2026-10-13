@@ -1,7 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { CHANNEL_OPTIONS } from '@/config/channels'
-import { anyoneCanRead, staffCanManageEvents } from '@/access/eventAccess'
+import { anyoneCanRead, canReadLivestream, staffCanManageEvents } from '@/access/eventAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 type DayRow = { date: string; name?: string | null }
@@ -33,6 +33,11 @@ export const Events: CollectionConfig = {
     group: ADMIN_GROUPS.events,
     useAsTitle: 'name',
     defaultColumns: ['name', 'channel', 'startsAt', 'endDate'],
+    components: {
+      edit: {
+        beforeDocumentControls: ['./components/admin/ManageEventLink#ManageEventLink'],
+      },
+    },
   },
   versions: { drafts: true },
   access: {
@@ -82,6 +87,19 @@ export const Events: CollectionConfig = {
       ],
     },
     { name: 'hasReplay', label: 'Replay', type: 'checkbox' },
+    { name: 'hasLivestream', label: 'Livestream', type: 'checkbox' },
+    {
+      name: 'livestreamUrl',
+      label: 'Livestream URL',
+      type: 'text',
+      admin: {
+        description:
+          "The event's one Vimeo livestream embed — update it as needed on each day of the event. Readable only by attendees registered for the event, once Livestream is on.",
+      },
+      access: {
+        read: canReadLivestream,
+      },
+    },
     { name: 'tagline', type: 'text' },
     { name: 'image', label: 'Event image', type: 'upload', relationTo: 'media' },
     { name: 'description', type: 'richText' },
@@ -164,6 +182,13 @@ export const Events: CollectionConfig = {
       type: 'relationship',
       relationTo: 'sponsors',
       hasMany: true,
+    },
+    {
+      name: 'speakers',
+      type: 'relationship',
+      relationTo: 'speakers',
+      hasMany: true,
+      admin: { description: "This event's speaker roster. Sessions pick moderators/speakers independently." },
     },
     {
       name: 'sessions',

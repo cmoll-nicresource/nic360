@@ -49,3 +49,11 @@ export const canReadReplay: FieldAccess = async ({ req, siblingData, data }) => 
 
   return hasActiveRegistration(req.payload, req.user, eventId)
 }
+
+/** Field-level access for Event.livestreamUrl: staff, or an attendee registered for this event, and only once hasLivestream is on. `doc`/`data` is the Event document itself here, so no extra lookup is needed. */
+export const canReadLivestream: FieldAccess = async ({ req, id, doc, data }) => {
+  if (staffHasRole(req.user, 'editor')) return true
+  if (!id || !(doc?.hasLivestream ?? data?.hasLivestream)) return false
+
+  return hasActiveRegistration(req.payload, req.user, Number(id))
+}

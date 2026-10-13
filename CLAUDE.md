@@ -33,13 +33,14 @@ A rebuild of Nicotine360 (nicotine360.org), a subscription news and intelligence
 - `gatekeeper` (2 staff): plus manage Users, Access Providers, discount codes, registrations, EmailFlags.
 - `admin` (Papa): plus manage Staff and global settings.
 
-**Reader access** is decided by content type and the reader's company, never per item:
+**Reader access** is decided by content type and the reader's company — with one per-item exception, Guides:
 
 | Content | Who can read |
 |---|---|
 | Excerpts (Articles, Bills, Trademarks) | Base or Premium |
-| Guides, Publications and Issues | Base or Premium |
+| Publications and Issues | Base or Premium |
 | Data (datasets, rows, downloads) | Premium |
+| Guides | Premium by default; a specific guide can opt into Base access via its own `requiresPremium` field |
 | An Event's restricted content (replays) | Users registered for that event |
 
 - A user's plan comes from their Access Provider: `plan` (None · Base · Premium), with `status` Trial or Live and `licenseExpiresAt` in the future or empty. Anything else means no access.
@@ -98,6 +99,7 @@ Our site is the source of truth for who receives what. Mailchimp only mirrors it
 - Field names and types follow `docs/entity-map.md`. If a field has to change, update the entity map in the same commit.
 - Use Payload drafts (`versions.drafts`) on content collections. Use `join` fields for reverse lists instead of storing both sides.
 - Seed scripts: `pnpm seed` resets and fills every collection with realistic placeholder data (tobacco and nicotine industry flavored, no real personal data).
+- Tests: `pnpm test` (Vitest, `src/**/*.test.ts`) covers pure logic — no DB or network. Add a test alongside any new pure function with real edge cases (parsing, pricing, classification, access rules), not just UI/collection code.
 - Secrets come only from env: `DATABASE_URI`, `PAYLOAD_SECRET`, `S3_*`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `MANDRILL_*`, `MAILCHIMP_API_KEY`, `MAILCHIMP_MODE`. Keep `.env.example` up to date.
 - Keep it simple: this is a prototype for a five-person team. Prefer Payload built-ins over custom infrastructure.
 

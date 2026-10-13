@@ -12,3 +12,11 @@ guide-files
 tsconfig.tsbuildinfo
 next-env.d.ts
 docs/sample-data
+
+# Raw dumps/exports from the old site — real customer data, never committed.
+# Migration *scripts* (migration/*.ts) are tracked normally; only this stays out.
+migration/data
+old-db
+
+# Standalone repo (its own .git) — the Chrome extension, not part of this app's build.
+tma-ext

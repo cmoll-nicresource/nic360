@@ -7,24 +7,33 @@ import config from '@/payload.config'
 import { getReaderPlan, planSatisfies, type ReaderPlan } from '@/access/readerPlan'
 import { SiteNav } from '@/components/SiteNav'
 import { NoSubscriptionNotice } from '@/components/NoSubscriptionNotice'
+import {
+  AnnouncementIcon,
+  DashboardIcon,
+  DocumentationIcon,
+  JournalIcon,
+  LawIcon,
+  ScheduleIcon,
+  StampIcon,
+} from '@/components/brandIcons'
 
 export const dynamic = 'force-dynamic'
 
 type Product = {
   href: string
-  icon: string
+  icon: React.ComponentType<{ className?: string }>
   title: string
   description: string
   requires: 'base' | 'premium'
 }
 
 const PRODUCTS: Product[] = [
-  { href: '/articles', icon: '📰', title: 'Articles', description: 'News from across the industry.', requires: 'base' },
-  { href: '/bills', icon: '🏛️', title: 'Bills', description: 'Legislation tracked via StateNet.', requires: 'base' },
-  { href: '/trademarks', icon: '®️', title: 'Trademarks', description: 'Weekly USPTO filings.', requires: 'base' },
-  { href: '/guides', icon: '📘', title: 'Guides', description: 'Reference guides and how-tos.', requires: 'base' },
-  { href: '/publications', icon: '✉️', title: 'Publications', description: 'Newsletters and issues.', requires: 'base' },
-  { href: '/datasets', icon: '📊', title: 'Data', description: 'Market, tax and trade datasets in AG Grid.', requires: 'premium' },
+  { href: '/articles', icon: AnnouncementIcon, title: 'News', description: 'News from across the industry.', requires: 'base' },
+  { href: '/bills', icon: LawIcon, title: 'Legislation', description: 'Legislation tracked via StateNet.', requires: 'base' },
+  { href: '/trademarks', icon: StampIcon, title: 'Trademarks', description: 'Weekly USPTO filings.', requires: 'base' },
+  { href: '/guides', icon: DocumentationIcon, title: 'Guides', description: 'Reference guides and how-tos.', requires: 'base' },
+  { href: '/publications', icon: JournalIcon, title: 'Publications', description: 'Newsletters and issues.', requires: 'base' },
+  { href: '/datasets', icon: DashboardIcon, title: 'Data', description: 'Market, tax and trade datasets in AG Grid.', requires: 'premium' },
 ]
 
 export default async function DashboardPage() {
@@ -71,25 +80,30 @@ export default async function DashboardPage() {
           <div className="product-grid">
             {PRODUCTS.map((p) => {
               const unlocked = planSatisfies(plan, p.requires)
-              const card = (
-                <div className={`product-card ${unlocked ? '' : 'locked'}`}>
-                  <div className="icon">{p.icon}</div>
+              const Icon = p.icon
+              const inner = (
+                <>
+                  <div className="icon">
+                    <Icon />
+                  </div>
                   <h3>{p.title}</h3>
                   <p>{unlocked ? p.description : `${p.description} Premium only.`}</p>
-                </div>
+                </>
               )
               return unlocked ? (
-                <Link key={p.href} href={p.href} className="product-card" style={{ display: 'block' }}>
-                  <div className="icon">{p.icon}</div>
-                  <h3>{p.title}</h3>
-                  <p>{p.description}</p>
+                <Link key={p.href} href={p.href} className="product-card">
+                  {inner}
                 </Link>
               ) : (
-                <div key={p.href}>{card}</div>
+                <div key={p.href} className="product-card locked">
+                  {inner}
+                </div>
               )
             })}
             <Link href="/events" className="product-card">
-              <div className="icon">🎟️</div>
+              <div className="icon">
+                <ScheduleIcon />
+              </div>
               <h3>Events</h3>
               <p>Conferences and webinars — open to everyone, ticketed separately.</p>
             </Link>

@@ -23,5 +23,12 @@ export const Speakers: CollectionConfig = {
     { name: 'company', type: 'text' },
     { name: 'headshot', type: 'upload', relationTo: 'media' },
     { name: 'bio', type: 'textarea' },
+    {
+      name: 'events',
+      type: 'join',
+      collection: 'events',
+      on: 'speakers',
+      admin: { description: "Reverse of each event's Speakers field." },
+    },
   ],
 }

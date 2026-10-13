@@ -29,7 +29,7 @@ export const Datasets: CollectionConfig = {
   admin: {
     group: ADMIN_GROUPS.data,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'slug'],
+    defaultColumns: ['title', 'category', 'slug'],
     description: 'Staff-defined flat tables: define columns, then import a spreadsheet of rows.',
     components: {
       edit: {
@@ -55,6 +55,20 @@ export const Datasets: CollectionConfig = {
     {
       name: 'description',
       type: 'textarea',
+    },
+    {
+      name: 'category',
+      type: 'select',
+      required: true,
+      defaultValue: 'markets',
+      options: [
+        { label: 'Policy', value: 'policy' },
+        { label: 'Markets', value: 'markets' },
+        { label: 'Trade', value: 'trade' },
+      ],
+      admin: {
+        description: 'Groups this dataset under Policy / Markets / Trade in the main nav and the Data page.',
+      },
     },
     {
       name: 'icon',

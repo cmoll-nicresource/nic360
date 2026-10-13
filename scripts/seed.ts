@@ -16,23 +16,47 @@ import {
   seedEmailFlags,
   seedIssuesAndSendDemo,
   seedMailchimpSettings,
+  seedPublicationAds,
+  seedPublicationEngagementHistory,
   seedPublications,
 } from './seed/publications'
-import { seedDiscountCodeAndDemoPurchase, seedEvents, seedSpeakersAndSponsors } from './seed/events'
+import {
+  seedDiscountCodeAndDemoPurchase,
+  seedEvents,
+  seedSpeakersAndSponsors,
+  seedVirtualAttendeesAndWatchData,
+} from './seed/events'
 
 const ALL = { id: { exists: true } } as const
 
 const WIPE_ORDER = [
-  'orders',
+  // event-registrations must be wiped before orders: it holds a required,
+  // non-cascading FK to orders, so deleting orders first aborts the
+  // transaction with "current transaction is aborted" on whatever runs next.
   'event-registrations',
+  'orders',
   'discount-codes',
+  // livestream-pings holds required relationships to both events and users
+  // (blocking, non-cascading FKs per the established pattern), so it must
+  // be wiped before either.
+  'livestream-pings',
   'sessions',
   'events',
   'speakers',
   'sponsors',
   'mailchimp-outbox',
+  'page-views',
   'email-flags',
+  // ses-outbox references publication-issues via an optional relationship,
+  // which Payload backs with an ON DELETE SET NULL FK (verified against the
+  // real schema) — order here isn't strictly required, unlike
+  // event-registrations/orders above, but wiping it first costs nothing.
+  'ses-outbox',
   'publication-issues',
+  // publication-ads holds required relationships to both publications and
+  // media (blocking, non-cascading FKs per the established pattern — see
+  // the event-registrations/orders note above), so it must be wiped first.
+  'publication-ads',
   'publications',
   'trademark-import-runs',
   'bills',
@@ -74,7 +98,9 @@ async function main() {
 
   await seedMailchimpSettings(payload)
   const publications = await seedPublications(payload)
+  await seedPublicationAds(payload, publications)
   await seedIssuesAndSendDemo(payload, publications)
+  await seedPublicationEngagementHistory(payload, publications)
   await seedEmailFlags(payload, publications)
 
   console.log('Setting a couple of readers\' publication preferences (exercises the Mailchimp sync hook)...')
@@ -91,11 +117,12 @@ async function main() {
   }
 
   const { speakers, sponsors } = await seedSpeakersAndSponsors(payload)
-  const { gtnf } = await seedEvents(payload, speakers, sponsors)
+  const { gtnf, infocus } = await seedEvents(payload, speakers, sponsors)
   await seedDiscountCodeAndDemoPurchase(payload, gtnf.id, async (name) => {
     const { docs } = await payload.find({ collection: 'access-providers', where: { name: { equals: name } }, limit: 1, overrideAccess: true })
     return docs[0]?.id
   })
+  await seedVirtualAttendeesAndWatchData(payload, infocus.id)
 
   console.log('\nAccess summary (via getReaderPlan, the shared helper):\n')
   const { docs: allUsers } = await payload.find({

@@ -9,7 +9,7 @@ export const TrademarkImportRuns: CollectionConfig = {
   admin: {
     group: ADMIN_GROUPS.system,
     useAsTitle: 'id',
-    defaultColumns: ['status', 'startedAt', 'finishedAt'],
+    defaultColumns: ['issueDate', 'status', 'startedAt', 'finishedAt'],
     description: 'A log of each automated USPTO pull, so failures are visible.',
   },
   access: {
@@ -19,6 +19,15 @@ export const TrademarkImportRuns: CollectionConfig = {
     delete: staffHasMinRole('admin'),
   },
   fields: [
+    {
+      name: 'issueDate',
+      label: 'TMOG issue date',
+      type: 'date',
+      admin: {
+        date: { pickerAppearance: 'dayOnly' },
+        description: "The Gazette issue (always a Tuesday) this run processed. Used to skip issues that already succeeded.",
+      },
+    },
     { name: 'startedAt', type: 'date', required: true },
     { name: 'finishedAt', type: 'date' },
     {
@@ -35,8 +44,12 @@ export const TrademarkImportRuns: CollectionConfig = {
       fields: [
         { name: 'new', type: 'number', defaultValue: 0 },
         { name: 'updated', type: 'number', defaultValue: 0 },
+        { name: 'published', label: 'Published (kept)', type: 'number', defaultValue: 0 },
+        { name: 'registered', label: 'Registered (kept)', type: 'number', defaultValue: 0 },
         { name: 'renewals', type: 'number', defaultValue: 0 },
         { name: 'cancellations', type: 'number', defaultValue: 0 },
+        { name: 'imagesSaved', label: 'Images saved', type: 'number', defaultValue: 0 },
+        { name: 'imagesMissing', label: 'Images missing (404)', type: 'number', defaultValue: 0 },
       ],
     },
     {

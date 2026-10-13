@@ -18,7 +18,12 @@ export const Sponsors: CollectionConfig = {
   },
   fields: [
     { name: 'name', label: 'Company', type: 'text', required: true },
-    { name: 'logo', type: 'upload', relationTo: 'media', required: true },
+    {
+      name: 'logo',
+      type: 'upload',
+      relationTo: 'media',
+      admin: { description: 'Blank for migrated sponsors — the old site never stored a logo image, only the company name.' },
+    },
     { name: 'description', type: 'richText', required: true },
     { name: 'website', type: 'text' },
     {

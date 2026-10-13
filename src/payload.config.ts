@@ -19,14 +19,18 @@ import { EventRegistrations } from './collections/EventRegistrations'
 import { Events } from './collections/Events'
 import { GuideFiles } from './collections/GuideFiles'
 import { Guides } from './collections/Guides'
+import { LivestreamPings } from './collections/LivestreamPings'
 import { Locations } from './collections/Locations'
 import { MailchimpOutbox } from './collections/MailchimpOutbox'
 import { Media } from './collections/Media'
 import { Orders } from './collections/Orders'
+import { PageViews } from './collections/PageViews'
 import { Products } from './collections/Products'
+import { PublicationAds } from './collections/PublicationAds'
 import { PublicationIssues } from './collections/PublicationIssues'
 import { Publications } from './collections/Publications'
 import { Sectors } from './collections/Sectors'
+import { SesOutbox } from './collections/SesOutbox'
 import { Sessions } from './collections/Sessions'
 import { Sources } from './collections/Sources'
 import { Speakers } from './collections/Speakers'
@@ -38,6 +42,7 @@ import { Trademarks } from './collections/Trademarks'
 import { Users } from './collections/Users'
 import { MailchimpSettings } from './globals/MailchimpSettings'
 import { consoleEmailTransport } from './lib/consoleEmailTransport'
+import { tmogImportTask } from './jobs/tmogImportTask'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -49,6 +54,24 @@ export default buildConfig({
     user: Staff.slug,
     importMap: {
       baseDir: path.resolve(dirname),
+    },
+    components: {
+      afterNavLinks: ['./components/admin/AnalyticsNavLink#AnalyticsNavLink'],
+      graphics: {
+        Logo: './components/admin/graphics/Logo#Logo',
+        Icon: './components/admin/graphics/Icon#Icon',
+      },
+      views: {
+        analytics: {
+          Component: './components/admin/analytics/AnalyticsView#AnalyticsView',
+          path: '/analytics',
+          meta: { title: 'Analytics' },
+        },
+      },
+    },
+    meta: {
+      titleSuffix: '- Nic360',
+      icons: [{ url: '/icon.png', type: 'image/png' }],
     },
   },
   collections: [
@@ -71,18 +94,31 @@ export default buildConfig({
     GuideFiles,
     Publications,
     PublicationIssues,
+    PublicationAds,
     EmailFlags,
     TrademarkImportRuns,
     MailchimpOutbox,
+    SesOutbox,
     Speakers,
     Sponsors,
     Events,
     Sessions,
+    LivestreamPings,
     DiscountCodes,
     Orders,
     EventRegistrations,
+    PageViews,
   ],
   globals: [MailchimpSettings],
+  jobs: {
+    tasks: [tmogImportTask],
+    // Ticks the 'tmog-import' queue every Friday at 12:00 UTC: picks up
+    // whatever's queued (including the job the task's own `schedule` just
+    // auto-queued for this tick) and runs it. Not used on serverless hosts,
+    // but this project deploys as a persistent Railway service, so the
+    // in-process cron check is fine.
+    autoRun: [{ cron: '0 12 * * 5', queue: 'tmog-import', limit: 1 }],
+  },
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

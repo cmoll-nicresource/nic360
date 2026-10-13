@@ -4,13 +4,15 @@ import { anyoneCanReadTeaser, canReadFullContent, staffCanWrite } from '@/access
 import { indexTermFields } from '@/fields/indexTerms'
 import { ingestionField } from '@/fields/ingestion'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
+import { buildSearchTextHook } from '@/hooks/buildSearchText'
 
 export const Bills: CollectionConfig = {
   slug: 'bills',
+  labels: { singular: 'Legislation', plural: 'Legislation' },
   admin: {
-    group: ADMIN_GROUPS.excerpts,
+    group: ADMIN_GROUPS.tracking,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'billNumber', 'governmentLevel', 'billDate'],
+    defaultColumns: ['title', '_status', 'primarySubject', 'locations', 'billNumber', 'governmentLevel', 'billDate'],
     description: 'Legislation tracked via StateNet, summarized and categorized.',
   },
   versions: {
@@ -21,6 +23,9 @@ export const Bills: CollectionConfig = {
     create: staffCanWrite,
     update: staffCanWrite,
     delete: staffCanWrite,
+  },
+  hooks: {
+    beforeChange: [buildSearchTextHook(['abstract', 'fullText'])],
   },
   fields: [
     {
@@ -59,7 +64,6 @@ export const Bills: CollectionConfig = {
               type: 'relationship',
               relationTo: 'locations',
               hasMany: true,
-              required: true,
             },
             {
               type: 'row',
@@ -74,7 +78,6 @@ export const Bills: CollectionConfig = {
                   name: 'governmentLevel',
                   label: 'Government level',
                   type: 'select',
-                  required: true,
                   options: ['Federal', 'State/Province', 'Local', 'International'],
                 },
               ],
@@ -205,5 +208,11 @@ export const Bills: CollectionConfig = {
       ],
     },
     ingestionField(),
+    {
+      name: 'searchText',
+      type: 'text',
+      admin: { hidden: true },
+      access: { read: () => false },
+    },
   ],
 }

@@ -14,6 +14,10 @@ pnpm dev                 # http://localhost:3000
 
 Admin panel: `/admin`. Every seeded account's password is `ChangeMe123!` (printed by `pnpm seed`).
 
+## Testing
+
+`pnpm test` runs the unit test suite (Vitest, `src/**/*.test.ts`) — no database or network needed; it covers pure logic only (reader access plan derivation, event ticket pricing, CSV import mapping, the TMOG trademark-feed parser and classifier). `pnpm test:watch` reruns on change. There's no integration/e2e layer yet — collection access rules, hooks and API routes are still verified manually.
+
 Without `MANDRILL_SMTP_HOST`/`MANDRILL_API_KEY` set, account emails (verification, password reset, event invites) print to the console instead of sending — fine for local dev. Without `STRIPE_SECRET_KEY`, event ticket checkout fails at the point of creating a Stripe session (everything up to and including 100%-off/free tickets still works, since those skip Stripe entirely).
 
 ## Status
@@ -51,7 +55,7 @@ Without `MANDRILL_SMTP_HOST`/`MANDRILL_API_KEY` set, account emails (verificatio
 - `src/lib/issueEmail.ts` renders an Issue into the email template for its format. Both "Build from rules" and "Send"/"Send test" are buttons on the Issue's admin edit screen (`admin.components.edit.beforeDocumentControls`), calling `/api/publication-issues/[id]/build-from-rules` and `/api/publication-issues/[id]/send`; Send asks for confirmation and locks the issue against re-sending once it reports `sent`.
 - `/api/mailchimp/webhook` is the one exception to "our site is the source of truth": an unsubscribe/spam-complaint/cleaned event clears the reader's `emailPublications` and opens an `EmailFlag`; its admin-screen "Re-add" button restores their prior choices (which re-triggers the sync hook) and resolves the flag.
 - `src/hooks/syncMailchimpOnUserChange.ts` keeps Mailchimp in sync whenever a reader's name, email, provider or publication choices change, and defensively clears preferences if they're no longer Base/Premium-eligible (e.g. their company's license expired) — the account page's preference picker is also gated on eligibility.
-- `src/lib/trademarkReportJob.ts`: a fixture stands in for the USPTO feed (`docs/sample-data/uspto-fixture.json`); upserts Trademarks by serial number, and drafts the Weekly/Monthly trademark report issues when there's something to report. Triggered manually at `/staff/trademark-reports` (a real deployment would run this on a schedule) and logged to `trademark-import-runs`.
+- `src/lib/trademarkReportJob.ts`: a fixture stand-in (`docs/sample-data/uspto-fixture.json`), kept for offline testing. Superseded as the production path by `src/lib/tmog/*`, which streams and parses the real USPTO Trademark Official Gazette feed and runs weekly via Payload's job-queue cron (`src/jobs/tmogImportTask.ts`) — see `docs/entity-map.md`'s Trademark reports section for the full pipeline. Both share `src/lib/trademarkReportIssues.ts` for drafting the Weekly/Monthly report issues, and both log to `trademark-import-runs`. Manual triggers for either live at `/staff/trademark-reports`.
 - `/publications` → `/publications/[slug]` → `/publications/[slug]/issues/[id]` (Base+ gated, draft issues hidden from readers).
 - `pnpm seed` creates 5 publications, builds one issue from rules and sends it for real (same code path as the admin buttons) so the outbox has a genuine example, plus a ready-to-try draft issue, an EmailFlag, and sets two readers' preferences (exercising the sync hook).
 

@@ -4,13 +4,15 @@ import { anyoneCanReadTeaser, canReadFullContent, staffCanWrite } from '@/access
 import { indexTermFields } from '@/fields/indexTerms'
 import { ingestionField } from '@/fields/ingestion'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
+import { buildSearchTextHook } from '@/hooks/buildSearchText'
 
 export const Articles: CollectionConfig = {
   slug: 'articles',
+  labels: { singular: 'News Item', plural: 'News' },
   admin: {
-    group: ADMIN_GROUPS.excerpts,
+    group: ADMIN_GROUPS.tracking,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'source', 'sourceDate', 'primarySubject'],
+    defaultColumns: ['title', '_status', 'primarySubject', 'locations', 'source', 'sourceDate'],
     description: 'News found across the internet; we take the title and a preview and index it.',
   },
   versions: {
@@ -21,6 +23,9 @@ export const Articles: CollectionConfig = {
     create: staffCanWrite,
     update: staffCanWrite,
     delete: staffCanWrite,
+  },
+  hooks: {
+    beforeChange: [buildSearchTextHook(['excerpt'])],
   },
   fields: [
     {
@@ -61,5 +66,11 @@ export const Articles: CollectionConfig = {
     },
     ...indexTermFields(),
     ingestionField(),
+    {
+      name: 'searchText',
+      type: 'text',
+      admin: { hidden: true },
+      access: { read: () => false },
+    },
   ],
 }

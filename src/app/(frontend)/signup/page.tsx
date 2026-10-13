@@ -10,7 +10,7 @@ export default function SignupPage() {
       <div className="page">
         <h1>Create your account</h1>
         <p className="muted">
-          Already have an account? <a href="/account">Sign in</a>.
+          Already have an account? <a href="/login">Sign in</a>.
         </p>
         <SignupWizard />
       </div>

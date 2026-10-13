@@ -1,1 +1,198 @@
 /* Payload admin panel style overrides go here. */
+
+/* Analytics custom view (/admin/analytics) */
+.nic-analytics {
+  max-width: 1100px;
+}
+
+.nic-analytics__muted {
+  color: var(--theme-elevation-500);
+  font-size: 13px;
+}
+
+.nic-analytics__tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--theme-border-color);
+  margin-bottom: 20px;
+}
+
+.nic-analytics__tab {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-elevation-500);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.nic-analytics__tab:hover {
+  color: var(--theme-text);
+}
+
+.nic-analytics__tab--active {
+  color: var(--theme-success-500);
+  border-bottom-color: var(--theme-success-500);
+  font-weight: 600;
+}
+
+.nic-analytics__card {
+  background: var(--theme-input-bg);
+  border: 1px solid var(--theme-border-color);
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.nic-analytics__card h3 {
+  margin-top: 0;
+}
+
+.nic-analytics__stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.nic-analytics__stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+
+.nic-analytics__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.nic-analytics__rank-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--theme-border-color);
+  color: var(--theme-text);
+  text-decoration: none;
+}
+
+.nic-analytics__rank-row:last-child {
+  border-bottom: none;
+}
+
+.nic-analytics__rank-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nic-analytics__pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--theme-elevation-150);
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.nic-analytics__picker {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.nic-analytics__picker select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--theme-border-color);
+  border-radius: 4px;
+  background: var(--theme-input-bg);
+  color: var(--theme-text);
+}
+
+.nic-analytics__picker button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid var(--theme-success-500);
+  background: var(--theme-success-500);
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.nic-analytics__user-search {
+  position: relative;
+  margin-bottom: 16px;
+  max-width: 420px;
+}
+
+.nic-analytics__user-search-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--theme-border-color);
+  border-radius: 4px;
+  background: var(--theme-input-bg);
+  color: var(--theme-text);
+}
+
+.nic-analytics__user-search-results {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--theme-bg);
+  border: 1px solid var(--theme-border-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nic-analytics__user-search-status {
+  padding: 8px 10px;
+  color: var(--theme-elevation-500);
+  font-size: 13px;
+}
+
+.nic-analytics__user-search-result {
+  display: block;
+  padding: 8px 10px;
+  color: var(--theme-text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--theme-elevation-150);
+}
+
+.nic-analytics__user-search-result:last-child {
+  border-bottom: none;
+}
+
+.nic-analytics__user-search-result:hover {
+  background: var(--theme-elevation-100);
+}
+
+.nic-analytics__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.nic-analytics__table th,
+.nic-analytics__table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--theme-border-color);
+  font-size: 13px;
+}
+
+.nic-analytics__table th {
+  color: var(--theme-elevation-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}

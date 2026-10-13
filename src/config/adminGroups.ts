@@ -6,7 +6,7 @@
 export const ADMIN_GROUPS = {
   accounts: 'Accounts & Access',
   taxonomy: 'Taxonomy',
-  excerpts: 'Excerpts',
+  tracking: 'Tracking',
   publishing: 'Guides & Publications',
   data: 'Data',
   events: 'Events',

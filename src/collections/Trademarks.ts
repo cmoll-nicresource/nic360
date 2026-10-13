@@ -13,7 +13,7 @@ const yesNoNA = [
 export const Trademarks: CollectionConfig = {
   slug: 'trademarks',
   admin: {
-    group: ADMIN_GROUPS.excerpts,
+    group: ADMIN_GROUPS.tracking,
     useAsTitle: 'title',
     defaultColumns: ['title', 'serialNumber', 'owner', 'publishedDate'],
     description: 'Scraped weekly from the USPTO XML feed: filings, renewals, cancellations.',
@@ -115,11 +115,17 @@ export const Trademarks: CollectionConfig = {
       ],
     },
     {
+      name: 'goods',
+      label: 'Goods / services',
+      type: 'textarea',
+      admin: { description: "Every class's GoodsServicesDescriptionText, joined." },
+    },
+    {
       name: 'image',
       label: 'Trademark image',
       type: 'upload',
       relationTo: 'media',
-      required: true,
+      admin: { description: 'Blank when the USPTO image endpoint 404s for this mark (word-only marks, or not yet available).' },
     },
     ingestionField(),
   ],

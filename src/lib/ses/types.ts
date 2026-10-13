@@ -1,0 +1,31 @@
+export type SesRecipient = { email: string; userId?: number }
+
+export type SesSendInput = {
+  issueId: number
+  subject: string
+  html: string
+  recipients: SesRecipient[]
+}
+
+export type SesSendResult = { messageCount: number }
+
+export type SesEventType = 'Send' | 'Delivery' | 'Open' | 'Click' | 'Bounce' | 'Complaint'
+
+/** Our normalized shape for one SES Configuration Set event, after unwrapping the SNS envelope. One event can affect several recipients (e.g. a bounce). */
+export type SesEvent = {
+  type: SesEventType
+  emails: string[]
+  issueId?: number
+  occurredAt: string
+  bounceType?: string
+}
+
+/**
+ * Sending and event-tracking for publication issues, as an alternative to
+ * Mailchimp campaigns — see docs/entity-map.md's Email delivery section.
+ * Two implementations chosen by env SES_MODE: simulated (writes to the
+ * ses-outbox collection) and live (real AWS SES, stubbed for now).
+ */
+export interface SesClient {
+  sendBulk(input: SesSendInput): Promise<SesSendResult>
+}

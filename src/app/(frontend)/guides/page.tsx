@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
+import { DocumentationIcon } from '@/components/brandIcons'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
@@ -24,7 +25,10 @@ export default async function GuidesPage() {
     <>
       <SiteNav />
       <div className="page">
-        <h1>Guides</h1>
+        <h1 className="page-heading">
+          <DocumentationIcon />
+          Guides
+        </h1>
         <p className="muted">Readable by any Base or Premium subscriber.</p>
 
         {!canRead ? (

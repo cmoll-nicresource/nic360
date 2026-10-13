@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
-import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
+import { staffCanWrite } from '@/access/excerptAccess'
+import { canReadGuide } from '@/access/guidesAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Guides: CollectionConfig = {
@@ -8,14 +9,16 @@ export const Guides: CollectionConfig = {
   admin: {
     group: ADMIN_GROUPS.publishing,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'slug'],
+    defaultColumns: ['title', 'slug', 'requiresPremium'],
   },
   versions: {
     drafts: true,
   },
   access: {
-    // No public teaser: any subscriber (Base or Premium) can read, nobody else.
-    read: requireBasePlanToRead,
+    // No public teaser. Most guides require Premium; requiresPremium=false
+    // opts a specific guide into Base access too — a real exception, not
+    // the default (see canReadGuide).
+    read: canReadGuide,
     create: staffCanWrite,
     update: staffCanWrite,
     delete: staffCanWrite,
@@ -46,6 +49,15 @@ export const Guides: CollectionConfig = {
       type: 'text',
       required: true,
       unique: true,
+    },
+    {
+      name: 'requiresPremium',
+      type: 'checkbox',
+      defaultValue: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Most guides require Premium. Turn this off for the handful open to Base subscribers too.',
+      },
     },
   ],
 }

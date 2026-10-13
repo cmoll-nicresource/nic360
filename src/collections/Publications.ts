@@ -19,7 +19,7 @@ export const Publications: CollectionConfig = {
   admin: {
     group: ADMIN_GROUPS.publishing,
     useAsTitle: 'title',
-    defaultColumns: ['title', 'format', 'frequency'],
+    defaultColumns: ['title', 'category', 'format', 'frequency'],
     description: 'The newsletter itself, e.g. "US News Clippings". An Issue is one edition of it.',
   },
   access: {
@@ -34,6 +34,22 @@ export const Publications: CollectionConfig = {
     { name: 'slug', type: 'text', required: true, unique: true },
     { name: 'description', type: 'textarea' },
     { name: 'thumbnail', type: 'upload', relationTo: 'media' },
+    {
+      name: 'category',
+      type: 'select',
+      hasMany: true,
+      required: true,
+      defaultValue: ['news'],
+      options: [
+        { label: 'News', value: 'news' },
+        { label: 'Legislation', value: 'legislation' },
+        { label: 'Trademarks', value: 'trademarks' },
+      ],
+      admin: {
+        description:
+          'Which tracking categories this publication draws from — a publication can belong to more than one (e.g. an executive summary covering news and legislation). Groups this publication in the main nav\'s Publications dropdown and on the Publications page.',
+      },
+    },
     {
       name: 'format',
       type: 'select',
@@ -124,6 +140,25 @@ export const Publications: CollectionConfig = {
           ],
         },
       ],
+    },
+    {
+      name: 'header',
+      label: 'Header HTML',
+      type: 'code',
+      admin: {
+        language: 'html',
+        description:
+          'Rendered before the tracking content / PDF download link in every issue (email and web). Trusted HTML (editor-role+ only), not sanitized further.',
+      },
+    },
+    {
+      name: 'footer',
+      label: 'Footer HTML',
+      type: 'code',
+      admin: {
+        language: 'html',
+        description: 'Rendered after the tracking content / PDF download link in every issue (email and web).',
+      },
     },
     {
       name: 'mailchimp',

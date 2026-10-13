@@ -9,6 +9,8 @@ import { SiteNav } from '@/components/SiteNav'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
+import { adSlotCount, getActiveAdsForPublication, isAdSlotBeforeIndex } from '@/lib/publicationAds'
+import type { PublicationAd } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,6 +51,74 @@ export default async function IssueDetailPage({
   )
 }
 
+// pdf-report issues have no "story" list to slot ads between, so instead of
+// a real item count we just allow a flat handful of ad slots — matches the
+// email renderer's PDF_REPORT_AD_ITEM_CAP.
+const PDF_REPORT_AD_ITEM_CAP = 10
+
+function AdCard({ ad }: { ad: PublicationAd }) {
+  const image = typeof ad.image === 'object' ? ad.image : null
+  if (!image?.url) return null
+  return (
+    <div className="nic-ad">
+      <a href={`/api/ads/${ad.id}/click`}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- admin-uploaded ad art of arbitrary size/host; a plain <img> avoids Next's image-domain config for this one case */}
+        <img src={image.url} alt={image.alt || 'Advertisement'} style={{ maxWidth: '100%', display: 'block' }} />
+      </a>
+    </div>
+  )
+}
+
+/**
+ * Renders sections as a flat sequence of headings/lists/ads, flattening the
+ * item count across the whole issue (not restarted per section) — same
+ * placement rule as the email renderer in src/lib/issueEmail.ts.
+ */
+function renderSectionsWithAds(
+  sections: { heading: string; items?: { relationTo: string; value: unknown }[] | null }[],
+  ads: PublicationAd[],
+): React.ReactNode[] {
+  let itemIndex = 0
+  let adIndex = 0
+  let listKey = 0
+  let currentList: React.ReactNode[] = []
+  const output: React.ReactNode[] = []
+
+  const flushList = (key: string) => {
+    if (currentList.length > 0) {
+      output.push(<ul key={`ul-${key}`}>{currentList}</ul>)
+      currentList = []
+    }
+  }
+
+  sections.forEach((section, si) => {
+    output.push(<h3 key={`h-${si}`}>{section.heading}</h3>)
+
+    ;(section.items ?? []).forEach((item, ii) => {
+      if (isAdSlotBeforeIndex(itemIndex) && adIndex < ads.length) {
+        flushList(`${si}-${listKey++}`)
+        output.push(<AdCard key={`ad-${adIndex}`} ad={ads[adIndex]} />)
+        adIndex++
+      }
+
+      if (typeof item.value === 'object' && item.value && 'id' in item.value && 'title' in item.value) {
+        const value = item.value as { id: number; title: string }
+        const href = `/${EXCERPT_PATH[item.relationTo]}/${value.id}`
+        currentList.push(
+          <li key={`item-${si}-${ii}`}>
+            <Link href={href}>{value.title}</Link>
+          </li>,
+        )
+      }
+      itemIndex++
+    })
+
+    flushList(`${si}-${listKey++}`)
+  })
+
+  return output
+}
+
 async function IssueDetail({
   payload,
   id,
@@ -65,9 +135,20 @@ async function IssueDetail({
   if (issue._status !== 'published' && !isStaff) notFound()
 
   const file = issue.file && typeof issue.file === 'object' ? issue.file : null
+  const publication = typeof issue.publication === 'object' ? issue.publication : null
+
+  const adItemCount =
+    issue.format === 'excerpt-list'
+      ? (issue.sections ?? []).reduce((n, s) => n + (s.items?.length ?? 0), 0)
+      : issue.format === 'pdf-report'
+        ? PDF_REPORT_AD_ITEM_CAP
+        : 0
+  const ads = publication ? await getActiveAdsForPublication(payload, publication.id, adSlotCount(adItemCount)) : []
 
   return (
     <>
+      {publication?.header && <div dangerouslySetInnerHTML={{ __html: publication.header }} />}
+
       <h1>{issue.title}</h1>
       <p className="excerpt-meta">
         {new Date(issue.issueDate).toLocaleDateString()} · {issue.email?.status ?? 'not sent'}
@@ -76,27 +157,16 @@ async function IssueDetail({
       {issue.format === 'excerpt-list' && (
         <div className="card">
           {issue.intro && <RichText data={issue.intro} />}
-          {(issue.sections ?? []).map((section, i) => (
-            <div key={i}>
-              <h3>{section.heading}</h3>
-              <ul>
-                {(section.items ?? []).map((item, j) => {
-                  if (typeof item.value !== 'object' || !item.value) return null
-                  return (
-                    <li key={j}>
-                      <Link href={`/${EXCERPT_PATH[item.relationTo]}/${item.value.id}`}>{item.value.title}</Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ))}
+          {renderSectionsWithAds(issue.sections ?? [], ads)}
         </div>
       )}
 
       {issue.format === 'pdf-report' && (
         <div className="card">
           {issue.summary && <RichText data={issue.summary} />}
+          {ads.map((ad) => (
+            <AdCard key={ad.id} ad={ad} />
+          ))}
           {file?.url && <p><a href={file.url}>Download PDF</a></p>}
         </div>
       )}
@@ -104,6 +174,8 @@ async function IssueDetail({
       {issue.format === 'custom-html' && issue.body && (
         <div className="card" dangerouslySetInnerHTML={{ __html: issue.body }} />
       )}
+
+      {publication?.footer && <div dangerouslySetInnerHTML={{ __html: publication.footer }} />}
     </>
   )
 }
