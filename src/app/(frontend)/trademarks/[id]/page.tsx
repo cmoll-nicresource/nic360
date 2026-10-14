@@ -7,6 +7,9 @@ import { SiteNav } from '@/components/SiteNav'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { formatDate } from '@/lib/formatDate'
+import { StatusBadge } from '@/components/StatusBadge'
+import { trademarkStatusPill } from '@/lib/statusPill'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,9 +28,9 @@ export default async function TrademarkDetailPage({ params }: { params: Promise<
     <>
       <SiteNav />
       <div className="page">
-        <p>
-          <Link href="/trademarks">&larr; All trademarks</Link>
-        </p>
+        <div className="breadcrumbs">
+          <Link href="/trademarks">Trademarks</Link>
+        </div>
         {!canRead ? (
           <div className="locked-content">
             Sign in with a Base or Premium subscription to view this trademark.{' '}
@@ -38,6 +41,16 @@ export default async function TrademarkDetailPage({ params }: { params: Promise<
         )}
       </div>
     </>
+  )
+}
+
+function Fact({ label, value }: { label: string; value: React.ReactNode }) {
+  if (value === null || value === undefined || value === '') return null
+  return (
+    <tr>
+      <th>{label}</th>
+      <td>{value}</td>
+    </tr>
   )
 }
 
@@ -54,9 +67,15 @@ async function TrademarkDetail({
   if (!trademark) notFound()
 
   const image = trademark.image && typeof trademark.image === 'object' ? trademark.image : null
+  const usptoUrl = trademark.serialNumber
+    ? `https://tsdr.uspto.gov/#caseNumber=${trademark.serialNumber}&caseType=SERIAL_NO&searchType=statusSearch`
+    : null
 
   return (
     <>
+      <div style={{ marginBottom: 8 }}>
+        <StatusBadge status={trademarkStatusPill(trademark)} />
+      </div>
       <h1>{trademark.title}</h1>
       <p className="excerpt-meta">
         {trademark.owner}
@@ -64,51 +83,51 @@ async function TrademarkDetail({
         {trademark.serialNumber ? ` · Serial ${trademark.serialNumber}` : null}
       </p>
 
+      {image?.url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={image.url}
+          alt={image.alt || trademark.title}
+          style={{ maxWidth: 320, marginBottom: 16, border: '1px solid var(--nrc-border)', borderRadius: 8, padding: 12, background: '#fff' }}
+        />
+      )}
+
       <div className="card">
-        {image?.url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={image.url} alt={image.alt || trademark.title} style={{ maxWidth: 240, marginBottom: 16 }} />
-        )}
         <table>
           <tbody>
-            <tr>
-              <th>Owner address</th>
-              <td>{trademark.ownerAddress || '—'}</td>
-            </tr>
-            <tr>
-              <th>Style / Design</th>
-              <td>
-                {trademark.style ?? '—'} / {trademark.design ?? '—'}
-              </td>
-            </tr>
-            <tr>
-              <th>Filed</th>
-              <td>{trademark.filedDate ? new Date(trademark.filedDate).toLocaleDateString() : '—'}</td>
-            </tr>
-            <tr>
-              <th>Published</th>
-              <td>{trademark.publishedDate ? new Date(trademark.publishedDate).toLocaleDateString() : '—'}</td>
-            </tr>
-            <tr>
-              <th>Registered</th>
-              <td>
-                {trademark.registeredDate ? new Date(trademark.registeredDate).toLocaleDateString() : '—'}
-                {trademark.registrationNumber ? ` (No. ${trademark.registrationNumber})` : null}
-              </td>
-            </tr>
-            <tr>
-              <th>Cancelled</th>
-              <td>{trademark.cancelledDate ? new Date(trademark.cancelledDate).toLocaleDateString() : '—'}</td>
-            </tr>
-            <tr>
-              <th>Renewed</th>
-              <td>
-                {trademark.renewedDate ? new Date(trademark.renewedDate).toLocaleDateString() : '—'}
-                {trademark.renewal?.owner ? ` — ${trademark.renewal.owner}` : null}
-              </td>
-            </tr>
+            <Fact label="Owner address" value={trademark.ownerAddress} />
+            <Fact
+              label="Style / Design"
+              value={trademark.style || trademark.design ? `${trademark.style ?? '—'} / ${trademark.design ?? '—'}` : null}
+            />
+            <Fact label="Filed" value={trademark.filedDate ? formatDate(trademark.filedDate) : null} />
+            <Fact label="Published" value={trademark.publishedDate ? formatDate(trademark.publishedDate) : null} />
+            <Fact
+              label="Registered"
+              value={
+                trademark.registeredDate
+                  ? `${formatDate(trademark.registeredDate)}${trademark.registrationNumber ? ` (No. ${trademark.registrationNumber})` : ''}`
+                  : null
+              }
+            />
+            <Fact label="Cancelled" value={trademark.cancelledDate ? formatDate(trademark.cancelledDate) : null} />
+            <Fact
+              label="Renewed"
+              value={
+                trademark.renewedDate
+                  ? `${formatDate(trademark.renewedDate)}${trademark.renewal?.owner ? ` — ${trademark.renewal.owner}` : ''}`
+                  : null
+              }
+            />
           </tbody>
         </table>
+        {usptoUrl && (
+          <p style={{ marginTop: 16, marginBottom: 0 }}>
+            <a href={usptoUrl} target="_blank" rel="noreferrer">
+              View on USPTO →
+            </a>
+          </p>
+        )}
       </div>
     </>
   )

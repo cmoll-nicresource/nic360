@@ -7,16 +7,17 @@ import React, { useEffect, useMemo, useState } from 'react'
 ModuleRegistry.registerModules([AllCommunityModule])
 
 // Matches the brand palette in src/app/(frontend)/styles.css (--nrc-* vars)
-// instead of AG Grid Community's default look.
+// instead of AG Grid Community's default look. A light header (not a heavy
+// navy bar) so the data carries the color, not the chrome.
 const brandGridTheme = themeQuartz.withParams({
   accentColor: 'var(--nrc-primary)',
   borderColor: 'var(--nrc-border)',
   fontFamily: 'var(--font-sans), system-ui, sans-serif',
-  headerBackgroundColor: 'var(--nrc-primary-dark)',
-  headerTextColor: '#ffffff',
+  headerBackgroundColor: '#f1f4f8',
+  headerTextColor: '#0f1722',
   headerFontWeight: 600,
-  oddRowBackgroundColor: 'var(--nrc-bg)',
-  rowHoverColor: '#e3eef8',
+  oddRowBackgroundColor: '#fff',
+  rowHoverColor: 'var(--nrc-bg)',
   wrapperBorder: '1px solid var(--nrc-border)',
   wrapperBorderRadius: 10,
 })
@@ -47,11 +48,16 @@ export function DatasetGrid({ datasetId }: { datasetId: string }) {
 
   const columnDefs: ColDef[] = useMemo(() => {
     if (!columns) return []
+    const isNumeric = (type: Column['type']) => type === 'number' || type === 'percent' || type === 'year'
     return columns.map((c) => ({
       field: c.key ?? '',
       headerName: c.label,
       filter: c.filterable !== false,
       sortable: c.sortable !== false,
+      flex: 1,
+      minWidth: 120,
+      type: isNumeric(c.type) ? 'rightAligned' : undefined,
+      cellClass: isNumeric(c.type) ? 'num' : undefined,
       valueFormatter:
         c.type === 'percent'
           ? (p) => (p.value === null || p.value === undefined ? '' : `${p.value}%`)
@@ -63,7 +69,7 @@ export function DatasetGrid({ datasetId }: { datasetId: string }) {
   if (!columns || !rows) return <p className="muted">Loading…</p>
 
   return (
-    <div style={{ height: 520 }}>
+    <div style={{ height: 'calc(100vh - 280px)', minHeight: 480 }}>
       <AgGridReact
         theme={brandGridTheme}
         columnDefs={columnDefs}

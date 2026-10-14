@@ -1078,6 +1078,67 @@ a:focus-visible {
   transform: none;
 }
 
+/* Guides: tall cards with a cover thumbnail, instead of a bare underlined list. */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.guide-card {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--nrc-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  color: var(--nrc-ink);
+  transition: box-shadow 0.2s var(--ease-bold), transform 0.2s var(--ease-bold), border-color 0.2s var(--ease-bold);
+}
+
+.guide-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--nrc-primary);
+  transform: translateY(-2px);
+}
+
+.guide-card-cover {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--nrc-border);
+}
+
+.guide-card-body {
+  padding: 16px;
+}
+
+.guide-card-body h3 {
+  margin: 0 0 4px;
+}
+
+.guide-card-body p {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.guide-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 200px) 1fr;
+  gap: 32px;
+}
+
+@media (max-width: 640px) {
+  .guide-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-detail-grid img {
+    max-width: 160px;
+  }
+}
+
 /* Plan comparison (homepage) */
 .plans-section {
   background: #fff;
@@ -1663,6 +1724,9 @@ a:focus-visible {
 
   .filter-details .filter-details-body {
     display: flex !important;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 16px;
   }
 }
 

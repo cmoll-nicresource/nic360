@@ -4,12 +4,20 @@ import { getPayload } from 'payload'
 import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { DashboardIcon } from '@/components/brandIcons'
+import { MarketsIcon, PolicyIcon, TradeIcon } from '@/components/icons'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
+import { formatDate } from '@/lib/formatDate'
 
 export const dynamic = 'force-dynamic'
+
+const CATEGORIES = [
+  { value: 'policy', label: 'Policy', Icon: PolicyIcon },
+  { value: 'markets', label: 'Markets', Icon: MarketsIcon },
+  { value: 'trade', label: 'Trade', Icon: TradeIcon },
+] as const
 
 export default async function DatasetsPage() {
   const headers = await getHeaders()
@@ -28,40 +36,47 @@ export default async function DatasetsPage() {
     overrideAccess: true,
   })
 
-  const CATEGORIES = [
-    { value: 'policy', label: 'Policy' },
-    { value: 'markets', label: 'Markets' },
-    { value: 'trade', label: 'Trade' },
-  ] as const
-
   return (
     <>
       <SiteNav />
-      <div className="page">
-        <h1 className="page-heading">
-          <DashboardIcon />
-          Data
-        </h1>
-        <p className="muted">
-          Staff-maintained reference tables. {!canRead && 'Premium subscription required to view rows.'}
-        </p>
+      <div className="header-band">
+        <div className="header-band-inner">
+          <div>
+            <p className="header-band-eyebrow">Data</p>
+            <h1 className="page-heading">
+              <span className="icon-badge">
+                <DashboardIcon />
+              </span>
+              Data
+            </h1>
+            <p>
+              Market, tax and trade data, researched and updated by our analysts.{' '}
+              {!canRead && 'Premium subscription required to view rows.'}
+            </p>
+          </div>
+          <span className="header-band-meta">{datasets.length} datasets</span>
+        </div>
+      </div>
+      <div className="page" style={{ maxWidth: 'var(--page-wide)' }}>
         {CATEGORIES.map((c) => {
           const inCategory = datasets.filter((d) => d.category === c.value)
           if (inCategory.length === 0) return null
           return (
-            <div key={c.value} style={{ marginBottom: 24 }}>
+            <div key={c.value} style={{ marginBottom: 32 }}>
               <h2>{c.label}</h2>
-              <div className="card">
+              <div className="product-grid">
                 {inCategory.map((d) => (
-                  <Link key={d.id} href={`/datasets/${d.slug}`} className="excerpt-list-item">
-                    <h3>
-                      {d.icon ? `${d.icon} ` : ''}
-                      {d.title}
-                    </h3>
-                    <div className="excerpt-meta">
-                      {d.description || `${d.columns.length} column(s)`}
-                      {d.lastImport?.rowCount ? ` · ${d.lastImport.rowCount} row(s)` : ' · not yet imported'}
+                  <Link key={d.id} href={`/datasets/${d.slug}`} className="product-card">
+                    <div className="icon">
+                      <c.Icon />
                     </div>
+                    <h3>{d.title}</h3>
+                    <p>{d.description || `${d.columns.length} column(s)`}</p>
+                    <p className="muted" style={{ marginTop: 6 }}>
+                      {d.lastImport?.rowCount
+                        ? `${d.lastImport.rowCount.toLocaleString()} rows${d.lastImport.importedAt ? ` · updated ${formatDate(d.lastImport.importedAt)}` : ''}`
+                        : 'Not yet imported'}
+                    </p>
                   </Link>
                 ))}
               </div>

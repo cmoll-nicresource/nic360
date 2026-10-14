@@ -8,6 +8,7 @@ import { SiteNav } from '@/components/SiteNav'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
+import { formatDate } from '@/lib/formatDate'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,9 +27,9 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
     <>
       <SiteNav />
       <div className="page">
-        <p>
-          <Link href="/guides">&larr; All guides</Link>
-        </p>
+        <div className="breadcrumbs">
+          <Link href="/guides">Guides</Link>
+        </div>
         {!canRead ? (
           <div className="locked-content">
             Sign in with a Base or Premium subscription to view this guide.{' '}
@@ -54,20 +55,35 @@ async function GuideDetail({ payload, slug }: { payload: Awaited<ReturnType<type
   if (!guide) notFound()
 
   const file = guide.file && typeof guide.file === 'object' ? guide.file : null
+  const sizeMb = file?.filesize ? (file.filesize / 1024 / 1024).toFixed(1) : null
 
   return (
-    <>
-      <h1>{guide.title}</h1>
-      {guide.description && <p className="muted">{guide.description}</p>}
-      <div className="card">
-        {file?.url ? (
-          <a href={file.url} target="_blank" rel="noreferrer">
-            Download PDF
-          </a>
-        ) : (
-          <p className="muted">No file attached.</p>
-        )}
+    <div className="guide-detail-grid">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`https://placehold.co/400x520/e3e8ee/285888?text=${encodeURIComponent(guide.title)}`}
+        alt=""
+        role="presentation"
+        style={{ width: '100%', borderRadius: 8, border: '1px solid var(--nrc-border)' }}
+      />
+      <div>
+        <h1>{guide.title}</h1>
+        {guide.description && <p className="muted">{guide.description}</p>}
+        <p className="excerpt-meta">
+          {formatDate(guide.updatedAt)}
+          {sizeMb ? <span className="dot">·</span> : null}
+          {sizeMb ? `${sizeMb} MB` : null}
+        </p>
+        <div className="card">
+          {file?.url ? (
+            <a href={file.url} target="_blank" rel="noreferrer" className="btn">
+              Download PDF{sizeMb ? ` (${sizeMb} MB)` : ''}
+            </a>
+          ) : (
+            <p className="muted">No file attached.</p>
+          )}
+        </div>
       </div>
-    </>
+    </div>
   )
 }

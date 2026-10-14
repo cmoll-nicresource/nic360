@@ -9,20 +9,25 @@ export function TrademarkFilterBar({ basePath, filters }: { basePath: string; fi
         Keyword
         <input type="search" name="keyword" defaultValue={filters.keyword ?? ''} placeholder="Brand, owner, goods…" />
       </label>
-      <label>
-        From
-        <input type="date" name="dateFrom" defaultValue={filters.dateFrom ?? ''} />
-      </label>
-      <label>
-        To
-        <input type="date" name="dateTo" defaultValue={filters.dateTo ?? ''} />
-      </label>
-      <button type="submit">Apply filters</button>
-      {hasAnyFilter && (
-        <a href={basePath} className="clear-filters">
-          Clear
-        </a>
-      )}
+      <details className="filter-details">
+        <summary>Filters</summary>
+        <div className="filter-details-body">
+          <label>
+            From
+            <input type="date" name="dateFrom" defaultValue={filters.dateFrom ?? ''} />
+          </label>
+          <label>
+            To
+            <input type="date" name="dateTo" defaultValue={filters.dateTo ?? ''} />
+          </label>
+          <button type="submit">Apply filters</button>
+          {hasAnyFilter && (
+            <a href={basePath} className="clear-filters">
+              Clear
+            </a>
+          )}
+        </div>
+      </details>
     </form>
   )
 }

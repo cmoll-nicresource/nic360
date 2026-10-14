@@ -8,6 +8,7 @@ import { SiteNav } from '@/components/SiteNav'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
+import { formatDate } from '@/lib/formatDate'
 import { DatasetGrid } from '@/components/DatasetGrid'
 
 export const dynamic = 'force-dynamic'
@@ -36,21 +37,31 @@ export default async function DatasetViewerPage({ params }: { params: Promise<{ 
     <>
       <SiteNav />
       <div className="page-wide">
-        <p>
-          <Link href="/datasets">&larr; All datasets</Link>
-        </p>
+        <div className="breadcrumbs">
+          <Link href="/datasets">Data</Link>
+          <span className="sep">/</span>
+          <span className="current">{dataset.title}</span>
+        </div>
         <div className="dashboard-header">
           <div>
-            <h1>
-              {dataset.icon ? `${dataset.icon} ` : ''}
-              {dataset.title}
-            </h1>
+            <h1>{dataset.title}</h1>
             {dataset.description && <p className="muted">{dataset.description}</p>}
+            {dataset.lastImport?.rowCount ? (
+              <p className="muted" style={{ fontSize: 13 }}>
+                {dataset.lastImport.rowCount.toLocaleString()} rows
+                {dataset.lastImport.importedAt ? ` · updated ${formatDate(dataset.lastImport.importedAt)}` : ''}
+              </p>
+            ) : null}
           </div>
           {canRead && (
-            <a href={`/api/datasets/${dataset.id}/export`} className="btn btn-secondary">
-              Download CSV
-            </a>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <a href={`/api/datasets/${dataset.id}/export?format=csv`} className="btn btn-secondary">
+                Download CSV
+              </a>
+              <a href={`/api/datasets/${dataset.id}/export?format=xlsx`} className="btn btn-secondary">
+                Download Excel
+              </a>
+            </div>
           )}
         </div>
 
