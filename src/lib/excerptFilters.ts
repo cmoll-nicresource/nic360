@@ -33,6 +33,15 @@ export function parseExcerptFilters(searchParams: Record<string, string | string
  * an `id: { in: [...] }` clause, since Payload's own `where` operators can't
  * express `to_tsvector`/`ts_rank`.
  */
+/** Query string (no leading `?`) for the active filters, for building pagination links that preserve them. */
+export function excerptFiltersToQueryString(filters: ExcerptFilterParams): string {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(filters)) {
+    if (value) params.set(key, value)
+  }
+  return params.toString()
+}
+
 export function excerptWhere(filters: ExcerptFilterParams, dateField: 'sourceDate' | 'billDate'): Where {
   const and: Where[] = []
   if (filters.sector) and.push({ sectors: { in: [filters.sector] } })

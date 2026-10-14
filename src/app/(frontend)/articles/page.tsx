@@ -8,8 +8,12 @@ import { AnnouncementIcon } from '@/components/brandIcons'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { ExcerptFilterBar } from '@/components/ExcerptFilterBar'
-import { excerptWhere, parseExcerptFilters } from '@/lib/excerptFilters'
+import { excerptFiltersToQueryString, excerptWhere, parseExcerptFilters } from '@/lib/excerptFilters'
+import { formatDate } from '@/lib/formatDate'
 import { searchColumnsForIds, sortByIdOrder } from '@/lib/fullTextSearch'
+import { PAGE_SIZE, parsePage } from '@/lib/pagination'
+import { Pagination } from '@/components/Pagination'
+import { TagPill } from '@/components/StatusBadge'
 import type { Article } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +25,7 @@ export default async function ArticlesPage({
 }) {
   const resolvedSearchParams = await searchParams
   const filters = parseExcerptFilters(resolvedSearchParams)
+  const page = parsePage(resolvedSearchParams.page)
 
   const headers = await getHeaders()
   const payloadConfig = await config
@@ -31,15 +36,19 @@ export default async function ArticlesPage({
   const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
   const canReadFull = isStaff || planSatisfies(plan, 'base')
 
-  const [{ docs: sectors }, { docs: products }, { docs: subjects }, { docs: locations }] = await Promise.all([
-    payload.find({ collection: 'sectors', limit: 100, sort: 'name', overrideAccess: true }),
-    payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: true }),
-    payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: true }),
-    payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: true }),
-  ])
+  const [{ docs: sectors }, { docs: products }, { docs: subjects }, { docs: locations }, { totalDocs: totalArticles }] =
+    await Promise.all([
+      payload.find({ collection: 'sectors', limit: 100, sort: 'name', overrideAccess: true }),
+      payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: true }),
+      payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: true }),
+      payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: true }),
+      payload.count({ collection: 'articles', overrideAccess: true }),
+    ])
 
   const baseWhere = excerptWhere(filters, 'sourceDate')
   let articles: Article[] = []
+  let totalDocs = 0
+  let totalPages = 1
 
   if (filters.keyword) {
     const rankedIds = await searchColumnsForIds(payload, 'articles', ['title', 'search_text'], filters.keyword)
@@ -52,32 +61,47 @@ export default async function ArticlesPage({
         overrideAccess: true,
       })
       articles = sortByIdOrder(docs, rankedIds)
+      totalDocs = articles.length
     }
   } else {
-    const { docs } = await payload.find({
+    const result = await payload.find({
       collection: 'articles',
       where: baseWhere,
       depth: 1,
       sort: '-sourceDate',
-      limit: 100,
+      limit: PAGE_SIZE,
+      page,
       overrideAccess: true,
     })
-    articles = docs
+    articles = result.docs
+    totalDocs = result.totalDocs
+    totalPages = result.totalPages
   }
+
+  const queryString = excerptFiltersToQueryString(filters)
 
   return (
     <>
       <SiteNav />
+      <div className="header-band">
+        <div className="header-band-inner">
+          <div>
+            <p className="header-band-eyebrow">Tracking</p>
+            <h1 className="page-heading">
+              <span className="icon-badge">
+                <AnnouncementIcon />
+              </span>
+              News
+            </h1>
+            <p>
+              News found across the internet, indexed by location, sector, product and subject.
+              {!canReadFull && ' Sign in with a Base or Premium subscription to read full excerpts.'}
+            </p>
+          </div>
+          <span className="header-band-meta">{totalArticles.toLocaleString()} articles · updated today</span>
+        </div>
+      </div>
       <div className="page">
-        <h1 className="page-heading">
-          <AnnouncementIcon />
-          News
-        </h1>
-        <p className="muted">
-          News found across the internet, indexed by location, sector, product and subject.
-          {!canReadFull && ' Sign in with a Base or Premium subscription to read full excerpts.'}
-        </p>
-
         <ExcerptFilterBar
           basePath="/articles"
           sectors={sectors}
@@ -94,12 +118,27 @@ export default async function ArticlesPage({
               <h3>{a.title}</h3>
               <div className="excerpt-meta">
                 {a.source && typeof a.source === 'object' ? a.source.name : null}
-                {a.sourceDate ? ` · ${new Date(a.sourceDate).toLocaleDateString()}` : null}
-                {a.primarySubject && typeof a.primarySubject === 'object' ? ` · ${a.primarySubject.name}` : null}
+                {a.sourceDate ? <span className="dot">·</span> : null}
+                {a.sourceDate ? formatDate(a.sourceDate) : null}
+                {a.primarySubject && typeof a.primarySubject === 'object' ? (
+                  <>
+                    <span className="dot">·</span>
+                    <TagPill>{a.primarySubject.name}</TagPill>
+                  </>
+                ) : null}
               </div>
             </Link>
           ))}
         </div>
+        {!filters.keyword && (
+          <Pagination
+            basePath={`/articles${queryString ? `?${queryString}` : ''}`}
+            page={page}
+            totalPages={totalPages}
+            totalDocs={totalDocs}
+            pageSize={PAGE_SIZE}
+          />
+        )}
       </div>
     </>
   )

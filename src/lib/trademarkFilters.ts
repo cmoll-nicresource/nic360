@@ -16,6 +16,15 @@ export function parseTrademarkFilters(searchParams: Record<string, string | stri
   }
 }
 
+/** Query string (no leading `?`) for the active filters, for building pagination links that preserve them. */
+export function trademarkFiltersToQueryString(filters: TrademarkFilterParams): string {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(filters)) {
+    if (value) params.set(key, value)
+  }
+  return params.toString()
+}
+
 // Unlike Articles/Bills, a Trademark has no single canonical date — which one
 // is set depends on its status (published/registered/cancelled/renewed, see
 // src/lib/tmog/classify.ts). A date-range filter has to match activity on

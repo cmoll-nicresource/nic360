@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { excerptWhere, parseExcerptFilters } from './excerptFilters'
+import { excerptFiltersToQueryString, excerptWhere, parseExcerptFilters } from './excerptFilters'
 
 describe('parseExcerptFilters', () => {
   it('picks the single values we care about off searchParams', () => {
@@ -80,5 +80,21 @@ describe('excerptWhere', () => {
 
   it('does not add a clause for keyword — that is handled via full-text search separately', () => {
     expect(excerptWhere({ keyword: 'tax' }, 'sourceDate')).toEqual({})
+  })
+})
+
+describe('excerptFiltersToQueryString', () => {
+  it('returns an empty string when no filters are set', () => {
+    expect(excerptFiltersToQueryString({})).toBe('')
+  })
+
+  it('includes only the filters that are set', () => {
+    expect(excerptFiltersToQueryString({ sector: '1', keyword: 'tax oh' })).toBe('sector=1&keyword=tax+oh')
+  })
+
+  it('round-trips through URLSearchParams parsing', () => {
+    const qs = excerptFiltersToQueryString({ sector: '1', dateFrom: '2026-01-01', dateTo: '2026-06-30' })
+    const parsed = Object.fromEntries(new URLSearchParams(qs))
+    expect(parsed).toEqual({ sector: '1', dateFrom: '2026-01-01', dateTo: '2026-06-30' })
   })
 })

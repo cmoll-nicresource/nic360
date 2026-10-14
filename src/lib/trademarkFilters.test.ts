@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseTrademarkFilters, trademarkWhere } from './trademarkFilters'
+import { parseTrademarkFilters, trademarkFiltersToQueryString, trademarkWhere } from './trademarkFilters'
 
 describe('parseTrademarkFilters', () => {
   it('picks the single values we care about', () => {
@@ -44,5 +44,15 @@ describe('trademarkWhere', () => {
         { publishedDate: { less_than_equal: '2026-06-30' } },
       ],
     })
+  })
+})
+
+describe('trademarkFiltersToQueryString', () => {
+  it('returns an empty string when no filters are set', () => {
+    expect(trademarkFiltersToQueryString({})).toBe('')
+  })
+
+  it('includes only the filters that are set', () => {
+    expect(trademarkFiltersToQueryString({ keyword: 'smoky' })).toBe('keyword=smoky')
   })
 })

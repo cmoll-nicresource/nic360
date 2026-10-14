@@ -46,6 +46,21 @@ export async function SiteNav() {
     after(() => logPageView(payload, pathname, user))
   }
 
+  const readerUser = isReader && user && 'collection' in user && user.collection === 'users' ? user : null
+  const initials = readerUser
+    ? `${(readerUser.firstName ?? '')[0] ?? ''}${(readerUser.lastName ?? '')[0] ?? ''}`.toUpperCase() || 'U'
+    : 'U'
+
+  const sectionFor = (path: string): string | null => {
+    if (path.startsWith('/articles') || path.startsWith('/bills') || path.startsWith('/trademarks')) return 'tracking'
+    if (path.startsWith('/guides')) return 'guides'
+    if (path.startsWith('/datasets')) return 'data'
+    if (path.startsWith('/publications')) return 'publications'
+    if (path.startsWith('/events')) return 'events'
+    return null
+  }
+  const activeSection = pathname ? sectionFor(pathname) : null
+
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
@@ -90,7 +105,7 @@ export async function SiteNav() {
 
       <div className="nav-links">
         <div className="nav-dropdown" tabIndex={0}>
-          <span className="nav-dropdown-label">Tracking</span>
+          <span className={`nav-dropdown-label${activeSection === 'tracking' ? ' active' : ''}`}>Tracking</span>
           <div className="nav-dropdown-menu">
             {TRACKING_LINKS.map((l) => (
               <Link key={l.href} href={l.href}>
@@ -100,7 +115,7 @@ export async function SiteNav() {
           </div>
         </div>
         <div className="nav-dropdown" tabIndex={0}>
-          <span className="nav-dropdown-label">Guides</span>
+          <span className={`nav-dropdown-label${activeSection === 'guides' ? ' active' : ''}`}>Guides</span>
           <div className="nav-dropdown-menu">
             {guides.map((g) => (
               <Link key={g.id} href={`/guides/${g.slug}`}>
@@ -110,7 +125,7 @@ export async function SiteNav() {
           </div>
         </div>
         <div className="nav-dropdown" tabIndex={0}>
-          <span className="nav-dropdown-label">Data</span>
+          <span className={`nav-dropdown-label${activeSection === 'data' ? ' active' : ''}`}>Data</span>
           <div className="nav-dropdown-menu wide">
             {DATA_CATEGORIES.map((c) => (
               <div key={c.value} className="nav-dropdown-group">
@@ -122,10 +137,15 @@ export async function SiteNav() {
                 ))}
               </div>
             ))}
+            <div className="nav-dropdown-group" style={{ borderLeft: '1px solid var(--nrc-border)', display: 'flex', alignItems: 'flex-end' }}>
+              <Link href="/datasets" style={{ fontWeight: 600, color: 'var(--nrc-primary)' }}>
+                View all data →
+              </Link>
+            </div>
           </div>
         </div>
         <div className="nav-dropdown" tabIndex={0}>
-          <span className="nav-dropdown-label">Publications</span>
+          <span className={`nav-dropdown-label${activeSection === 'publications' ? ' active' : ''}`}>Publications</span>
           <div className="nav-dropdown-menu wide">
             {PUBLICATION_CATEGORIES.map((c) => (
               <div key={c.value} className="nav-dropdown-group">
@@ -140,7 +160,7 @@ export async function SiteNav() {
           </div>
         </div>
         <div className="nav-dropdown" tabIndex={0}>
-          <span className="nav-dropdown-label">Events</span>
+          <span className={`nav-dropdown-label${activeSection === 'events' ? ' active' : ''}`}>Events</span>
           <div className="nav-dropdown-menu">
             {events.map((e) => (
               <Link key={e.id} href={`/events/${e.id}`}>
@@ -154,13 +174,25 @@ export async function SiteNav() {
         </div>
       </div>
       <div className="nav-right">
-        {isReader && <Link href="/dashboard">Dashboard</Link>}
-        {isReader && <Link href="/account">Account</Link>}
         {isStaff && <Link href="/access-check">Access check</Link>}
         {isStaff && <Link href={payloadConfig.routes.admin}>Admin</Link>}
+        {isStaff && <LogoutButton collection="staff" />}
         {!user && <Link href="/login">Log in</Link>}
         {!user && <Link href="/signup" className="btn">Sign up</Link>}
-        {!!user && <LogoutButton collection={isStaff ? 'staff' : 'users'} />}
+        {isReader && (
+          <div className="nav-dropdown" tabIndex={0}>
+            <span className="nav-avatar" aria-label="Account menu">
+              {initials}
+            </span>
+            <div className="nav-dropdown-menu" style={{ left: 'auto', right: -12 }}>
+              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/account">Account</Link>
+              <div style={{ padding: '8px 10px' }}>
+                <LogoutButton collection="users" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   )

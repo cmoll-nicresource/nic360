@@ -76,6 +76,47 @@ export function EventsIcon({ className }: IconProps) {
   )
 }
 
+export function PolicyIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M12 3v2M5 7l7-4 7 4M4 10h16M5 10v8M19 10v8M3 21h18" />
+    </svg>
+  )
+}
+
+export function MarketsIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 20V10M10 20V4M16 20v-7M4 20h16" />
+    </svg>
+  )
+}
+
+export function TradeIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M12 3 3 7.5 12 12l9-4.5L12 3Z" />
+      <path d="M3 7.5V16l9 4.5V12M21 7.5V16l-9 4.5" />
+    </svg>
+  )
+}
+
+export function DownloadIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M12 4v11m0 0 5-5m-5 5-5-5M4 19h16" />
+    </svg>
+  )
+}
+
+export function ChevronDownIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
+}
+
 export function MenuIcon({ className }: IconProps) {
   return (
     <svg {...base} className={className}>

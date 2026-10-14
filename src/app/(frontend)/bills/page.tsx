@@ -8,8 +8,13 @@ import { LawIcon } from '@/components/brandIcons'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { ExcerptFilterBar } from '@/components/ExcerptFilterBar'
-import { excerptWhere, parseExcerptFilters } from '@/lib/excerptFilters'
+import { excerptFiltersToQueryString, excerptWhere, parseExcerptFilters } from '@/lib/excerptFilters'
+import { formatDate } from '@/lib/formatDate'
 import { searchColumnsForIds, sortByIdOrder } from '@/lib/fullTextSearch'
+import { PAGE_SIZE, parsePage } from '@/lib/pagination'
+import { Pagination } from '@/components/Pagination'
+import { StatusBadge } from '@/components/StatusBadge'
+import { billStatusPill } from '@/lib/statusPill'
 import type { Bill } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +26,7 @@ export default async function BillsPage({
 }) {
   const resolvedSearchParams = await searchParams
   const filters = parseExcerptFilters(resolvedSearchParams)
+  const page = parsePage(resolvedSearchParams.page)
 
   const headers = await getHeaders()
   const payloadConfig = await config
@@ -31,15 +37,19 @@ export default async function BillsPage({
   const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
   const canReadFull = isStaff || planSatisfies(plan, 'base')
 
-  const [{ docs: sectors }, { docs: products }, { docs: subjects }, { docs: locations }] = await Promise.all([
-    payload.find({ collection: 'sectors', limit: 100, sort: 'name', overrideAccess: true }),
-    payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: true }),
-    payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: true }),
-    payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: true }),
-  ])
+  const [{ docs: sectors }, { docs: products }, { docs: subjects }, { docs: locations }, { totalDocs: totalBills }] =
+    await Promise.all([
+      payload.find({ collection: 'sectors', limit: 100, sort: 'name', overrideAccess: true }),
+      payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: true }),
+      payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: true }),
+      payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: true }),
+      payload.count({ collection: 'bills', overrideAccess: true }),
+    ])
 
   const baseWhere = excerptWhere(filters, 'billDate')
   let bills: Bill[] = []
+  let totalDocs = 0
+  let totalPages = 1
 
   if (filters.keyword) {
     const rankedIds = await searchColumnsForIds(payload, 'bills', ['title', 'bill_number', 'search_text'], filters.keyword)
@@ -52,32 +62,47 @@ export default async function BillsPage({
         overrideAccess: true,
       })
       bills = sortByIdOrder(docs, rankedIds)
+      totalDocs = bills.length
     }
   } else {
-    const { docs } = await payload.find({
+    const result = await payload.find({
       collection: 'bills',
       where: baseWhere,
       depth: 1,
       sort: '-billDate',
-      limit: 100,
+      limit: PAGE_SIZE,
+      page,
       overrideAccess: true,
     })
-    bills = docs
+    bills = result.docs
+    totalDocs = result.totalDocs
+    totalPages = result.totalPages
   }
+
+  const queryString = excerptFiltersToQueryString(filters)
 
   return (
     <>
       <SiteNav />
+      <div className="header-band">
+        <div className="header-band-inner">
+          <div>
+            <p className="header-band-eyebrow">Tracking</p>
+            <h1 className="page-heading">
+              <span className="icon-badge">
+                <LawIcon />
+              </span>
+              Legislation
+            </h1>
+            <p>
+              Legislation tracked via StateNet, summarized and categorized.
+              {!canReadFull && ' Sign in with a Base or Premium subscription to read full abstracts and text.'}
+            </p>
+          </div>
+          <span className="header-band-meta">{totalBills.toLocaleString()} bills tracked</span>
+        </div>
+      </div>
       <div className="page">
-        <h1 className="page-heading">
-          <LawIcon />
-          Legislation
-        </h1>
-        <p className="muted">
-          Legislation tracked via StateNet, summarized and categorized.
-          {!canReadFull && ' Sign in with a Base or Premium subscription to read full abstracts and text.'}
-        </p>
-
         <ExcerptFilterBar
           basePath="/bills"
           sectors={sectors}
@@ -89,19 +114,34 @@ export default async function BillsPage({
 
         <div className="card">
           {bills.length === 0 && <p className="muted">No bills match these filters.</p>}
-          {bills.map((b) => (
-            <Link key={b.id} href={`/bills/${b.id}`} className="excerpt-list-item">
-              <h3>
-                {b.billNumber} — {b.title}
-              </h3>
-              <div className="excerpt-meta">
-                {b.governmentLevel}
-                {b.billDate ? ` · ${new Date(b.billDate).toLocaleDateString()}` : null}
-                {b.statusText ? ` · ${b.statusText}` : null}
-              </div>
-            </Link>
-          ))}
+          {bills.map((b) => {
+            const jurisdiction = b.locations?.find((l) => typeof l === 'object')
+            const jurisdictionName = jurisdiction && typeof jurisdiction === 'object' ? jurisdiction.name : b.governmentLevel
+            return (
+              <Link key={b.id} href={`/bills/${b.id}`} className="excerpt-list-item">
+                <div className="excerpt-meta" style={{ marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="tag-pill tnum">{b.billNumber}</span>
+                  <StatusBadge status={billStatusPill(b)} />
+                </div>
+                <h3>{b.title}</h3>
+                <div className="excerpt-meta">
+                  {jurisdictionName}
+                  {b.billDate ? <span className="dot">·</span> : null}
+                  {b.billDate ? formatDate(b.billDate) : null}
+                </div>
+              </Link>
+            )
+          })}
         </div>
+        {!filters.keyword && (
+          <Pagination
+            basePath={`/bills${queryString ? `?${queryString}` : ''}`}
+            page={page}
+            totalPages={totalPages}
+            totalDocs={totalDocs}
+            pageSize={PAGE_SIZE}
+          />
+        )}
       </div>
     </>
   )

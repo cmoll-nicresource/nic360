@@ -8,6 +8,9 @@ import { SiteNav } from '@/components/SiteNav'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { formatDate } from '@/lib/formatDate'
+import { billStatusPill } from '@/lib/statusPill'
+import { StatusBadge, TagPill } from '@/components/StatusBadge'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,20 +28,30 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
   const bill = await payload.findByID({ collection: 'bills', id, depth: 1, overrideAccess: true }).catch(() => null)
   if (!bill) notFound()
 
+  const jurisdiction = bill.locations?.find((l) => typeof l === 'object')
+  const jurisdictionName = jurisdiction && typeof jurisdiction === 'object' ? jurisdiction.name : bill.governmentLevel
+  const hasFullText = bill.fullText && Array.isArray(bill.fullText.root?.children) && bill.fullText.root.children.length > 0
+
   return (
     <>
       <SiteNav />
       <div className="page">
-        <p>
-          <Link href="/bills">&larr; All bills</Link>
-        </p>
-        <h1>
-          {bill.billNumber} — {bill.title}
-        </h1>
+        <div className="breadcrumbs">
+          <Link href="/bills">Legislation</Link>
+          <span className="sep">/</span>
+          <span className="current">{jurisdictionName}</span>
+          <span className="sep">/</span>
+          <span className="current">{bill.billNumber}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <span className="tag-pill tnum">{bill.billNumber}</span>
+          <StatusBadge status={billStatusPill(bill)} />
+        </div>
+        <h1>{bill.title}</h1>
         <p className="excerpt-meta">
-          {bill.billType} · {bill.governmentLevel}
+          {bill.billType} · {jurisdictionName}
           {bill.session ? ` · ${bill.session} session` : null}
-          {bill.billDate ? ` · ${new Date(bill.billDate).toLocaleDateString()}` : null}
+          {bill.billDate ? ` · ${formatDate(bill.billDate)}` : null}
         </p>
 
         <div className="card">
@@ -54,60 +67,71 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
           )}
         </div>
 
-        {canReadFull && (
+        {canReadFull && hasFullText && (
           <div className="card">
             <h3>Full text</h3>
             <RichText data={bill.fullText} />
           </div>
         )}
 
-        <div className="card">
-          <h3>Status</h3>
-          <p className="excerpt-meta">{bill.statusText || '—'}</p>
-          {bill.actions && bill.actions.length > 0 && (
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Action</th>
-                  <th>Actor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bill.actions.map((a, i) => (
-                  <tr key={i}>
-                    <td>{a.date ? new Date(a.date).toLocaleDateString() : '—'}</td>
-                    <td>{a.action}</td>
-                    <td>{a.actor || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {bill.actions && bill.actions.length > 0 && (
+          <div className="card">
+            <h3>Status</h3>
+            <ol className="status-timeline">
+              {bill.actions.map((a, i) => (
+                <li key={i}>
+                  <span className="status-timeline-dot" />
+                  <div>
+                    <div className="excerpt-meta tnum">{a.date ? formatDate(a.date) : '—'}</div>
+                    <div>
+                      {a.action}
+                      {a.actor ? <span className="muted"> — {a.actor}</span> : null}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
         <div className="card">
           <h3>Index terms</h3>
-          <p className="excerpt-meta">
-            <strong>Primary subject:</strong>{' '}
-            {bill.primarySubject && typeof bill.primarySubject === 'object' ? bill.primarySubject.name : '—'}
-          </p>
-          <p className="excerpt-meta">
-            <strong>Subjects:</strong>{' '}
-            {bill.subjects?.map((s) => (typeof s === 'object' ? s.name : s)).join(', ') || '—'}
-          </p>
-          <p className="excerpt-meta">
-            <strong>Sectors:</strong>{' '}
-            {bill.sectors?.map((s) => (typeof s === 'object' ? s.name : s)).join(', ') || '—'}
-          </p>
-          <p className="excerpt-meta">
-            <strong>Products:</strong>{' '}
-            {bill.products?.map((p) => (typeof p === 'object' ? p.name : p)).join(', ') || '—'}
-          </p>
-          <p className="excerpt-meta">
-            <strong>Locations:</strong>{' '}
-            {bill.locations?.map((l) => (typeof l === 'object' ? l.name : l)).join(', ') || '—'}
-          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {bill.primarySubject && typeof bill.primarySubject === 'object' && (
+              <TagPill href={`/bills?subject=${bill.primarySubject.id}`}>{bill.primarySubject.name}</TagPill>
+            )}
+            {bill.subjects
+              ?.filter((s) => typeof s === 'object')
+              .map((s) => (
+                <TagPill key={s.id} href={`/bills?subject=${s.id}`}>
+                  {s.name}
+                </TagPill>
+              ))}
+            {bill.sectors
+              ?.filter((s) => typeof s === 'object')
+              .map((s) => (
+                <TagPill key={s.id} href={`/bills?sector=${s.id}`}>
+                  {s.name}
+                </TagPill>
+              ))}
+            {bill.products
+              ?.filter((p) => typeof p === 'object')
+              .map((p) => (
+                <TagPill key={p.id} href={`/bills?product=${p.id}`}>
+                  {p.name}
+                </TagPill>
+              ))}
+            {bill.locations
+              ?.filter((l) => typeof l === 'object')
+              .map((l) => (
+                <TagPill key={l.id} href={`/bills?location=${l.id}`}>
+                  {l.name}
+                </TagPill>
+              ))}
+            {!bill.primarySubject && !bill.subjects?.length && !bill.sectors?.length && !bill.products?.length && !bill.locations?.length && (
+              <span className="muted">No index terms yet.</span>
+            )}
+          </div>
         </div>
       </div>
     </>

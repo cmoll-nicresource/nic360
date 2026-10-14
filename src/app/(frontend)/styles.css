@@ -1,13 +1,18 @@
 :root {
+  --nrc-heading: #0f1722;
   --nrc-ink: #1a2330;
   --nrc-muted: #5b6878;
-  --nrc-border: #d8dee6;
+  --nrc-border: #e3e8ee;
   --nrc-bg: #f7f8fa;
   /* Brand colors sampled from the Nicotine360 logo. */
+  --nrc-navy: #0e2a47;
   --nrc-primary: #285888;
   --nrc-primary-dark: #1c4066;
   --nrc-secondary: #5890b0;
   --nrc-accent: var(--nrc-primary);
+  /* Cool data accent — charts, "new" markers, data-page accents, the thing
+     that says "data platform" rather than "blue template". */
+  --nrc-teal: #12a594;
   /* A second, warmer accent for moments that should pop against the all-blue
      palette (hover states, hero eyebrow, underlines) — distinct from the
      amber already used for Premium badges so the two don't read as the same thing. */
@@ -15,10 +20,24 @@
   --nrc-energy-dark: #c8431d;
   --nrc-energy-tint: #fdeae3;
 
+  /* Semantic status set for legislation/trademark lifecycle pills. */
+  --status-blue-bg: #e8f0f8;
+  --status-blue-fg: #285888;
+  --status-amber-bg: #fff4db;
+  --status-amber-fg: #8a5a00;
+  --status-green-bg: #e3f5ec;
+  --status-green-fg: #146c43;
+  --status-grey-bg: #eef0f3;
+  --status-grey-fg: #5b6878;
+
   --shadow-sm: 0 1px 2px rgba(26, 35, 48, 0.06), 0 1px 1px rgba(26, 35, 48, 0.04);
   --shadow-md: 0 4px 10px rgba(26, 35, 48, 0.08), 0 1px 3px rgba(26, 35, 48, 0.06);
   --radius: 10px;
   --ease-bold: cubic-bezier(0.22, 1, 0.36, 1);
+  --page-reading: 760px;
+  --page-wide: 1200px;
+  --control-height: 40px;
+  --focus-ring: 0 0 0 3px rgba(40, 88, 136, 0.25);
 }
 
 * {
@@ -53,38 +72,165 @@ h4 {
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.01em;
+  color: var(--nrc-heading);
 }
 
-/* A section's licensed brand icon (src/components/brandIcons.tsx) next to
-   its page <h1>. These are detailed two-tone navy/blue icons, not simple
-   white silhouettes, so they sit directly on the page background rather
-   than in the colored gradient badges product/dashboard cards use. */
+/* The serif marks editorial moments (page titles, article/bill headlines);
+   everything that's interface chrome — section headings, card and list
+   titles — runs the sans so the UI reads as technical, not bookish. */
+h2,
+.card h3,
+.excerpt-list-item h3,
+.product-card h3,
+.teaser-card h3,
+.plan-card h3 {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+h1 {
+  font-size: 32px;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Tabular figures so numbers line up in tables, grids and stat callouts. */
+.num,
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* A section's licensed brand icon (src/components/brandIcons.tsx), set in a
+   40px tinted square so it reads as a badge rather than floating loose next
+   to the heading text. */
 .page-heading {
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
+.page-heading .icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--nrc-bg);
+  border: 1px solid var(--nrc-border);
+  flex-shrink: 0;
+}
+
 .page-heading svg {
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
 }
 
 a {
   color: var(--nrc-primary);
+  text-decoration: none;
+}
+
+/* Links inside editorial body copy (article/bill excerpts, publication
+   issue bodies) keep a subtle underline — everywhere else (nav, list rows,
+   cards, buttons) an underline is noise, not a signal. */
+.payload-richtext a,
+.richtext-body a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--nrc-primary) 40%, transparent);
+}
+
+.payload-richtext a:hover,
+.richtext-body a:hover {
+  text-decoration-color: currentColor;
 }
 
 .page {
-  max-width: 880px;
+  max-width: var(--page-reading);
   margin: 0 auto;
   padding: 48px 24px;
 }
 
 .page-wide {
-  max-width: 1100px;
+  max-width: var(--page-wide);
   margin: 0 auto;
   padding: 48px 24px;
+}
+
+/* Section page header band: white background, eyebrow + H1 + description,
+   optional freshness/count line on the right. Wraps .page-heading. */
+.header-band {
+  background: #fff;
+  border-bottom: 1px solid var(--nrc-border);
+}
+
+.header-band-inner {
+  max-width: var(--page-wide);
+  margin: 0 auto;
+  padding: 48px 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.header-band-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nrc-muted);
+  margin: 0 0 8px;
+}
+
+.header-band h1 {
+  margin: 0 0 6px;
+}
+
+.header-band p {
+  margin: 0;
+  color: var(--nrc-muted);
+  max-width: 60ch;
+}
+
+.header-band-meta {
+  font-size: 13px;
+  color: var(--nrc-muted);
+  white-space: nowrap;
+}
+
+/* Breadcrumbs on detail pages, in place of underlined "<- back" links. */
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--nrc-muted);
+  margin-bottom: 16px;
+}
+
+.breadcrumbs a {
+  color: var(--nrc-muted);
+}
+
+.breadcrumbs a:hover {
+  color: var(--nrc-primary);
+}
+
+.breadcrumbs .sep {
+  color: var(--nrc-border);
+}
+
+.breadcrumbs .current {
+  color: var(--nrc-ink);
 }
 
 .card {
@@ -117,6 +263,21 @@ th {
   letter-spacing: 0.02em;
 }
 
+tbody tr {
+  transition: background-color 0.1s ease;
+}
+
+tbody tr:hover {
+  background: var(--nrc-bg);
+}
+
+th.num,
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
 .badge {
   display: inline-block;
   padding: 3px 10px;
@@ -136,9 +297,62 @@ th {
   color: var(--nrc-primary-dark);
 }
 
+/* A navy fill reads as "the good tier", not a warning label — the old peach
+   pill competed visually with the status/amber set below. */
 .badge-premium {
-  background: #fbe9d2;
-  color: #9a5b12;
+  background: var(--nrc-navy);
+  color: #fff;
+}
+
+/* Semantic status pills: legislation and trademark lifecycle. */
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.status-pill-blue {
+  background: var(--status-blue-bg);
+  color: var(--status-blue-fg);
+}
+
+.status-pill-amber {
+  background: var(--status-amber-bg);
+  color: var(--status-amber-fg);
+}
+
+.status-pill-green {
+  background: var(--status-green-bg);
+  color: var(--status-green-fg);
+}
+
+.status-pill-grey {
+  background: var(--status-grey-bg);
+  color: var(--status-grey-fg);
+}
+
+/* Index-term / jurisdiction pills (sector, subject, location) — sentence
+   case regardless of how the term is stored, neutral grey so they don't
+   compete with status pills. */
+.tag-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--nrc-bg);
+  color: var(--nrc-ink);
+  border: 1px solid var(--nrc-border);
+  text-transform: none;
+}
+
+a.tag-pill:hover {
+  border-color: var(--nrc-primary);
+  color: var(--nrc-primary);
 }
 
 .muted {
@@ -153,7 +367,8 @@ nav.topnav {
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 12px 24px;
+  height: 64px;
+  padding: 0 24px;
   border-bottom: 1px solid var(--nrc-border);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(6px);
@@ -292,9 +507,35 @@ nav.topnav .nav-links a:hover::before {
   transition: transform 0.2s var(--ease-bold);
 }
 
+.nav-dropdown-label.active {
+  color: var(--nrc-primary);
+}
+
+.nav-dropdown-label.active::before {
+  left: 0;
+  right: 0;
+}
+
 .nav-dropdown:hover .nav-dropdown-label,
 .nav-dropdown:focus-within .nav-dropdown-label {
   color: var(--nrc-primary);
+}
+
+/* Logged-in reader's account menu trigger: initials in a circle, in place
+   of three separate "Dashboard · Account · Log out" links. */
+.nav-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--nrc-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: default;
 }
 
 .nav-dropdown:hover .nav-dropdown-label::before,
@@ -405,19 +646,104 @@ nav.topnav .nav-right a:not(.btn):hover {
   color: var(--nrc-primary);
 }
 
+/* Form controls — one shared style for text/date/search inputs, selects,
+   textareas and native buttons, so a filter bar's inputs don't fall back to
+   browser defaults next to an already-styled dropdown. Excludes the nav's
+   CSS-only mobile-menu checkbox and radios (handled separately, minimal). */
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea {
+  height: var(--control-height);
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--nrc-ink);
+  background: #fff;
+  border: 1px solid var(--nrc-border);
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+textarea {
+  height: auto;
+  min-height: 80px;
+  padding: 10px 12px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--nrc-primary);
+  box-shadow: var(--focus-ring);
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--nrc-primary);
+  width: 16px;
+  height: 16px;
+}
+
+/* Native, unclassed buttons (e.g. a component's plain <button>) get the
+   same baseline as .btn so nothing on the site renders as an unstyled
+   browser control. */
+button:not(.btn):not(.nav-logout-btn):not(.tab-link) {
+  height: var(--control-height);
+  padding: 0 18px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  background: var(--nrc-primary);
+  border: 1px solid var(--nrc-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+button:not(.btn):not(.nav-logout-btn):not(.tab-link):hover {
+  background: var(--nrc-primary-dark);
+  border-color: var(--nrc-primary-dark);
+}
+
+button:not(.btn):not(.nav-logout-btn):not(.tab-link):disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+button:focus-visible,
+.btn:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* 16px prevents iOS Safari from zooming the page when a field is focused. */
+@media (max-width: 640px) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Buttons */
 .btn {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  padding: 10px 18px;
-  border-radius: 6px;
+  height: var(--control-height);
+  padding: 0 20px;
+  border-radius: 8px;
   border: 1px solid var(--nrc-primary);
   background: var(--nrc-primary);
   color: #fff;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 500;
   text-decoration: none;
   text-align: center;
   box-shadow: var(--shadow-sm);
@@ -491,20 +817,13 @@ nav.topnav .nav-right a:not(.btn):hover {
   color: var(--nrc-muted);
 }
 
-.filter-bar select {
-  padding: 6px 8px;
-  border: 1px solid var(--nrc-border);
-  border-radius: 6px;
+.filter-bar select,
+.filter-bar input {
   min-width: 160px;
 }
 
-.filter-bar button {
-  padding: 7px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--nrc-primary);
-  background: var(--nrc-primary);
-  color: #fff;
-  cursor: pointer;
+.filter-bar input[type='search'] {
+  min-width: 220px;
 }
 
 .clear-filters {
@@ -512,10 +831,49 @@ nav.topnav .nav-right a:not(.btn):hover {
   align-self: center;
 }
 
+/* Active-filter pills under the toolbar (result count + removable chips). */
+.filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--nrc-muted);
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 3px 10px;
+  border-radius: 999px;
+  background: var(--nrc-bg);
+  border: 1px solid var(--nrc-border);
+  font-size: 12px;
+  color: var(--nrc-ink);
+}
+
+.filter-pill a {
+  color: var(--nrc-muted);
+  font-weight: 600;
+}
+
+.filter-pill a:hover {
+  color: var(--nrc-energy);
+}
+
 .excerpt-list-item {
   display: block;
-  padding: 16px 0;
+  padding: 16px 4px;
+  margin: 0 -4px;
   border-bottom: 1px solid var(--nrc-border);
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.excerpt-list-item:hover {
+  background: var(--nrc-bg);
 }
 
 .excerpt-list-item:last-child {
@@ -524,12 +882,34 @@ nav.topnav .nav-right a:not(.btn):hover {
 
 .excerpt-list-item h3 {
   margin: 0 0 4px;
-  font-size: 18px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--nrc-heading);
+  transition: color 0.15s ease;
+}
+
+.excerpt-list-item:hover h3 {
+  color: var(--nrc-primary);
+}
+
+.excerpt-list-item p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: var(--nrc-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .excerpt-meta {
   font-size: 13px;
   color: var(--nrc-muted);
+}
+
+.excerpt-meta .dot {
+  margin: 0 6px;
+  color: var(--nrc-border);
 }
 
 .locked-content {
@@ -587,11 +967,6 @@ nav.topnav .nav-right a:not(.btn):hover {
 .field select,
 .field textarea {
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--nrc-border);
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
 }
 
 /* Dashboard */
@@ -797,9 +1172,27 @@ nav.topnav .nav-right a:not(.btn):hover {
   font-size: 13px;
 }
 
+.event-teaser-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.event-teaser-image {
+  display: block;
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.event-teaser-card h3 {
+  margin: 8px 0 4px;
+}
+
 /* Closing CTA band (homepage, signed-out visitors only) */
 .closing-cta {
-  background: linear-gradient(120deg, var(--nrc-primary-dark), var(--nrc-primary) 60%, var(--nrc-secondary));
+  background: var(--nrc-navy);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 18px 18px;
   color: #fff;
 }
 
@@ -834,29 +1227,51 @@ nav.topnav .nav-right a:not(.btn):hover {
   border: 1px solid #c9e3d7;
 }
 
-/* Hero (homepage) */
+/* Hero (homepage) — solid brand navy with a faint dot-grid texture instead
+   of a gradient, so it reads as a data platform rather than a 2015 SaaS
+   template. The right-half product shot is a placehold.co placeholder
+   until real screenshots/photography are ready (see docs/nicotine360-design-review.md). */
 .hero {
   position: relative;
-  background: linear-gradient(120deg, var(--nrc-primary-dark), var(--nrc-primary) 45%, var(--nrc-secondary) 75%, var(--nrc-energy-dark));
-  background-size: 200% 200%;
-  animation: heroGradient 16s ease infinite;
+  background: var(--nrc-navy);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
   color: #fff;
   overflow: hidden;
 }
 
-@keyframes heroGradient {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+.hero-grid {
+  position: relative;
+  max-width: var(--page-wide);
+  margin: 0 auto;
+  padding: 72px 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+}
+
+.hero-grid .hero-inner {
+  max-width: none;
+  padding: 0;
+}
+
+.hero-image {
+  display: flex;
+  justify-content: center;
+}
+
+.hero-image img {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 }
 
 .hero-inner {
   position: relative;
-  max-width: 880px;
+  max-width: 760px;
   margin: 0 auto;
   padding: 88px 24px 72px;
 }
@@ -924,16 +1339,17 @@ nav.topnav .nav-right a:not(.btn):hover {
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* Footer */
+/* Footer — solid brand navy so the page has a clear, confident end instead
+   of fading into another white card. */
 .site-footer {
-  border-top: 1px solid var(--nrc-border);
-  background: #fff;
+  background: var(--nrc-navy);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .site-footer-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: 48px 24px;
   display: flex;
   flex-wrap: wrap;
   gap: 48px;
@@ -947,10 +1363,19 @@ nav.topnav .nav-right a:not(.btn):hover {
 .site-footer-brand img {
   height: 24px;
   margin-bottom: 12px;
+  filter: brightness(0) invert(1);
 }
 
 .site-footer-brand p {
   font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.site-footer-org {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
 }
 
 .site-footer-links {
@@ -961,35 +1386,97 @@ nav.topnav .nav-right a:not(.btn):hover {
 
 .site-footer-links h4 {
   margin: 0 0 12px;
-  font-size: 13px;
-  color: var(--nrc-muted);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   font-weight: 600;
 }
 
 .site-footer-links a {
   display: block;
   font-size: 14px;
-  color: var(--nrc-ink);
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   margin-bottom: 10px;
 }
 
 .site-footer-links a:hover {
-  color: var(--nrc-primary);
+  color: #fff;
 }
 
 .site-footer-links span.muted {
   display: block;
   font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .site-footer-bottom {
-  border-top: 1px solid var(--nrc-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   padding: 16px 24px;
   text-align: center;
   font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.site-footer-legal {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.site-footer-legal a {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.site-footer-legal a:hover {
+  color: #fff;
+}
+
+/* Bill detail: a vertical timeline instead of a plain table. */
+.status-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.status-timeline li {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 0 0 18px 4px;
+}
+
+.status-timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.status-timeline li::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 16px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--nrc-border);
+}
+
+.status-timeline li:last-child::before {
+  display: none;
+}
+
+.status-timeline-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--nrc-primary);
+  z-index: 1;
 }
 
 /* Tabs (staff analytics dashboard) */
@@ -1027,6 +1514,8 @@ nav.topnav .nav-right a:not(.btn):hover {
 @media (max-width: 900px) {
   nav.topnav {
     flex-wrap: wrap;
+    height: auto;
+    min-height: 64px;
     padding: 10px 16px;
   }
 
@@ -1126,6 +1615,120 @@ nav.topnav .nav-right a:not(.btn):hover {
 
   .wizard-steps {
     flex-wrap: wrap;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .product-card {
+    padding: 14px;
+  }
+
+  .product-card .icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+
+  .product-card .icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .header-band-inner {
+    padding: 32px 16px;
+    align-items: flex-start;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    padding: 40px 20px;
+  }
+
+  .hero-image {
+    display: none;
+  }
+}
+
+/* Filters collapse behind a toggle on phones; the keyword field (rendered
+   outside <details> in ExcerptFilterBar/TrademarkFilterBar) stays visible.
+   Above the breakpoint the <details> is forced open and its marker hidden,
+   so desktop sees the plain toolbar from before. */
+@media (min-width: 641px) {
+  .filter-details > summary {
+    display: none;
+  }
+
+  .filter-details .filter-details-body {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-details > summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nrc-primary);
+    list-style: none;
+    padding: 4px 0;
+  }
+
+  .filter-details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .filter-details .filter-details-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .filter-details .filter-details-body select,
+  .filter-details .filter-details-body input {
+    width: 100%;
+  }
+
+  /* Trademarks table: stacked cards instead of a 549px table squeezed into
+     a 390px viewport. */
+  .trademark-table {
+    display: none;
+  }
+
+  .trademark-cards {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .trademark-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--nrc-border);
+  }
+
+  .trademark-card img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid var(--nrc-border);
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  .trademark-card-body h3 {
+    margin: 0 0 2px;
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 641px) {
+  .trademark-cards {
+    display: none;
   }
 }
 
