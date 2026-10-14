@@ -10,9 +10,13 @@
 // automatically is a table's own column-header row when its body rows split
 // across pages (model.ts's own comment: header rows are "repeated on each
 // page"), so paginateRows() below chunks each table's rows to a
-// conservative per-page estimate and renders each chunk as its own
-// non-splitting (wrap={false}) block with the header reprinted at the top —
-// the PDF equivalent of docx.ts's `tableHeader: true`.
+// conservative per-page estimate and reprints the header at the top of each
+// chunk — the PDF equivalent of docx.ts's `tableHeader: true`. Individual
+// rows are non-splitting (wrap={false} in tableRow, so one row is never torn
+// across a page break), but the chunk itself is left free to wrap if the
+// estimate runs long, so an underestimate degrades to "header doesn't
+// repeat on one unexpected overflow page" rather than forcing overlapping
+// content.
 import { Document, Image, Page, renderToBuffer, StyleSheet, Text, View } from '@react-pdf/renderer'
 import type { ReactElement } from 'react'
 
@@ -35,6 +39,33 @@ function usableHeight(landscape: boolean): number {
   const m = landscape ? MARGIN.landscape : MARGIN.portrait
   const pageH = landscape ? PAGE_W : PAGE_H
   return pageH - m.top - m.bottom
+}
+
+function usableWidth(landscape: boolean): number {
+  const m = landscape ? MARGIN.landscape : MARGIN.portrait
+  const pageW = landscape ? PAGE_H : PAGE_W
+  return pageW - m.left - m.right
+}
+
+/**
+ * Explicit per-column widths in points, not percentage strings. With 15-16
+ * sibling cells in a row (the summary/detail tables routinely have that
+ * many columns), independently-rounded percentage widths can accumulate
+ * enough floating-point error that the last columns in the row are left
+ * with ~0 width while their (unclamped, overflowing) text still renders —
+ * producing badly garbled, overlapping digits in exactly the trailing
+ * YTD/Pct-Chg columns. Computing in points up front and reconciling the
+ * rounding remainder onto the widest column keeps every row's widths
+ * summing to exactly the available content width.
+ */
+function columnWidthsPt(widths: number[], contentWidth: number): number[] {
+  const totalW = widths.reduce((a, b) => a + b, 0)
+  const raw = widths.map((w) => (w / totalW) * contentWidth)
+  const floored = raw.map(Math.floor)
+  const remainder = Math.round(contentWidth - floored.reduce((a, b) => a + b, 0))
+  const widestIndex = widths.indexOf(Math.max(...widths))
+  floored[widestIndex] += remainder
+  return floored
 }
 
 const styles = StyleSheet.create({
@@ -72,13 +103,21 @@ function textRuns(text: string, size: number, extra?: Record<string, unknown>): 
   )
 }
 
-/** Conservative rows-per-page estimate for a table at its own font size, in the section's orientation. */
+/**
+ * Conservative rows-per-page estimate for a table at its own font size, in
+ * the section's orientation. Pads generously (1.3x) for rows whose longest
+ * cell (an 11+ digit YTD dollar/quantity figure in a narrow column) wraps to
+ * a second line — this is only an estimate for how many rows to put in each
+ * non-splitting chunk (see tableBlock), not the actual layout, so erring
+ * toward fewer rows per page is cheap; erring toward more risks a chunk
+ * whose real height exceeds the page (see tableBlock's wrap fallback).
+ */
 function rowsPerPage(table: TableModel, landscape: boolean): number {
   const fontSize = table.fontSize ?? 8
-  const rowHeight = fontSize * 1.5 + 4
+  const rowHeight = fontSize * 1.5 * 1.3 + 4
   const headerHeight = table.header.length * rowHeight
   const titleHeight = table.title ? 20 : 0
-  const available = usableHeight(landscape) * 0.88 - headerHeight - titleHeight
+  const available = usableHeight(landscape) * 0.85 - headerHeight - titleHeight
   return Math.max(3, Math.floor(available / rowHeight))
 }
 
@@ -99,12 +138,11 @@ function cellStyle(c: Row['cells'][number]): Record<string, unknown> {
   }
 }
 
-function tableRow(key: number | string, r: Row, widths: number[], isHeader: boolean, fontSize: number): ReactElement {
-  const totalW = widths.reduce((a, b) => a + b, 0)
+function tableRow(key: number | string, r: Row, colWidthsPt: number[], isHeader: boolean, fontSize: number): ReactElement {
   return (
     <View key={key} style={[styles.row, isHeader ? styles.headerCell : r.shade ? styles.shadeCell : undefined]} wrap={false}>
       {r.cells.map((c, i) => (
-        <View key={i} style={[styles.cellBase, { width: `${(widths[i] / totalW) * 100}%` }]}>
+        <View key={i} style={[styles.cellBase, { width: colWidthsPt[i], flexShrink: 0, flexGrow: 0 }]}>
           <Text style={{ fontSize, ...cellStyle(c), fontWeight: r.bold || c.bold || isHeader ? 700 : 400 }}>{c.text}</Text>
         </View>
       ))}
@@ -115,13 +153,14 @@ function tableRow(key: number | string, r: Row, widths: number[], isHeader: bool
 function tableBlock(t: TableModel, landscape: boolean): ReactElement {
   const fontSize = t.fontSize ?? 8
   const chunks = paginateRows(t, landscape)
+  const colWidthsPt = columnWidthsPt(t.widths, usableWidth(landscape))
   return (
     <>
       {t.title && <Text style={styles.tableTitle}>{t.title}</Text>}
       {chunks.map((chunk, ci) => (
-        <View key={ci} wrap={false} style={{ marginBottom: ci === chunks.length - 1 ? 8 : 0 }} break={ci > 0}>
-          {t.header.map((r, i) => tableRow(`h${i}`, r, t.widths, true, fontSize))}
-          {chunk.map((r, i) => tableRow(`r${i}`, r, t.widths, false, fontSize))}
+        <View key={ci} style={{ marginBottom: ci === chunks.length - 1 ? 8 : 0 }} break={ci > 0}>
+          {t.header.map((r, i) => tableRow(`h${i}`, r, colWidthsPt, true, fontSize))}
+          {chunk.map((r, i) => tableRow(`r${i}`, r, colWidthsPt, false, fontSize))}
         </View>
       ))}
     </>
