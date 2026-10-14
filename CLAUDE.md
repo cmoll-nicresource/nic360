@@ -93,6 +93,10 @@ There is no Mailchimp test audience yet. Define a `MailchimpClient` interface (`
 
 Our site is the source of truth for who receives what. Mailchimp only mirrors it, except for unsubscribes (see the entity map, EmailFlag).
 
+## US Tobacco Trade Barometer
+
+A monthly, upload-triggered report (not scheduled): any editor uploads the two files Census emails each month at `/staff/trade-reports`, which loads them into a `ref`/`trade`/`report` Postgres schema set (same database, namespaced away from Payload's own tables), refreshes the US Imports/US Exports Datasets, and drafts the Trade Barometer as a PDF Publication Issue. See `docs/ttb-trade-report.md` for setup/testing/known-issues and the entity map's "US Tobacco Trade Barometer" section for field-level detail. **Production doesn't have the required schema/historical data yet** — check that doc before assuming this works in production.
+
 ## Conventions
 
 - One file per collection in `src/collections/`. Shared field builders (index terms, excerpt core) live in `src/fields/`. Access functions go in `src/access/`, hooks in `src/hooks/`.
