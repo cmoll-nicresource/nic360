@@ -1,4 +1,3 @@
-import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
@@ -7,10 +6,9 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import type { Plugin } from 'payload'
 import { fileURLToPath } from 'url'
-import nodemailer from 'nodemailer'
 import sharp from 'sharp'
 
-import { applyEmailSafeMode } from './lib/emailSafeMode'
+import { buildAccountEmailTransport } from './lib/accountEmailTransport'
 
 import { AccessProviders } from './collections/AccessProviders'
 import { Articles } from './collections/Articles'
@@ -46,13 +44,10 @@ import { TrademarkImportRuns } from './collections/TrademarkImportRuns'
 import { Trademarks } from './collections/Trademarks'
 import { Users } from './collections/Users'
 import { MailchimpSettings } from './globals/MailchimpSettings'
-import { consoleEmailTransport } from './lib/consoleEmailTransport'
 import { tmogImportTask } from './jobs/tmogImportTask'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
-
-const hasSesConfig = Boolean(process.env.SES_ACCESS_KEY_ID && process.env.SES_SECRET_ACCESS_KEY)
 
 // S3-compatible file storage (AWS S3 or Cloudflare R2) — leave S3_BUCKET
 // unset in development to keep using local disk. Files stay served through
@@ -164,47 +159,17 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI || '',
     },
   }),
-  email: (() => {
-    // Everything moved to SES (no more Mandrill) — same AWS credentials the
-    // publication-issue bulk sender uses (src/lib/ses/), so there's one
-    // email-sending system end to end rather than two.
-    const transport = hasSesConfig
-      ? nodemailer.createTransport(
-          // @types/nodemailer's createTransport overloads don't cover the
-          // {SES: {...}} shorthand (it has no dependency on @aws-sdk/client-ses
-          // types) — this is still real, documented nodemailer behavior:
-          // https://nodemailer.com/transports/ses/
-          {
-            SES: {
-              ses: new SESClient({
-                region: process.env.SES_REGION || 'us-east-1',
-                credentials: {
-                  accessKeyId: process.env.SES_ACCESS_KEY_ID!,
-                  secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
-                },
-              }),
-              aws: { SendRawEmailCommand },
-            },
-          } as Parameters<typeof nodemailer.createTransport>[0],
-        )
-      : // No SES_* env set: print emails to the console instead of sending them.
-        nodemailer.createTransport(consoleEmailTransport)
-
-    // Real migrated user data lives in this environment — this is the hard
-    // safety net against ever emailing one of them by accident. See
-    // src/lib/emailSafeMode.ts; requires an explicit EMAIL_SAFE_MODE=off to
-    // actually deliver to a real recipient.
-    applyEmailSafeMode(transport)
-
-    return nodemailerAdapter({
-      // Deliberately separate from SES_FROM_ADDRESS (used for publication
-      // bulk sends, src/lib/ses/) — different MAIL FROM domain so a
-      // newsletter send's bounce/complaint rate can't drag down deliverability
-      // for password resets and other must-arrive account email.
-      defaultFromAddress: process.env.SES_ACCOUNT_FROM_ADDRESS || 'no-reply@accounts.nicotine360.org',
-      defaultFromName: 'Nicotine360',
-      transport,
-    })
-  })(),
+  email: nodemailerAdapter({
+    // Deliberately separate from SES_FROM_ADDRESS (used for publication
+    // bulk sends, src/lib/ses/) — different MAIL FROM domain so a
+    // newsletter send's bounce/complaint rate can't drag down deliverability
+    // for password resets and other must-arrive account email.
+    defaultFromAddress: process.env.SES_ACCOUNT_FROM_ADDRESS || 'no-reply@accounts.nicotine360.org',
+    defaultFromName: 'Nicotine360',
+    // Safe-mode-wrapped transport built in accountEmailTransport.ts (and
+    // unit-tested there) rather than inline, so the safe-mode wiring itself
+    // is regression-tested — see accountEmailTransport.test.ts.
+    transport: buildAccountEmailTransport(),
+  }),
   sharp,
 })
