@@ -2,6 +2,7 @@ import Papa from 'papaparse'
 import { NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 
+import { buildCountryNameLookup, resolveCountryColumns } from '@/lib/countryLookup'
 import { requireReaderPlan } from '@/lib/requireReaderPlan'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -13,16 +14,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const dataset = await payload.findByID({ collection: 'datasets', id, overrideAccess: true }).catch(() => null)
     if (!dataset) return NextResponse.json({ error: 'Dataset not found.' }, { status: 404 })
 
-    const { docs } = await payload.find({
-      collection: 'dataset-rows',
-      where: { dataset: { equals: dataset.id } },
-      limit: 10000,
-      depth: 0,
-      overrideAccess: true,
-    })
+    const [{ docs }, { docs: countries }] = await Promise.all([
+      payload.find({
+        collection: 'dataset-rows',
+        where: { dataset: { equals: dataset.id } },
+        limit: 10000,
+        depth: 0,
+        overrideAccess: true,
+      }),
+      payload.find({ collection: 'countries', limit: 1000, depth: 0, overrideAccess: true }),
+    ])
 
     const columns = dataset.columns
-    const rows = docs.map((d) => columns.map((c) => (d.values as Record<string, unknown>)[c.key ?? ''] ?? ''))
+    const nameByIso2 = buildCountryNameLookup(countries)
+    const resolved = resolveCountryColumns(columns, docs.map((d) => d.values as Record<string, unknown>), nameByIso2)
+    const rows = resolved.map((values) => columns.map((c) => values[c.key ?? ''] ?? ''))
 
     if (format === 'xlsx') {
       const worksheet = XLSX.utils.aoa_to_sheet([columns.map((c) => c.label), ...rows])
