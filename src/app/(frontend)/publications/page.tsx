@@ -8,6 +8,7 @@ import { JournalIcon } from '@/components/brandIcons'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
+import { sentenceCase } from '@/lib/textCase'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,13 +25,21 @@ export default async function PublicationsPage() {
   return (
     <>
       <SiteNav />
+      <div className="header-band">
+        <div className="header-band-inner">
+          <div>
+            <p className="header-band-eyebrow">Content</p>
+            <h1 className="page-heading">
+              <span className="icon-badge">
+                <JournalIcon />
+              </span>
+              Publications
+            </h1>
+            <p>Daily and weekly briefings, delivered to your inbox and archived here.</p>
+          </div>
+        </div>
+      </div>
       <div className="page">
-        <h1 className="page-heading">
-          <JournalIcon />
-          Publications
-        </h1>
-        <p className="muted">Newsletters, readable by any Base or Premium subscriber.</p>
-
         {!canRead ? (
           <div className="locked-content">
             Sign in with a Base or Premium subscription to view publications.{' '}
@@ -71,10 +80,11 @@ async function PublicationList({ payload }: { payload: Awaited<ReturnType<typeof
             <div className="card">
               {inCategory.map((p) => (
                 <Link key={p.id} href={`/publications/${p.slug}`} className="excerpt-list-item">
-                  <h3>{p.title}</h3>
-                  <div className="excerpt-meta">
-                    {p.description} · {p.frequency}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <h3 style={{ margin: 0 }}>{p.title}</h3>
+                    {p.frequency && <span className="tag-pill">{sentenceCase(p.frequency)}</span>}
                   </div>
+                  {p.description && <div className="excerpt-meta">{p.description}</div>}
                 </Link>
               ))}
             </div>

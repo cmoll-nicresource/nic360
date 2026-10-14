@@ -11,6 +11,7 @@ import { CHANNELS } from '@/config/channels'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { hasActiveRegistration } from '@/access/eventAccess'
 import { EventCheckoutForm } from '@/components/EventCheckoutForm'
+import { formatDate } from '@/lib/formatDate'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,20 +46,31 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   return (
     <>
       <SiteNav />
+      <div
+        className="hero"
+        style={{
+          background: `linear-gradient(180deg, rgba(14,42,71,0.55), rgba(14,42,71,0.85)), url(https://placehold.co/1600x500/${channel.brandColor.replace('#', '')}/ffffff?text=${encodeURIComponent(channel.name)})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="hero-inner" style={{ padding: '56px 24px' }}>
+          <p className="eyebrow">{channel.name}</p>
+          <h1 style={{ fontSize: 34 }}>{event.name}</h1>
+          <p className="hero-sub">
+            {formatDate(event.startsAt)} &ndash; {formatDate(event.endDate)}
+            {event.venue?.address ? ` · ${event.venue.address}` : ''}
+          </p>
+        </div>
+      </div>
       <div className="page">
-        <p>
-          <Link href="/events">&larr; All events</Link>
-        </p>
-        <h1>{event.name}</h1>
-        <p className="excerpt-meta">
-          {channel.name} · {new Date(event.startsAt).toLocaleDateString()} &ndash;{' '}
-          {new Date(event.endDate).toLocaleDateString()}
-          {event.venue?.address ? ` · ${event.venue.address}` : ''}
-        </p>
-        {event.tagline && <p className="muted">{event.tagline}</p>}
+        <div className="breadcrumbs">
+          <Link href="/events">Events</Link>
+        </div>
 
         {event.description && (
           <div className="card">
+            <h2>About</h2>
             <RichText data={event.description} />
           </div>
         )}
@@ -102,7 +114,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <div key={s.id} className="excerpt-list-item">
               <h3>{s.title}</h3>
               <div className="excerpt-meta">
-                {new Date(s.day).toLocaleDateString()} · {s.type}
+                {formatDate(s.day)} · {s.type}
                 {s.room ? ` · ${s.room}` : ''}
               </div>
               {s.description && <p>{s.description}</p>}

@@ -25,15 +25,16 @@ type Product = {
   title: string
   description: string
   requires: 'base' | 'premium'
+  collection?: 'articles' | 'bills' | 'trademarks'
 }
 
 const PRODUCTS: Product[] = [
-  { href: '/articles', icon: AnnouncementIcon, title: 'News', description: 'News from across the industry.', requires: 'base' },
-  { href: '/bills', icon: LawIcon, title: 'Legislation', description: 'Legislation tracked via StateNet.', requires: 'base' },
-  { href: '/trademarks', icon: StampIcon, title: 'Trademarks', description: 'Weekly USPTO filings.', requires: 'base' },
+  { href: '/articles', icon: AnnouncementIcon, title: 'News', description: 'News from across the industry.', requires: 'base', collection: 'articles' },
+  { href: '/bills', icon: LawIcon, title: 'Legislation', description: 'Legislation tracked via StateNet.', requires: 'base', collection: 'bills' },
+  { href: '/trademarks', icon: StampIcon, title: 'Trademarks', description: 'Weekly USPTO filings.', requires: 'base', collection: 'trademarks' },
   { href: '/guides', icon: DocumentationIcon, title: 'Guides', description: 'Reference guides and how-tos.', requires: 'base' },
   { href: '/publications', icon: JournalIcon, title: 'Publications', description: 'Newsletters and issues.', requires: 'base' },
-  { href: '/datasets', icon: DashboardIcon, title: 'Data', description: 'Market, tax and trade datasets in AG Grid.', requires: 'premium' },
+  { href: '/datasets', icon: DashboardIcon, title: 'Data', description: 'Market, tax and trade datasets you can filter and download.', requires: 'premium' },
 ]
 
 export default async function DashboardPage() {
@@ -61,6 +62,24 @@ export default async function DashboardPage() {
   const plan = await getReaderPlan(fullUser, payload)
   const tierLabel: Record<ReaderPlan, string> = { none: 'No subscription', base: 'Base', premium: 'Premium' }
 
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const newCounts: Partial<Record<'articles' | 'bills' | 'trademarks', number>> = {}
+  if (plan !== 'none') {
+    const results = await Promise.all(
+      (['articles', 'bills', 'trademarks'] as const).map((c) =>
+        payload.count({
+          collection: c,
+          where: { createdAt: { greater_than_equal: sevenDaysAgo.toISOString() } },
+          overrideAccess: true,
+        }),
+      ),
+    )
+    newCounts.articles = results[0].totalDocs
+    newCounts.bills = results[1].totalDocs
+    newCounts.trademarks = results[2].totalDocs
+  }
+
   return (
     <>
       <SiteNav />
@@ -81,6 +100,7 @@ export default async function DashboardPage() {
             {PRODUCTS.map((p) => {
               const unlocked = planSatisfies(plan, p.requires)
               const Icon = p.icon
+              const newCount = p.collection ? newCounts[p.collection] : undefined
               const inner = (
                 <>
                   <div className="icon">
@@ -88,6 +108,11 @@ export default async function DashboardPage() {
                   </div>
                   <h3>{p.title}</h3>
                   <p>{unlocked ? p.description : `${p.description} Premium only.`}</p>
+                  {unlocked && newCount ? (
+                    <p className="muted tnum" style={{ marginTop: 4, fontWeight: 600, color: 'var(--nrc-teal)' }}>
+                      {newCount} new this week
+                    </p>
+                  ) : null}
                 </>
               )
               return unlocked ? (

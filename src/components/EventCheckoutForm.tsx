@@ -88,7 +88,14 @@ export function EventCheckoutForm({
   }
 
   if (onSaleTypes.length === 0) {
-    return <p className="muted">No ticket types are currently on sale for this event.</p>
+    return (
+      <p className="muted">
+        Ticket sales haven&apos;t opened yet.{' '}
+        <a href={`mailto:membership@nicotine360.org?subject=${encodeURIComponent('Notify me when tickets open')}`}>
+          Get notified →
+        </a>
+      </p>
+    )
   }
 
   return (

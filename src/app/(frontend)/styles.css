@@ -157,6 +157,11 @@ a {
   padding: 48px 24px;
 }
 
+/* Login/forgot-password: a narrow centered card, not an 880px box for two fields. */
+.auth-page {
+  max-width: 420px;
+}
+
 .page-wide {
   max-width: var(--page-wide);
   margin: 0 auto;

@@ -8,6 +8,7 @@ import { SiteNav } from '@/components/SiteNav'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
+import { formatDate } from '@/lib/formatDate'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,9 +27,9 @@ export default async function PublicationDetailPage({ params }: { params: Promis
     <>
       <SiteNav />
       <div className="page">
-        <p>
-          <Link href="/publications">&larr; All publications</Link>
-        </p>
+        <div className="breadcrumbs">
+          <Link href="/publications">Publications</Link>
+        </div>
         {!canRead ? (
           <div className="locked-content">
             Sign in with a Base or Premium subscription to view this publication.{' '}
@@ -70,22 +71,44 @@ async function PublicationDetail({
     overrideAccess: true,
   })
 
+  const groups = new Map<string, typeof issues>()
+  for (const issue of issues) {
+    const key = new Date(issue.issueDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    const group = groups.get(key)
+    if (group) group.push(issue)
+    else groups.set(key, [issue])
+  }
+
   return (
     <>
-      <h1>{publication.title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <h1 style={{ margin: 0 }}>{publication.title}</h1>
+        {publication.frequency && <span className="tag-pill">{publication.frequency}</span>}
+      </div>
       {publication.description && <p className="muted">{publication.description}</p>}
 
-      <div className="card">
-        {issues.map((issue) => (
-          <Link key={issue.id} href={`/publications/${slug}/issues/${issue.id}`} className="excerpt-list-item">
-            <h3>{issue.title}</h3>
-            <div className="excerpt-meta">
-              {new Date(issue.issueDate).toLocaleDateString()} · {issue.email?.status ?? 'not sent'}
-            </div>
-          </Link>
-        ))}
-        {issues.length === 0 && <p className="muted">No issues yet.</p>}
-      </div>
+      {issues.length === 0 && <p className="muted">No issues yet.</p>}
+      {[...groups.entries()].map(([month, monthIssues]) => (
+        <div key={month} style={{ marginBottom: 24 }}>
+          <h2>{month}</h2>
+          <div className="card">
+            {monthIssues.map((issue) => (
+              <Link key={issue.id} href={`/publications/${slug}/issues/${issue.id}`} className="excerpt-list-item">
+                <h3>
+                  {new Date(issue.issueDate).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                    timeZone: 'UTC',
+                  })}
+                </h3>
+                {isStaff && <div className="excerpt-meta">{issue.email?.status ?? 'not sent'}</div>}
+              </Link>
+            ))}
+          </div>
+        </div>
+      ))}
     </>
   )
 }

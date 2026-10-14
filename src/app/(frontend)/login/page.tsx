@@ -7,14 +7,19 @@ export default function LoginPage() {
   return (
     <>
       <SiteNav />
-      <div className="page">
-        <h1>Sign in</h1>
-        <p className="muted">
-          New here? <a href="/signup">Create an account</a>.
+      <div className="page auth-page">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="Nicotine360" style={{ height: 32, margin: '0 auto 24px', display: 'block' }} />
+        <h1 style={{ textAlign: 'center' }}>Sign in</h1>
+        <p className="muted" style={{ textAlign: 'center' }}>
+          Use your work email — if your company subscribes, you&apos;re in automatically.
         </p>
         <Suspense>
           <LoginForm />
         </Suspense>
+        <p className="muted" style={{ textAlign: 'center', marginTop: 16 }}>
+          New here? <a href="/signup">Create an account</a>.
+        </p>
       </div>
     </>
   )

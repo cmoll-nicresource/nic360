@@ -3,6 +3,7 @@ import type { getPayload } from 'payload'
 import React from 'react'
 
 import { CHANNELS } from '@/config/channels'
+import { formatDate } from '@/lib/formatDate'
 
 /** Shown to a reader whose company has no active subscription: contact-us + a promoted upcoming event. */
 export async function NoSubscriptionNotice({ payload }: { payload: Awaited<ReturnType<typeof getPayload>> }) {
@@ -38,7 +39,7 @@ export async function NoSubscriptionNotice({ payload }: { payload: Awaited<Retur
             <strong>{nextEvent.name}</strong>
             {nextEvent.tagline ? ` — ${nextEvent.tagline}` : ''}
             <br />
-            {new Date(nextEvent.startsAt).toLocaleDateString()}
+            {formatDate(nextEvent.startsAt)}
             {nextEvent.venue?.address ? ` · ${nextEvent.venue.address}` : ''}
           </p>
           <p>

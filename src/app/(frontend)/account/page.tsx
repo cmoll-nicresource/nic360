@@ -4,14 +4,18 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getReaderPlan, planSatisfies, type ReaderPlan } from '@/access/readerPlan'
+import { EditProfileForm } from '@/components/EditProfileForm'
+import { sentenceCase } from '@/lib/textCase'
 import { PublicationPreferencesForm } from '@/components/PublicationPreferencesForm'
 import { SiteNav } from '@/components/SiteNav'
 import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
 
-function PlanBadge({ plan }: { plan: 'none' | 'base' | 'premium' }) {
-  return <span className={`badge badge-${plan}`}>{plan}</span>
+const PLAN_LABEL: Record<ReaderPlan, string> = { none: 'No subscription', base: 'Base', premium: 'Premium' }
+
+function PlanBadge({ plan }: { plan: ReaderPlan }) {
+  return <span className={`badge badge-${plan}`}>{PLAN_LABEL[plan]}</span>
 }
 
 export default async function AccountPage() {
@@ -55,28 +59,16 @@ export default async function AccountPage() {
 
       <div className="card">
         <h2>Profile</h2>
-        <table>
-          <tbody>
-            <tr>
-              <th>Name</th>
-              <td>
-                {fullUser.firstName} {fullUser.lastName}
-              </td>
-            </tr>
-            <tr>
-              <th>Email</th>
-              <td>{fullUser.email}</td>
-            </tr>
-            <tr>
-              <th>Department</th>
-              <td>{fullUser.department || <span className="muted">—</span>}</td>
-            </tr>
-            <tr>
-              <th>Business sector</th>
-              <td>{fullUser.businessSector || <span className="muted">—</span>}</td>
-            </tr>
-          </tbody>
-        </table>
+        <EditProfileForm
+          userId={fullUser.id}
+          profile={{
+            firstName: fullUser.firstName ?? '',
+            lastName: fullUser.lastName ?? '',
+            email: fullUser.email,
+            department: fullUser.department ?? null,
+            businessSector: fullUser.businessSector ?? null,
+          }}
+        />
       </div>
 
       <div className="card">
@@ -86,7 +78,7 @@ export default async function AccountPage() {
         </p>
         <p className="muted">
           {provider
-            ? `Via ${provider.name} (${provider.status}, ${provider.plan})`
+            ? `Provided by ${provider.name} · ${PLAN_LABEL[provider.plan as ReaderPlan] ?? provider.plan}`
             : 'No access provider on file — you can only read events you have registered for.'}
         </p>
       </div>
@@ -143,8 +135,8 @@ async function EventRegistrationsAsync({ payload, userId }: { payload: Payload; 
               )}
             </td>
             <td>{r.ticketType}</td>
-            <td>{r.attendance}</td>
-            <td>{r.status}</td>
+            <td>{sentenceCase(r.attendance)}</td>
+            <td>{sentenceCase(r.status)}</td>
           </tr>
         ))}
       </tbody>

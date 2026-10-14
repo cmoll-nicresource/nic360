@@ -10,6 +10,7 @@ import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
 import { adSlotCount, getActiveAdsForPublication, isAdSlotBeforeIndex } from '@/lib/publicationAds'
+import { formatDate } from '@/lib/formatDate'
 import type { PublicationAd } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
@@ -35,16 +36,13 @@ export default async function IssueDetailPage({
     <>
       <SiteNav />
       <div className="page">
-        <p>
-          <Link href={`/publications/${slug}`}>&larr; Back</Link>
-        </p>
         {!canRead ? (
           <div className="locked-content">
             Sign in with a Base or Premium subscription to view this issue.{' '}
             <Link href="/account">Sign in</Link>
           </div>
         ) : (
-          <IssueDetail payload={payload} id={id} isStaff={isStaff} />
+          <IssueDetail payload={payload} id={id} isStaff={isStaff} slug={slug} />
         )}
       </div>
     </>
@@ -123,10 +121,12 @@ async function IssueDetail({
   payload,
   id,
   isStaff,
+  slug,
 }: {
   payload: Awaited<ReturnType<typeof getPayload>>
   id: string
   isStaff: boolean
+  slug: string
 }) {
   const issue = await payload
     .findByID({ collection: 'publication-issues', id, depth: 1, overrideAccess: true })
@@ -147,11 +147,19 @@ async function IssueDetail({
 
   return (
     <>
+      <div className="breadcrumbs">
+        <Link href="/publications">Publications</Link>
+        <span className="sep">/</span>
+        <Link href={`/publications/${slug}`}>{publication?.title ?? slug}</Link>
+      </div>
+
       {publication?.header && <div dangerouslySetInnerHTML={{ __html: publication.header }} />}
 
       <h1>{issue.title}</h1>
       <p className="excerpt-meta">
-        {new Date(issue.issueDate).toLocaleDateString()} · {issue.email?.status ?? 'not sent'}
+        {formatDate(issue.issueDate)}
+        {isStaff ? <span className="dot">·</span> : null}
+        {isStaff ? (issue.email?.status ?? 'not sent') : null}
       </p>
 
       {issue.format === 'excerpt-list' && (
