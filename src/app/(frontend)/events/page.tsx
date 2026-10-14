@@ -9,6 +9,10 @@ import { CHANNELS } from '@/config/channels'
 import { formatDate } from '@/lib/formatDate'
 
 export const dynamic = 'force-dynamic'
+export const metadata = {
+  title: 'Events',
+  description: 'Conferences and webinars across our channels.',
+}
 
 export default async function EventsPage() {
   const payloadConfig = await config

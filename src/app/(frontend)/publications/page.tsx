@@ -11,6 +11,10 @@ import { staffHasRole } from '@/access/staffRoles'
 import { sentenceCase } from '@/lib/textCase'
 
 export const dynamic = 'force-dynamic'
+export const metadata = {
+  title: 'Publications',
+  description: 'Daily and weekly briefings, delivered to your inbox and archived here.',
+}
 
 export default async function PublicationsPage() {
   const headers = await getHeaders()

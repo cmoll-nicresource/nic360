@@ -18,6 +18,10 @@ import { billStatusPill } from '@/lib/statusPill'
 import type { Bill } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
+export const metadata = {
+  title: 'Legislation',
+  description: 'Legislation tracked via StateNet, summarized and categorized.',
+}
 
 export default async function BillsPage({
   searchParams,

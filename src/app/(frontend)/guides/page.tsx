@@ -11,6 +11,10 @@ import { staffHasRole } from '@/access/staffRoles'
 import { formatDate } from '@/lib/formatDate'
 
 export const dynamic = 'force-dynamic'
+export const metadata = {
+  title: 'Guides',
+  description: 'In-depth reference guides to tax, trade and regulation.',
+}
 
 export default async function GuidesPage() {
   const headers = await getHeaders()

@@ -18,6 +18,7 @@ import {
 } from '@/components/brandIcons'
 
 export const dynamic = 'force-dynamic'
+export const metadata = { title: 'Dashboard' }
 
 type Product = {
   href: string

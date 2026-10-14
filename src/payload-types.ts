@@ -377,7 +377,6 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
-  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1232,7 +1231,6 @@ export interface Guide {
  */
 export interface GuideFile {
   id: number;
-  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1914,7 +1912,6 @@ export interface AccessProvidersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
-  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -2188,7 +2185,6 @@ export interface GuidesSelect<T extends boolean = true> {
  * via the `definition` "guide-files_select".
  */
 export interface GuideFilesSelect<T extends boolean = true> {
-  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

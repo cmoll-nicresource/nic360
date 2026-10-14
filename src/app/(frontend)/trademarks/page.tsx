@@ -18,6 +18,10 @@ import { parseTrademarkFilters, trademarkFiltersToQueryString, trademarkWhere } 
 import type { Trademark } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
+export const metadata = {
+  title: 'Trademarks',
+  description: 'New tobacco and nicotine trademark filings, renewals and cancellations from the USPTO, updated every week.',
+}
 
 export default async function TrademarksPage({
   searchParams,

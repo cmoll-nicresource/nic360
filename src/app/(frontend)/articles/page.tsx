@@ -17,6 +17,10 @@ import { TagPill } from '@/components/StatusBadge'
 import type { Article } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
+export const metadata = {
+  title: 'News',
+  description: 'News found across the internet, indexed by location, sector, product and subject.',
+}
 
 export default async function ArticlesPage({
   searchParams,

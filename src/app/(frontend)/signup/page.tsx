@@ -3,6 +3,8 @@ import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { SignupWizard } from '@/components/SignupWizard'
 
+export const metadata = { title: 'Create your account' }
+
 export default function SignupPage() {
   return (
     <>

@@ -12,6 +12,10 @@ import { staffHasRole } from '@/access/staffRoles'
 import { formatDate } from '@/lib/formatDate'
 
 export const dynamic = 'force-dynamic'
+export const metadata = {
+  title: 'Data',
+  description: 'Market, tax and trade data, researched and updated by our analysts.',
+}
 
 const CATEGORIES = [
   { value: 'policy', label: 'Policy', Icon: PolicyIcon },

@@ -3,6 +3,8 @@ import React, { Suspense } from 'react'
 import { LoginForm } from '@/components/LoginForm'
 import { SiteNav } from '@/components/SiteNav'
 
+export const metadata = { title: 'Sign in' }
+
 export default function LoginPage() {
   return (
     <>

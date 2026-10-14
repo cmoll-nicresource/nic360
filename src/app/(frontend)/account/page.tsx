@@ -18,6 +18,8 @@ function PlanBadge({ plan }: { plan: ReaderPlan }) {
   return <span className={`badge badge-${plan}`}>{PLAN_LABEL[plan]}</span>
 }
 
+export const metadata = { title: 'Account' }
+
 export default async function AccountPage() {
   const headers = await getHeaders()
   const payloadConfig = await config
