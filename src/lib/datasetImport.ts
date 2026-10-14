@@ -19,7 +19,7 @@ export function parseCsv(fileContents: string): ParsedSpreadsheet {
   return { headers, rows: result.data }
 }
 
-function normalize(s: string): string {
+export function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
@@ -39,9 +39,10 @@ export function suggestMapping(
   return mapping
 }
 
-type CountryLookup = Map<string, string> // normalized name/alias/iso -> iso2
+export type CountryLookup = Map<string, string> // normalized name/alias/iso -> iso2
 
-function buildCountryLookup(countries: Country[]): CountryLookup {
+/** Exported for reuse by other code that needs to resolve a free-text country name/code to a canonical iso2 (e.g. src/lib/ttb/syncDatasets.ts). */
+export function buildCountryLookup(countries: Country[]): CountryLookup {
   const lookup: CountryLookup = new Map()
   for (const c of countries) {
     lookup.set(normalize(c.name), c.iso2)

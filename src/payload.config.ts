@@ -42,6 +42,7 @@ import { Staff } from './collections/Staff'
 import { Subjects } from './collections/Subjects'
 import { TrademarkImportRuns } from './collections/TrademarkImportRuns'
 import { Trademarks } from './collections/Trademarks'
+import { TradeImportRuns } from './collections/TradeImportRuns'
 import { Users } from './collections/Users'
 import { MailchimpSettings } from './globals/MailchimpSettings'
 import { tmogImportTask } from './jobs/tmogImportTask'
@@ -126,6 +127,7 @@ export default buildConfig({
     PublicationAds,
     EmailFlags,
     TrademarkImportRuns,
+    TradeImportRuns,
     MailchimpOutbox,
     SesOutbox,
     Speakers,

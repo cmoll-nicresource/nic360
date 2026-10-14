@@ -32,6 +32,9 @@
     // Loosely typed by design — ids come from in-memory old-id -> new-id
     // Maps, not Payload's own generated types — so they shouldn't block
     // the production build's type check.
-    "migration"
+    "migration",
+    // Standalone POC with its own package.json/dependencies, not installed
+    // in this project — ported piece by piece into src/lib/ttb/ instead.
+    "ttb-trade"
   ]
 }

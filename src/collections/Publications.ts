@@ -74,12 +74,13 @@ export const Publications: CollectionConfig = {
       required: true,
       defaultValue: 'manual',
       admin: {
-        description: 'Manual for every publication except the two automated trademark reports.',
+        description: 'Manual for every publication except the automated trademark and trade-barometer reports.',
       },
       options: [
         { label: 'Manual', value: 'manual' },
         { label: 'Weekly US Trademark Report', value: 'weekly-trademark-report' },
         { label: 'Monthly US Trademark Activity', value: 'monthly-trademark-activity' },
+        { label: 'US Tobacco Trade Barometer', value: 'monthly-trade-barometer' },
       ],
     },
     {

@@ -20,3 +20,7 @@ old-db
 
 # Standalone repo (its own .git) — the Chrome extension, not part of this app's build.
 tma-ext
+
+# Standalone POC (own package.json/README/21MB db dump) — ported piece by piece into
+# src/lib/ttb/ instead of committed wholesale.
+ttb-trade

@@ -90,6 +90,7 @@ export interface Config {
     'publication-ads': PublicationAd;
     'email-flags': EmailFlag;
     'trademark-import-runs': TrademarkImportRun;
+    'trade-import-runs': TradeImportRun;
     'mailchimp-outbox': MailchimpOutbox;
     'ses-outbox': SesOutbox;
     speakers: Speaker;
@@ -153,6 +154,7 @@ export interface Config {
     'publication-ads': PublicationAdsSelect<false> | PublicationAdsSelect<true>;
     'email-flags': EmailFlagsSelect<false> | EmailFlagsSelect<true>;
     'trademark-import-runs': TrademarkImportRunsSelect<false> | TrademarkImportRunsSelect<true>;
+    'trade-import-runs': TradeImportRunsSelect<false> | TradeImportRunsSelect<true>;
     'mailchimp-outbox': MailchimpOutboxSelect<false> | MailchimpOutboxSelect<true>;
     'ses-outbox': SesOutboxSelect<false> | SesOutboxSelect<true>;
     speakers: SpeakersSelect<false> | SpeakersSelect<true>;
@@ -446,9 +448,9 @@ export interface Publication {
   format: 'excerpt-list' | 'pdf-report' | 'custom-html';
   frequency: 'daily' | 'weekly' | 'monthly';
   /**
-   * Manual for every publication except the two automated trademark reports.
+   * Manual for every publication except the automated trademark and trade-barometer reports.
    */
-  generator: 'manual' | 'weekly-trademark-report' | 'monthly-trademark-activity';
+  generator: 'manual' | 'weekly-trademark-report' | 'monthly-trademark-activity' | 'monthly-trade-barometer';
   /**
    * Defaults for building an issue; editors can still adjust each issue afterward.
    */
@@ -1433,6 +1435,43 @@ export interface TrademarkImportRun {
   createdAt: string;
 }
 /**
+ * A log of each monthly Census trade file upload, so failures are visible.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trade-import-runs".
+ */
+export interface TradeImportRun {
+  id: number;
+  startedAt: string;
+  finishedAt?: string | null;
+  status: 'running' | 'succeeded' | 'failed';
+  files?: {
+    import?: string | null;
+    export?: string | null;
+  };
+  counts?: {
+    importRows?: number | null;
+    exportRows?: number | null;
+    importReplaced?: number | null;
+    exportReplaced?: number | null;
+    newHtsCodes?: number | null;
+    newCountries?: number | null;
+  };
+  /**
+   * Duplicate/overlap warnings, YTD checks and reference-code additions the loader surfaced.
+   */
+  dataQualityNotes?:
+    | {
+        note: string;
+        id?: string | null;
+      }[]
+    | null;
+  issuesCreated?: (number | PublicationIssue)[] | null;
+  error?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Simulated Mailchimp calls. In simulated mode this is how campaigns get reviewed — the full rendered HTML and target segment are logged here instead of being sent.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1720,6 +1759,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'trademark-import-runs';
         value: number | TrademarkImportRun;
+      } | null)
+    | ({
+        relationTo: 'trade-import-runs';
+        value: number | TradeImportRun;
       } | null)
     | ({
         relationTo: 'mailchimp-outbox';
@@ -2360,6 +2403,41 @@ export interface TrademarkImportRunsSelect<T extends boolean = true> {
         cancellations?: T;
         imagesSaved?: T;
         imagesMissing?: T;
+      };
+  issuesCreated?: T;
+  error?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trade-import-runs_select".
+ */
+export interface TradeImportRunsSelect<T extends boolean = true> {
+  startedAt?: T;
+  finishedAt?: T;
+  status?: T;
+  files?:
+    | T
+    | {
+        import?: T;
+        export?: T;
+      };
+  counts?:
+    | T
+    | {
+        importRows?: T;
+        exportRows?: T;
+        importReplaced?: T;
+        exportReplaced?: T;
+        newHtsCodes?: T;
+        newCountries?: T;
+      };
+  dataQualityNotes?:
+    | T
+    | {
+        note?: T;
+        id?: T;
       };
   issuesCreated?: T;
   error?: T;

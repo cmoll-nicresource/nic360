@@ -7,6 +7,11 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  // Native binding (the Rust-based resvg chart renderer for the trade-report
+  // PDF) — must load via Node's own require at runtime, not get bundled;
+  // sharp gets this treatment by one of Next's own built-in defaults, this
+  // one doesn't, so it's listed explicitly.
+  serverExternalPackages: ['@resvg/resvg-js'],
   images: {
     localPatterns: [
       {
