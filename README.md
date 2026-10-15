@@ -8,7 +8,7 @@ Payload CMS 3 + Next.js rebuild of Nicotine360. See [CLAUDE.md](./CLAUDE.md) for
 pnpm install
 cp .env.example .env   # fill in DATABASE_URI at minimum; everything else has a dev-safe default
 docker compose up -d   # local Postgres on :5432
-pnpm seed               # wipes and fills every collection with placeholder data
+# Optional disposable demo data: see docs/import-and-access-safety.md
 pnpm dev                 # http://localhost:3000
 ```
 
@@ -17,6 +17,8 @@ Admin panel: `/admin`. Staff tasks are grouped into imports/reports, publishing 
 ## Testing
 
 The current reader layouts, search, dataset explorer and access checks are described in [docs/frontend-experience.md](./docs/frontend-experience.md).
+
+Dataset transactions, PDF permissions, webhook verification, and the guarded local demo reset are documented in [docs/import-and-access-safety.md](./docs/import-and-access-safety.md). `pnpm seed` refuses the working database; it requires a dedicated local demo/test database and explicit reset switches.
 
 `pnpm test` runs the offline Vitest suite, including trade-report database-response regressions and actual PDF table-layout checks. `pnpm test:watch` reruns on change. `pnpm test:trade-report` opts into read-only integration checks against local Postgres with the restored trade history; these are skipped in the offline suite. Collection access rules, hooks and HTTP flows still require manual verification.
 

@@ -110,7 +110,7 @@ Missing TRQ inputs are also fetched automatically from the latest weekly CBP Com
 - One file per collection in `src/collections/`. Shared field builders (index terms, excerpt core) live in `src/fields/`. Access functions go in `src/access/`, hooks in `src/hooks/`.
 - Field names and types follow `docs/entity-map.md`. If a field has to change, update the entity map in the same commit.
 - Use Payload drafts (`versions.drafts`) on content collections. Use `join` fields for reverse lists instead of storing both sides.
-- Seed scripts: `pnpm seed` resets and fills every collection with realistic placeholder data (tobacco and nicotine industry flavored, no real personal data).
+- Seed scripts: never reset the working or hosted database. The demo reset requires a dedicated loopback `nic360_*_demo`/`nic360_*_test` database, `ALLOW_DESTRUCTIVE_LOCAL_SEED=true`, and `pnpm seed --reset-local-demo`; see `docs/import-and-access-safety.md`.
 - Tests: `pnpm test` (Vitest, `src/**/*.test.ts`) covers pure logic — no DB or network. Add a test alongside any new pure function with real edge cases (parsing, pricing, classification, access rules), not just UI/collection code.
 - Secrets come only from env: `DATABASE_URI`, `PAYLOAD_SECRET`, `S3_*`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SES_*`, `MAILCHIMP_API_KEY`, `MAILCHIMP_MODE`. Keep `.env.example` up to date.
 - Email safety: real migrated user data lives in non-local environments, so every outgoing account email is redirected to a safe address by default (`EMAIL_SAFE_MODE`, `src/lib/emailSafeMode.ts`) — requires an explicit `EMAIL_SAFE_MODE=off` to deliver to a real recipient. Keep the SES account in sandbox mode as a second, infrastructure-level backstop until real sending is actually wanted.

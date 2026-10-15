@@ -5,6 +5,7 @@ import type Stripe from 'stripe'
 import config from '@/payload.config'
 import { getStripeClient } from '@/lib/stripe'
 import { markOrderPaid } from '@/lib/orderFulfillment'
+import { allowLocalWebhookSimulation } from '@/lib/localSafety'
 
 export async function POST(request: Request) {
   const signature = request.headers.get('stripe-signature')
@@ -14,10 +15,19 @@ export async function POST(request: Request) {
   try {
     if (process.env.STRIPE_WEBHOOK_SECRET) {
       const stripe = getStripeClient()
-      event = stripe.webhooks.constructEvent(rawBody, signature || '', process.env.STRIPE_WEBHOOK_SECRET)
-    } else {
+      event = stripe.webhooks.constructEvent(
+        rawBody,
+        signature || '',
+        process.env.STRIPE_WEBHOOK_SECRET,
+      )
+    } else if (allowLocalWebhookSimulation(request)) {
       // Dev convenience only: no webhook secret configured, so signature isn't checked.
       event = JSON.parse(rawBody) as Stripe.Event
+    } else {
+      return NextResponse.json(
+        { error: 'Stripe webhook verification is not configured.' },
+        { status: 503 },
+      )
     }
   } catch (err) {
     console.error('Stripe webhook signature verification failed', err)
@@ -31,7 +41,9 @@ export async function POST(request: Request) {
       const payloadConfig = await config
       const payload = await getPayload({ config: payloadConfig })
       const paymentRef =
-        typeof session.payment_intent === 'string' ? session.payment_intent : (session.payment_intent?.id ?? session.id)
+        typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? session.id)
       await markOrderPaid(payload, Number(orderId), paymentRef)
     }
   }

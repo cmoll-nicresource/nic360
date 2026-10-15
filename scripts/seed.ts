@@ -5,9 +5,8 @@
  * Usage: pnpm seed
  */
 import 'dotenv/config' // next dev/build load .env automatically; running via tsx directly does not.
-import { getPayload } from 'payload'
-
-import config from '../src/payload.config'
+import type { Payload } from 'payload'
+import { assertSafeDemoSeed } from '../src/lib/localSafety'
 import { getReaderPlan } from '../src/access/readerPlan'
 import { SEED_PASSWORD, seedAccounts } from './seed/accounts'
 import { seedCountries, seedDatasets, seedGuides } from './seed/data'
@@ -78,13 +77,16 @@ const WIPE_ORDER = [
   'media',
 ] as const
 
-async function wipe(payload: Awaited<ReturnType<typeof getPayload>>) {
+async function wipe(payload: Payload) {
   for (const collection of WIPE_ORDER) {
     await payload.delete({ collection, where: ALL, overrideAccess: true })
   }
 }
 
 async function main() {
+  assertSafeDemoSeed(process.env, process.argv.slice(2))
+  const { getPayload } = await import('payload')
+  const { default: config } = await import('../src/payload.config')
   const payload = await getPayload({ config })
 
   console.log('Wiping all seeded collections...')
@@ -103,14 +105,26 @@ async function main() {
   await seedPublicationEngagementHistory(payload, publications)
   await seedEmailFlags(payload, publications)
 
-  console.log('Setting a couple of readers\' publication preferences (exercises the Mailchimp sync hook)...')
+  console.log(
+    "Setting a couple of readers' publication preferences (exercises the Mailchimp sync hook)...",
+  )
   for (const email of ['megan.clarke@altria.com', 'elena.rossi@pmi.com']) {
-    const { docs } = await payload.find({ collection: 'users', where: { email: { equals: email } }, limit: 1, overrideAccess: true })
+    const { docs } = await payload.find({
+      collection: 'users',
+      where: { email: { equals: email } },
+      limit: 1,
+      overrideAccess: true,
+    })
     if (docs[0]) {
       await payload.update({
         collection: 'users',
         id: docs[0].id,
-        data: { emailPublications: [publications['us-news-clippings'], publications['monthly-research-digest']] },
+        data: {
+          emailPublications: [
+            publications['us-news-clippings'],
+            publications['monthly-research-digest'],
+          ],
+        },
         overrideAccess: true,
       })
     }
@@ -119,7 +133,12 @@ async function main() {
   const { speakers, sponsors } = await seedSpeakersAndSponsors(payload)
   const { gtnf, infocus } = await seedEvents(payload, speakers, sponsors)
   await seedDiscountCodeAndDemoPurchase(payload, gtnf.id, async (name) => {
-    const { docs } = await payload.find({ collection: 'access-providers', where: { name: { equals: name } }, limit: 1, overrideAccess: true })
+    const { docs } = await payload.find({
+      collection: 'access-providers',
+      where: { name: { equals: name } },
+      limit: 1,
+      overrideAccess: true,
+    })
     return docs[0]?.id
   })
   await seedVirtualAttendeesAndWatchData(payload, infocus.id)
@@ -134,7 +153,8 @@ async function main() {
   const rows = await Promise.all(
     allUsers.map(async (u) => ({
       email: u.email,
-      provider: u.accessProvider && typeof u.accessProvider === 'object' ? u.accessProvider.name : '(none)',
+      provider:
+        u.accessProvider && typeof u.accessProvider === 'object' ? u.accessProvider.name : '(none)',
       plan: await getReaderPlan(u, payload),
     })),
   )

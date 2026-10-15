@@ -6,6 +6,8 @@ Source for this first pass: *N360 Excerpt Types.docx* (Papa, 2026-10-08), which 
 
 ## Overview
 
+Current import transaction guarantees, parent-scoped PDF file access, webhook verification, and seed protections are documented in [import-and-access-safety.md](./import-and-access-safety.md). These supersede the earlier prototype shortcuts described in the historical notes below.
+
 Current reader layouts and data-explorer behavior are documented in [frontend-experience.md](./frontend-experience.md); staff routes and their permissions are in [admin-workspace.md](./admin-workspace.md).
 
 ```

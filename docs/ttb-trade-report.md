@@ -119,6 +119,6 @@ These commands are an operator plan, not evidence that the beta database has bee
 ## Known limits
 
 - Rendering a full report takes tens of seconds; the web request runs synchronously.
-- Dataset replacement is delete-then-insert without a transaction and reads at most 20,000 existing rows. A failure can leave a partially refreshed dataset; larger datasets require pagination and an atomic replacement design.
+- Dataset refreshes now use a locked transaction and bulk inserts with no 20,000-row cap. Rows and import metadata commit together; failed replacements roll back. See [import-and-access-safety.md](./import-and-access-safety.md). Census fact-file commits and PDF generation remain separate stages.
 - Preview uploads are held in one process's memory. Multiple app instances or a restart between preview and confirm can lose the upload.
 - Missing required trade figures stop generation; retry the source or supply complete manual inputs. Trademark PDFs use their separate implementation.
