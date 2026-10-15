@@ -26,7 +26,7 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm lint
       - run: pnpm test
-      - run: pnpm exec vitest run src/lib/writeDatasetRows.integration.test.ts
+      - run: pnpm exec vitest run src/lib/writeDatasetRows.integration.test.ts src/lib/emailFlagSchema.integration.test.ts
         env:
           DATASET_INTEGRATION: '1'
           DATABASE_URI: postgresql://postgres:postgres@localhost:5432/nic360_test

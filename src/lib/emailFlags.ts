@@ -26,7 +26,7 @@ export async function flagUserByEmail(
 
   const { totalDocs: alreadyOpen } = await payload.find({
     collection: 'email-flags',
-    where: { and: [{ user: { equals: user.id } }, { status: { equals: 'open' } }] },
+    where: { and: [{ user: { equals: user.id } }, { status: { in: ['open', 'following up'] } }] },
     limit: 0,
     overrideAccess: true,
   })

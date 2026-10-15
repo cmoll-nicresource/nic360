@@ -74,3 +74,5 @@ Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verific
 - `pnpm seed` seeds speakers, sponsors, three events across all three channels (one with `hasReplay`), sessions, a discount code, and a demo two-ticket purchase with that code applied (reusing the real pricing/validation functions, not hand-rolled numbers).
 
 This completes every milestone in CLAUDE.md's original prototype scope. Later work added migration tooling, search, analytics, and the US Tobacco Trade Barometer. The entity map documents current behavior; the trade runbook records outstanding production verification. Newsletter bulk delivery through the live SES implementation remains stubbed; account emails use a separate SES transport.
+
+Current company/member migration exceptions and the EmailFlag deletion repair are tracked in [docs/migration-exceptions.md](docs/migration-exceptions.md). Apply its additive EmailFlag schema migration before deploying that relationship change to another existing database.

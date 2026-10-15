@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { staffHasMinRole } from '@/access/staffRoles'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
+import { snapshotEmailFlagRecipient } from '@/hooks/snapshotEmailFlagRecipient'
 
 export const EmailFlags: CollectionConfig = {
   slug: 'email-flags',
@@ -9,7 +10,7 @@ export const EmailFlags: CollectionConfig = {
   admin: {
     group: ADMIN_GROUPS.accounts,
     useAsTitle: 'id',
-    defaultColumns: ['user', 'reason', 'status', 'occurredAt'],
+    defaultColumns: ['user', 'recipientEmail', 'reason', 'status', 'occurredAt'],
     description: 'A queue of unsubscribes and delivery problems to follow up on.',
     components: {
       edit: {
@@ -23,8 +24,24 @@ export const EmailFlags: CollectionConfig = {
     update: staffHasMinRole('gatekeeper'),
     delete: staffHasMinRole('gatekeeper'),
   },
+  hooks: { beforeValidate: [snapshotEmailFlagRecipient] },
   fields: [
-    { name: 'user', type: 'relationship', relationTo: 'users', required: true },
+    {
+      name: 'user',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: {
+        description: 'Required for new flags. Cleared automatically if the reader is deleted.',
+      },
+    },
+    {
+      name: 'recipientEmail',
+      type: 'email',
+      admin: {
+        readOnly: true,
+        description: 'Retained for follow-up and suppression after account deletion.',
+      },
+    },
     {
       name: 'reason',
       type: 'select',

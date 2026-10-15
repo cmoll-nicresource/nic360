@@ -23,6 +23,10 @@
  * Rights of America.
  *
  * Usage: npx tsx migration/applyMemberPlans.ts
+ *
+ * HISTORICAL ONLY: October 15 staff decisions supersede this initial list.
+ * See docs/migration-exceptions.md. Replaying this reset would undo the
+ * reviewed Pillar/Republic/JUUL decisions and the internal NRC account.
  */
 import 'dotenv/config'
 import { getPayload } from 'payload'

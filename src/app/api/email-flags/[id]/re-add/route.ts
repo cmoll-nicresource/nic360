@@ -13,11 +13,25 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   try {
     const { payload } = await requireStaff('gatekeeper')
 
-    const flag = await payload.findByID({ collection: 'email-flags', id, depth: 0, overrideAccess: true }).catch(() => null)
+    const flag = await payload
+      .findByID({ collection: 'email-flags', id, depth: 0, overrideAccess: true })
+      .catch(() => null)
     if (!flag) return NextResponse.json({ error: 'Email flag not found.' }, { status: 404 })
 
-    const userId = typeof flag.user === 'object' ? flag.user.id : flag.user
-    const publicationIds = (flag.publicationsBefore ?? []).map((p) => (typeof p === 'object' ? p.id : p))
+    const userId = typeof flag.user === 'object' ? flag.user?.id : flag.user
+    if (!userId)
+      return NextResponse.json(
+        {
+          error:
+            'This reader was deleted. The flag remains for follow-up; publication choices cannot be restored.',
+        },
+        { status: 409 },
+      )
+    if (flag.status === 'resolved')
+      return NextResponse.json({ error: 'This flag is already resolved.' }, { status: 409 })
+    const publicationIds = (flag.publicationsBefore ?? []).map((p) =>
+      typeof p === 'object' ? p.id : p,
+    )
 
     await payload.update({
       collection: 'users',

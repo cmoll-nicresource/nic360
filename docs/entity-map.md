@@ -741,9 +741,12 @@ Our site is the **source of truth**; Mailchimp only mirrors it. This section des
 
 A staff queue of unsubscribes and delivery problems to follow up on.
 
+The user link becomes null when a reader is deleted; `recipientEmail` retains the delivery address and unresolved flags still suppress it. New flags require a reader. Deleted-reader flags remain editable for follow-up, but cannot use Re-add. See [migration exception review](./migration-exceptions.md) for the schema repair, membership audit, and outstanding company decisions.
+
 | Field | Type | Notes |
 |---|---|---|
-| `user` | relationship → Users | ✓ |
+| `user` | relationship → Users | Required on creation; nullable after account deletion so the flag survives |
+| `recipientEmail` | email, read-only | Snapshotted from the reader; retained for follow-up and suppression after deletion |
 | `reason` | select: unsubscribed · spam complaint · cleaned (bounces) | from the webhook |
 | `occurredAt` | date | |
 | `publicationsBefore` | relationship → Publications, hasMany | what they were receiving, so it can be restored |

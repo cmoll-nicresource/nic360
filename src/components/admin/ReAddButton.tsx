@@ -9,8 +9,11 @@ export function ReAddButton() {
   const [message, setMessage] = useState<string | null>(null)
 
   if (!id) return null
-  const status = savedDocumentData && 'status' in savedDocumentData ? savedDocumentData.status : undefined
+  const status =
+    savedDocumentData && 'status' in savedDocumentData ? savedDocumentData.status : undefined
   if (status === 'resolved') return null
+  if (savedDocumentData && !savedDocumentData.user)
+    return <p>This reader was deleted. The flag is retained for follow-up.</p>
 
   async function handleClick() {
     if (

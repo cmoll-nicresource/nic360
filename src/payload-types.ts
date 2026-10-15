@@ -1391,7 +1391,14 @@ export interface PublicationAd {
  */
 export interface EmailFlag {
   id: number;
-  user: number | User;
+  /**
+   * Required for new flags. Cleared automatically if the reader is deleted.
+   */
+  user?: (number | null) | User;
+  /**
+   * Retained for follow-up and suppression after account deletion.
+   */
+  recipientEmail?: string | null;
   reason: 'unsubscribed' | 'spam complaint' | 'cleaned';
   occurredAt: string;
   /**
@@ -2374,6 +2381,7 @@ export interface PublicationAdsSelect<T extends boolean = true> {
  */
 export interface EmailFlagsSelect<T extends boolean = true> {
   user?: T;
+  recipientEmail?: T;
   reason?: T;
   occurredAt?: T;
   publicationsBefore?: T;
