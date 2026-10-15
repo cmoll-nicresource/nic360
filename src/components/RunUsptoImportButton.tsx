@@ -29,7 +29,8 @@ export function RunUsptoImportButton() {
           `Issue ${data.issueDate}: ${c?.new ?? 0} new, ${c?.updated ?? 0} updated ` +
             `(published ${c?.published ?? 0}, registered ${c?.registered ?? 0}, renewed ${c?.renewals ?? 0}, cancelled ${c?.cancellations ?? 0}). ` +
             `Images: ${c?.imagesSaved ?? 0} saved, ${c?.imagesMissing ?? 0} missing. ` +
-            `Draft issues created: ${data.run?.issuesCreated?.length ?? 0}.`,
+            `Draft issues created: ${data.run?.issuesCreated?.length ?? 0}.` +
+            (data.run?.error ? ` Report error: ${data.run.error}` : ''),
         )
       }
     } catch (err) {
@@ -43,7 +44,11 @@ export function RunUsptoImportButton() {
     <div className="card">
       <div className="field">
         <label>Issue date (optional — YYYYMMDD, forces one specific issue)</label>
-        <input value={issueDate} onChange={(e) => setIssueDate(e.target.value)} placeholder="e.g. 20261013" />
+        <input
+          value={issueDate}
+          onChange={(e) => setIssueDate(e.target.value)}
+          placeholder="e.g. 20261013"
+        />
       </div>
       <button className="btn" onClick={handleClick} disabled={busy}>
         {busy ? 'Importing… this can take a few minutes' : 'Run live USPTO import'}

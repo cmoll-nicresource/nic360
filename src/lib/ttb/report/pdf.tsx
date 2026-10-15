@@ -1,84 +1,70 @@
 // Renders the same format-neutral Report model docx.ts renders, as a PDF
 // instead of a Word document — built new (no PDF rendering existed in nic360
-// before this), reusing 100% of chapters.ts/data.ts/format.ts/text.ts/chart.ts
-// unchanged. See model.ts for the Block/Table/Row/Cell shapes this walks.
+// before this), using the existing chapters/data/format/text/chart layer.
+// See model.ts for the Block/Table/Row/Cell shapes this walks.
 //
-// react-pdf auto-paginates a Page's overflowing content and repeats any
-// `fixed` element (the running header/footer below) on every page that
-// overflow generates — so, unlike docx.ts, this doesn't need to create
-// physical pages by hand. The one thing react-pdf does NOT repeat
-// automatically is a table's own column-header row when its body rows split
-// across pages (model.ts's own comment: header rows are "repeated on each
-// page"), so paginateRows() below chunks each table's rows to a
-// conservative per-page estimate and reprints the header at the top of each
-// chunk — the PDF equivalent of docx.ts's `tableHeader: true`. Individual
-// rows are non-splitting (wrap={false} in tableRow, so one row is never torn
-// across a page break), but the chunk itself is left free to wrap if the
-// estimate runs long, so an underestimate degrades to "header doesn't
-// repeat on one unexpected overflow page" rather than forcing overlapping
-// content.
-import { Document, Image, Page, renderToBuffer, StyleSheet, Text, View } from '@react-pdf/renderer'
-import type { ReactElement } from 'react'
+// The installed renderer's new pagination engine measures rows and scopes
+// fixed elements to their immediate parent. A fixed title/header inside a
+// table repeats only when that table crosses a physical page boundary.
+// No estimated row chunks: adjacent tables can share pages without spurious
+// headers in the middle of a table or headerless continuation pages.
+import { Document, Image, Link, Page, renderToBuffer, StyleSheet, Text, View } from '@react-pdf/renderer'
+import fs from 'node:fs'
+import path from 'node:path'
+import type { ComponentProps, ReactElement } from 'react'
 
 import type { Block, Report, Row, Table as TableModel } from './model'
+import { assertReportReady } from './readiness'
 
 const FONT = 'Helvetica'
-const ACCENT = '#2E6DB4'
+const ACCENT = '#285888'
 const MUTED = '#595959'
 
 // US Letter in points (72pt/in), matching docx.ts's margins (0.75in top/bottom
 // always; 1in sides portrait, 0.75in sides landscape).
 const PAGE_W = 612
-const PAGE_H = 792
 const MARGIN = {
   portrait: { top: 54, bottom: 54, left: 72, right: 72 },
   landscape: { top: 54, bottom: 54, left: 54, right: 54 },
 }
 
-function usableHeight(landscape: boolean): number {
-  const m = landscape ? MARGIN.landscape : MARGIN.portrait
-  const pageH = landscape ? PAGE_W : PAGE_H
-  return pageH - m.top - m.bottom
-}
-
 function usableWidth(landscape: boolean): number {
   const m = landscape ? MARGIN.landscape : MARGIN.portrait
-  const pageW = landscape ? PAGE_H : PAGE_W
+  const pageW = landscape ? 792 : PAGE_W
   return pageW - m.left - m.right
 }
 
 /**
  * Explicit per-column widths in points, not percentage strings. With 15-16
- * sibling cells in a row (the summary/detail tables routinely have that
- * many columns), independently-rounded percentage widths can accumulate
- * enough floating-point error that the last columns in the row are left
- * with ~0 width while their (unclamped, overflowing) text still renders —
- * producing badly garbled, overlapping digits in exactly the trailing
- * YTD/Pct-Chg columns. Computing in points up front and reconciling the
- * rounding remainder onto the widest column keeps every row's widths
- * summing to exactly the available content width.
+ * sibling cells in a row, explicit widths keep the layout predictable.
+ * Reconcile the rounding remainder onto the widest column so the widths
+ * sum to the available content width. The original overlapping digits
+ * were primarily caused by concatenated database numeric strings (see
+ * data.ts); column sizing alone could not correct those invalid figures.
  */
 function columnWidthsPt(widths: number[], contentWidth: number): number[] {
+  if (!widths.length || widths.some((w) => !Number.isFinite(w) || w <= 0)) {
+    throw new Error('PDF table column widths must be finite and positive')
+  }
   const totalW = widths.reduce((a, b) => a + b, 0)
   const raw = widths.map((w) => (w / totalW) * contentWidth)
   const floored = raw.map(Math.floor)
   const remainder = Math.round(contentWidth - floored.reduce((a, b) => a + b, 0))
   const widestIndex = widths.indexOf(Math.max(...widths))
   floored[widestIndex] += remainder
+  if (floored.some((w) => w < 1)) throw new Error('PDF table column is too narrow')
   return floored
 }
 
 const styles = StyleSheet.create({
   page: { fontFamily: FONT, fontSize: 11, paddingTop: 54, paddingBottom: 54, paddingHorizontal: 72 },
   pageLandscape: { fontFamily: FONT, fontSize: 11, paddingTop: 54, paddingBottom: 54, paddingHorizontal: 54 },
-  runningHeader: { position: 'absolute', top: 24, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: MUTED },
+  runningHeader: { position: 'absolute', top: 26, left: 180, right: 54, textAlign: 'right', fontSize: 7.5, color: MUTED },
   runningFooter: { position: 'absolute', bottom: 24, right: 54, textAlign: 'right', fontSize: 8, color: '#7F7F7F' },
   h1: { fontSize: 20, fontWeight: 700, color: ACCENT, marginBottom: 10, marginTop: 6 },
   h2: { fontSize: 15, fontWeight: 700, color: ACCENT, marginBottom: 8, marginTop: 10 },
   h3: { fontSize: 12, fontWeight: 700, color: ACCENT, marginBottom: 6, marginTop: 8 },
   para: { fontSize: 10, lineHeight: 1.4, marginBottom: 8, textAlign: 'justify' },
-  placeholder: { backgroundColor: '#FFFF00' },
-  italic: { fontStyle: 'italic' },
   tableTitle: { fontSize: 10, fontWeight: 700, marginTop: 10, marginBottom: 4 },
   row: { flexDirection: 'row' },
   cellBase: { paddingVertical: 2, paddingHorizontal: 2 },
@@ -86,48 +72,9 @@ const styles = StyleSheet.create({
   shadeCell: { backgroundColor: '#EDF2F9' },
 })
 
-/** Splits text on [[...]] markers; placeholders are highlighted so the editor can find them. */
+/** Readiness validation rejects editorial markers before any PDF is built. */
 function textRuns(text: string, size: number, extra?: Record<string, unknown>): ReactElement {
-  const parts = text.split(/(\[\[[\s\S]*?\]\])/).filter(Boolean)
-  return (
-    <Text style={{ fontSize: size, ...extra }}>
-      {parts.map((part, i) => {
-        const ph = part.startsWith('[[') && part.endsWith(']]')
-        return (
-          <Text key={i} style={ph ? [styles.placeholder, styles.italic] : undefined}>
-            {ph ? part.slice(2, -2) : part}
-          </Text>
-        )
-      })}
-    </Text>
-  )
-}
-
-/**
- * Conservative rows-per-page estimate for a table at its own font size, in
- * the section's orientation. Pads generously (1.3x) for rows whose longest
- * cell (an 11+ digit YTD dollar/quantity figure in a narrow column) wraps to
- * a second line — this is only an estimate for how many rows to put in each
- * non-splitting chunk (see tableBlock), not the actual layout, so erring
- * toward fewer rows per page is cheap; erring toward more risks a chunk
- * whose real height exceeds the page (see tableBlock's wrap fallback).
- */
-function rowsPerPage(table: TableModel, landscape: boolean): number {
-  const fontSize = table.fontSize ?? 8
-  const rowHeight = fontSize * 1.5 * 1.3 + 4
-  const headerHeight = table.header.length * rowHeight
-  const titleHeight = table.title ? 20 : 0
-  const available = usableHeight(landscape) * 0.85 - headerHeight - titleHeight
-  return Math.max(3, Math.floor(available / rowHeight))
-}
-
-/** Splits a table's body rows into page-sized chunks, each reprinting the header. */
-function paginateRows(table: TableModel, landscape: boolean): Row[][] {
-  const perPage = rowsPerPage(table, landscape)
-  if (table.rows.length <= perPage) return [table.rows]
-  const chunks: Row[][] = []
-  for (let i = 0; i < table.rows.length; i += perPage) chunks.push(table.rows.slice(i, i + perPage))
-  return chunks
+  return <Text style={{ fontSize: size, ...extra }}>{text}</Text>
 }
 
 function cellStyle(c: Row['cells'][number]): Record<string, unknown> {
@@ -151,19 +98,20 @@ function tableRow(key: number | string, r: Row, colWidthsPt: number[], isHeader:
 }
 
 function tableBlock(t: TableModel, landscape: boolean): ReactElement {
+  if ([...t.header, ...t.rows].some((r) => r.cells.length !== t.widths.length)) {
+    throw new Error(`PDF table "${t.title ?? 'untitled'}" has mismatched cells and column widths`)
+  }
   const fontSize = t.fontSize ?? 8
-  const chunks = paginateRows(t, landscape)
+  if (!Number.isFinite(fontSize) || fontSize <= 0) throw new Error('PDF table font size must be finite and positive')
   const colWidthsPt = columnWidthsPt(t.widths, usableWidth(landscape))
   return (
-    <>
-      {t.title && <Text style={styles.tableTitle}>{t.title}</Text>}
-      {chunks.map((chunk, ci) => (
-        <View key={ci} style={{ marginBottom: ci === chunks.length - 1 ? 8 : 0 }} break={ci > 0}>
-          {t.header.map((r, i) => tableRow(`h${i}`, r, colWidthsPt, true, fontSize))}
-          {chunk.map((r, i) => tableRow(`r${i}`, r, colWidthsPt, false, fontSize))}
-        </View>
-      ))}
-    </>
+    <View style={{ marginBottom: 8 }}>
+      <View fixed wrap={false} minPresenceAhead={fontSize * 2 + 4}>
+        {t.title && <Text style={styles.tableTitle}>{t.title}</Text>}
+        {t.header.map((r, i) => tableRow(`h${i}`, r, colWidthsPt, true, fontSize))}
+      </View>
+      {t.rows.map((r, i) => tableRow(`r${i}`, r, colWidthsPt, false, fontSize))}
+    </View>
   )
 }
 
@@ -184,6 +132,8 @@ function blockToPdf(b: Block, landscape: boolean, key: number): ReactElement {
     case 'chart':
       return (
         <View key={key} style={{ alignItems: 'center', marginVertical: 8 }} wrap={false}>
+          {/* react-pdf Image is a PDF primitive, not an HTML image. */}
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image src={b.png} style={{ width: b.width * 0.75, height: b.height * 0.75 }} />
         </View>
       )
@@ -194,33 +144,25 @@ function blockToPdf(b: Block, landscape: boolean, key: number): ReactElement {
   }
 }
 
-export async function renderPdf(report: Report): Promise<Buffer> {
+export function reportDocument(report: Report): ReactElement<ComponentProps<typeof Document>> {
+  assertReportReady(report)
   const pages: ReactElement[] = []
+  // Read the tracked asset, not an absolute workstation path or a remote URL.
+  const logo = { data: fs.readFileSync(path.join(process.cwd(), 'public', 'logo.png')), format: 'png' as const }
 
   // Cover / contents
   pages.push(
-    <Page key="cover" size="LETTER" style={styles.page}>
-      <View style={{ marginTop: 160, alignItems: 'center' }}>
+    <Page key="cover" size="LETTER" style={styles.page} experimentalPagination>
+      <View style={{ marginTop: 90, alignItems: 'center' }}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- PDF primitive */}
+        <Image src={logo} style={{ width: 360, height: 360 * 424 / 2182, marginBottom: 38 }} />
         <Text style={{ fontSize: 28, fontWeight: 700, color: ACCENT, marginBottom: 10 }}>{report.title}</Text>
         <Text style={{ fontSize: 18, color: MUTED, marginBottom: 24 }}>{report.subtitle}</Text>
         {report.chapters.map((c, i) => (
-          <Text key={i} style={{ fontSize: 12, marginBottom: 4 }}>
+          <Link key={i} src={`#part-${c.partNo}`} style={{ fontSize: 12, marginBottom: 4, color: ACCENT, textDecoration: 'underline' }}>
             Part {c.partNo}: {c.title}
-          </Text>
+          </Link>
         ))}
-        {report.notes.length > 0 && (
-          <View style={{ marginTop: 24, alignSelf: 'stretch' }}>
-            <Text style={{ fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Data notes</Text>
-            {report.notes.map((n, i) => (
-              <Text key={i} style={{ fontSize: 9, marginBottom: 3 }}>
-                • {textContentOnly(n)}
-              </Text>
-            ))}
-          </View>
-        )}
-        <Text style={{ fontSize: 9, fontStyle: 'italic', color: MUTED, marginTop: 24 }}>
-          Highlighted text marks placeholders and editor notes that need a person&apos;s input before publishing.
-        </Text>
       </View>
     </Page>,
   )
@@ -228,13 +170,21 @@ export async function renderPdf(report: Report): Promise<Buffer> {
   for (const ch of report.chapters) {
     ch.sections.forEach((s, i) => {
       pages.push(
-        <Page key={`${ch.partNo}-${i}`} size="LETTER" orientation={s.landscape ? 'landscape' : 'portrait'} style={s.landscape ? styles.pageLandscape : styles.page}>
-          <Text style={styles.runningHeader} fixed>
-            {s.header}
-          </Text>
-          <Text style={styles.runningFooter} fixed render={({ pageNumber }) => `Page ${pageNumber}`} />
+        <Page key={`${ch.partNo}-${i}`} size="LETTER" orientation={s.landscape ? 'landscape' : 'portrait'} style={s.landscape ? styles.pageLandscape : styles.page}
+          layout={({ children, pageNumber, totalPages }) => (
+            <>
+              {/* Page chrome is instantiated afresh, outside the table flow. */}
+              {/* eslint-disable-next-line jsx-a11y/alt-text -- PDF primitive */}
+              <Image src={logo} style={{ position: 'absolute', top: 20, left: s.landscape ? 54 : 72, width: 100, height: 100 * 424 / 2182 }} />
+              <Text style={styles.runningHeader}>
+                {s.header.replace(/^TMA Tobacco Trade Barometer/, 'US Tobacco Trade Barometer')}
+              </Text>
+              <Text style={styles.runningFooter}>Page {pageNumber} of {totalPages}</Text>
+              {children}
+            </>
+          )}>
           {i === 0 && (
-            <View style={styles.h1} wrap={false}>
+            <View id={`part-${ch.partNo}`} style={styles.h1} wrap={false}>
               <Text>
                 Part {ch.partNo}: {ch.title}
               </Text>
@@ -246,11 +196,9 @@ export async function renderPdf(report: Report): Promise<Buffer> {
     })
   }
 
-  const buffer = await renderToBuffer(<Document title={`${report.title} ${report.subtitle}`}>{pages}</Document>)
-  return buffer
+  return <Document title={`${report.title} ${report.subtitle}`}>{pages}</Document>
 }
 
-/** Strips [[...]] markers for the plain-text notes list on the cover page. */
-function textContentOnly(s: string): string {
-  return s.replace(/\[\[([\s\S]*?)\]\]/g, '$1')
+export async function renderPdf(report: Report): Promise<Buffer> {
+  return renderToBuffer(reportDocument(report))
 }

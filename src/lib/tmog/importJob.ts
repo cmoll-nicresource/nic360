@@ -4,10 +4,12 @@ import { buildTrademarkReportIssues } from '@/lib/trademarkReportIssues'
 import { candidateIssueDates, fetchSpecificIssue } from './fetchIssue'
 import { parseTrademarkIssue, type ParsedTrademark } from './parseIssue'
 import { createThrottle, fetchAndStoreTrademarkImage } from './images'
+import { IncompleteTrademarkMonthError } from './monthlyCoverage'
 
 const IMAGE_RATE_LIMIT_MS = 200 // ~5 requests/second
 
 type TrademarkUpdateData = {
+  class: string
   title: string
   serialNumber: string
   goods?: string
@@ -34,7 +36,16 @@ type Counts = {
 }
 
 function blankCounts(): Counts {
-  return { new: 0, updated: 0, published: 0, registered: 0, renewals: 0, cancellations: 0, imagesSaved: 0, imagesMissing: 0 }
+  return {
+    new: 0,
+    updated: 0,
+    published: 0,
+    registered: 0,
+    renewals: 0,
+    cancellations: 0,
+    imagesSaved: 0,
+    imagesMissing: 0,
+  }
 }
 
 async function upsertTrademark(
@@ -52,6 +63,7 @@ async function upsertTrademark(
   })
 
   const data: TrademarkUpdateData = {
+    class: '34',
     title: record.markText,
     serialNumber: record.serial,
     goods: record.goods || undefined,
@@ -62,7 +74,9 @@ async function upsertTrademark(
 
   switch (record.status) {
     case 'published':
-      data.publishedDate = record.statusDate
+      // The status snapshot often predates publication by several weeks.
+      // Appearance in this Gazette's opposition section establishes publication.
+      data.publishedDate = isoFromYYYYMMDD(issueDate)
       counts.published += 1
       break
     case 'registered':
@@ -99,7 +113,12 @@ async function upsertTrademark(
   }
 
   if (existing[0]) {
-    await payload.update({ collection: 'trademarks', id: existing[0].id, data, overrideAccess: true })
+    await payload.update({
+      collection: 'trademarks',
+      id: existing[0].id,
+      data,
+      overrideAccess: true,
+    })
     counts.updated += 1
   } else {
     await payload.create({ collection: 'trademarks', data, overrideAccess: true })
@@ -122,14 +141,22 @@ export type TmogImportResult = {
  * Idempotent: if `onlyIssueDate` is omitted, candidates that already have a
  * succeeded run are skipped without doing any work.
  */
-export async function runTmogImportJob(payload: Payload, onlyIssueDate?: string): Promise<TmogImportResult> {
+export async function runTmogImportJob(
+  payload: Payload,
+  onlyIssueDate?: string,
+): Promise<TmogImportResult> {
   const candidates = onlyIssueDate ? [onlyIssueDate] : candidateIssueDates()
 
   for (const issueDate of candidates) {
     if (!onlyIssueDate) {
       const { totalDocs } = await payload.find({
         collection: 'trademark-import-runs',
-        where: { and: [{ issueDate: { equals: isoFromYYYYMMDD(issueDate) } }, { status: { equals: 'succeeded' } }] },
+        where: {
+          and: [
+            { issueDate: { equals: isoFromYYYYMMDD(issueDate) } },
+            { status: { equals: 'succeeded' } },
+          ],
+        },
         limit: 0,
         overrideAccess: true,
       })
@@ -160,10 +187,22 @@ export async function runTmogImportJob(payload: Payload, onlyIssueDate?: string)
         await upsertTrademark(payload, record, issueDate, throttle, counts)
       }
 
-      const issuesCreated = await buildTrademarkReportIssues(payload, {
-        cancellations: counts.cancellations,
-        renewals: counts.renewals,
-      })
+      const asOf = new Date(isoFromYYYYMMDD(issueDate))
+      const issuesCreated = await buildTrademarkReportIssues(payload, { asOf, monthly: false })
+      let reportError: string | undefined
+      if (asOf.getUTCDate() <= 7) {
+        try {
+          issuesCreated.push(
+            ...(await buildTrademarkReportIssues(payload, { asOf, weekly: false, monthly: true })),
+          )
+        } catch (error) {
+          if (!(error instanceof IncompleteTrademarkMonthError)) throw error
+          // Ingestion completed. Keep its successful coverage evidence and the
+          // weekly draft, while making the blocked monthly report visible.
+          reportError = error.message
+          payload.logger.error(reportError)
+        }
+      }
 
       const finished = await payload.update({
         collection: 'trademark-import-runs',
@@ -173,6 +212,7 @@ export async function runTmogImportJob(payload: Payload, onlyIssueDate?: string)
           status: 'succeeded',
           counts,
           issuesCreated,
+          error: reportError ?? null,
         },
         overrideAccess: true,
       })

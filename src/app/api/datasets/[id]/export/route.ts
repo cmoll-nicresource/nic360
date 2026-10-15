@@ -11,23 +11,41 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { payload } = await requireReaderPlan('premium')
     const format = new URL(request.url).searchParams.get('format') === 'xlsx' ? 'xlsx' : 'csv'
 
-    const dataset = await payload.findByID({ collection: 'datasets', id, overrideAccess: true }).catch(() => null)
+    const dataset = await payload
+      .findByID({ collection: 'datasets', id, overrideAccess: true })
+      .catch(() => null)
     if (!dataset) return NextResponse.json({ error: 'Dataset not found.' }, { status: 404 })
 
-    const [{ docs }, { docs: countries }] = await Promise.all([
-      payload.find({
-        collection: 'dataset-rows',
-        where: { dataset: { equals: dataset.id } },
-        limit: 10000,
-        depth: 0,
-        overrideAccess: true,
-      }),
+    // A fixed limit silently truncated large trade datasets. Read stable pages
+    // after the Premium check so a download always includes every record.
+    const loadRows = async () => {
+      const values: Record<string, unknown>[] = []
+      let page = 1
+      let totalPages = 1
+      do {
+        const result = await payload.find({
+          collection: 'dataset-rows',
+          where: { dataset: { equals: dataset.id } },
+          limit: 2000,
+          page,
+          sort: 'id',
+          depth: 0,
+          overrideAccess: true,
+        })
+        values.push(...result.docs.map((doc) => doc.values as Record<string, unknown>))
+        totalPages = result.totalPages
+        page++
+      } while (page <= totalPages)
+      return values
+    }
+    const [values, { docs: countries }] = await Promise.all([
+      loadRows(),
       payload.find({ collection: 'countries', limit: 1000, depth: 0, overrideAccess: true }),
     ])
 
     const columns = dataset.columns
     const nameByIso2 = buildCountryNameLookup(countries)
-    const resolved = resolveCountryColumns(columns, docs.map((d) => d.values as Record<string, unknown>), nameByIso2)
+    const resolved = resolveCountryColumns(columns, values, nameByIso2)
     const rows = resolved.map((values) => columns.map((c) => values[c.key ?? ''] ?? ''))
 
     if (format === 'xlsx') {

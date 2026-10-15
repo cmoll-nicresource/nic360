@@ -16,7 +16,10 @@
     "seed": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:trade-report": "cross-env TTB_INTEGRATION=1 vitest run src/lib/ttb/report/database.integration.test.ts",
+    "trade:render": "tsx scripts/renderTradeReport.ts",
+    "trade:check": "tsx scripts/checkTradeReadiness.ts"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1149.0",
@@ -38,6 +41,7 @@
     "nodemailer": "^6.9.16",
     "papaparse": "5.7.0",
     "payload": "3.90.2",
+    "pdfjs-dist": "5.4.624",
     "pg": "8.20.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

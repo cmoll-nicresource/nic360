@@ -4,11 +4,16 @@ import { getPayload } from 'payload'
 import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { LawIcon } from '@/components/brandIcons'
+import { EditorialPhoto } from '@/components/frontend/EditorialPhoto'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { ExcerptFilterBar } from '@/components/ExcerptFilterBar'
-import { excerptFiltersToQueryString, excerptWhere, parseExcerptFilters } from '@/lib/excerptFilters'
+import {
+  excerptFiltersToQueryString,
+  excerptWhere,
+  parseExcerptFilters,
+} from '@/lib/excerptFilters'
 import { formatDate } from '@/lib/formatDate'
 import { searchColumnsForIds, sortByIdOrder } from '@/lib/fullTextSearch'
 import { PAGE_SIZE, parsePage } from '@/lib/pagination'
@@ -38,17 +43,25 @@ export default async function BillsPage({
   const { user } = await payload.auth({ headers })
 
   const isStaff = !!user && 'collection' in user && user.collection === 'staff'
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
+  const plan =
+    user && 'collection' in user && user.collection === 'users'
+      ? await getReaderPlan(user, payload)
+      : 'none'
   const canReadFull = isStaff || planSatisfies(plan, 'base')
 
-  const [{ docs: sectors }, { docs: products }, { docs: subjects }, { docs: locations }, { totalDocs: totalBills }] =
-    await Promise.all([
-      payload.find({ collection: 'sectors', limit: 100, sort: 'name', overrideAccess: true }),
-      payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: true }),
-      payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: true }),
-      payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: true }),
-      payload.count({ collection: 'bills', overrideAccess: true }),
-    ])
+  const [
+    { docs: sectors },
+    { docs: products },
+    { docs: subjects },
+    { docs: locations },
+    { totalDocs: totalBills },
+  ] = await Promise.all([
+    payload.find({ collection: 'sectors', limit: 100, sort: 'name', overrideAccess: true }),
+    payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: true }),
+    payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: true }),
+    payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: true }),
+    payload.count({ collection: 'bills', overrideAccess: true }),
+  ])
 
   const baseWhere = excerptWhere(filters, 'billDate')
   let bills: Bill[] = []
@@ -56,7 +69,12 @@ export default async function BillsPage({
   let totalPages = 1
 
   if (filters.keyword) {
-    const rankedIds = await searchColumnsForIds(payload, 'bills', ['title', 'bill_number', 'search_text'], filters.keyword)
+    const rankedIds = await searchColumnsForIds(
+      payload,
+      'bills',
+      ['title', 'bill_number', 'search_text'],
+      filters.keyword,
+    )
     if (rankedIds.length > 0) {
       const { docs } = await payload.find({
         collection: 'bills',
@@ -88,7 +106,7 @@ export default async function BillsPage({
   return (
     <>
       <SiteNav />
-      <div className="header-band">
+      <div className="header-band header-band--photographic">
         <div className="header-band-inner">
           <div>
             <p className="header-band-eyebrow">Tracking</p>
@@ -100,10 +118,18 @@ export default async function BillsPage({
             </h1>
             <p>
               Legislation tracked via StateNet, summarized and categorized.
-              {!canReadFull && ' Sign in with a Base or Premium subscription to read full abstracts and text.'}
+              {!canReadFull &&
+                ' Sign in with a Base or Premium subscription to read full abstracts and text.'}
             </p>
           </div>
           <span className="header-band-meta">{totalBills.toLocaleString()} bills tracked</span>
+          <EditorialPhoto
+            photo="chamber"
+            className="editorial-header-photo"
+            decorative
+            eager
+            sizes="(max-width: 700px) 100vw, 360px"
+          />
         </div>
       </div>
       <div className="page">
@@ -120,10 +146,16 @@ export default async function BillsPage({
           {bills.length === 0 && <p className="muted">No bills match these filters.</p>}
           {bills.map((b) => {
             const jurisdiction = b.locations?.find((l) => typeof l === 'object')
-            const jurisdictionName = jurisdiction && typeof jurisdiction === 'object' ? jurisdiction.name : b.governmentLevel
+            const jurisdictionName =
+              jurisdiction && typeof jurisdiction === 'object'
+                ? jurisdiction.name
+                : b.governmentLevel
             return (
               <Link key={b.id} href={`/bills/${b.id}`} className="excerpt-list-item">
-                <div className="excerpt-meta" style={{ marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div
+                  className="excerpt-meta"
+                  style={{ marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}
+                >
                   <span className="tag-pill tnum">{b.billNumber}</span>
                   <StatusBadge status={billStatusPill(b)} />
                 </div>

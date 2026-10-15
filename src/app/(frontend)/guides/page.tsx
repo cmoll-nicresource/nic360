@@ -1,100 +1,88 @@
-import { headers as getHeaders } from 'next/headers.js'
-import Link from 'next/link'
-import { getPayload } from 'payload'
-import React from 'react'
+﻿import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { DocumentationIcon } from '@/components/brandIcons'
-
-import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
-import { staffHasRole } from '@/access/staffRoles'
+import { AccessPanel, GuideCover } from '@/components/frontend/Editorial'
+import { frontendContext } from '@/lib/frontendContext'
 import { formatDate } from '@/lib/formatDate'
-
+import { EditorialPhoto } from '@/components/frontend/EditorialPhoto'
 export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Guides',
-  description: 'In-depth reference guides to tax, trade and regulation.',
+  description: 'Essential references for tax, trade and regulation.',
 }
-
 export default async function GuidesPage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const isStaff = staffHasRole(user, 'editor')
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
-  const canRead = isStaff || planSatisfies(plan, 'base')
-
+  const { payload, user, canRead, plan, isStaff } = await frontendContext()
+  const guides = canRead
+    ? await payload.find({
+        collection: 'guides',
+        limit: 100,
+        sort: 'title',
+        depth: 1,
+        user,
+        overrideAccess: false,
+        where: {
+          and: [
+            { _status: { equals: 'published' } },
+            ...(!isStaff && plan !== 'premium' ? [{ requiresPremium: { equals: false } }] : []),
+          ],
+        },
+      })
+    : null
   return (
     <>
       <SiteNav />
-      <div className="header-band">
+      <header className="header-band header-band--photographic">
         <div className="header-band-inner">
           <div>
-            <p className="header-band-eyebrow">Content</p>
-            <h1 className="page-heading">
-              <span className="icon-badge">
-                <DocumentationIcon />
-              </span>
-              Guides
-            </h1>
-            <p>In-depth reference guides to tax, trade and regulation.</p>
+            <p className="edition-eyebrow">THE REFERENCE SHELF</p>
+            <h1>Keep the essentials close.</h1>
+            <p>In-depth guides to the tax, trade and regulatory frameworks shaping your work.</p>
           </div>
+          {guides && (
+            <span className="header-band-meta">
+              {guides.totalDocs} guides available with your access
+            </span>
+          )}
+          <EditorialPhoto
+            photo="field"
+            className="editorial-header-photo"
+            decorative
+            eager
+            sizes="(max-width: 700px) 100vw, 360px"
+          />
         </div>
-      </div>
-      <div className="page">
+      </header>
+      <div className="page-wide">
         {!canRead ? (
-          <div className="locked-content">
-            Sign in with a Base or Premium subscription to view guides.{' '}
-            <Link href="/account">Sign in</Link>
-          </div>
+          <AccessPanel
+            title="A reference library for your industry."
+            description="Sign in to browse the guides included in your company’s subscription. Most guides require Premium."
+            premium
+          />
         ) : (
-          <GuideList payload={payload} />
+          <div className="edition-guide-grid">
+            {guides?.docs.map((guide) => (
+              <Link className="edition-guide-card" key={guide.id} href={`/guides/${guide.slug}`}>
+                <GuideCover guide={guide} />
+                <div>
+                  <span className="edition-eyebrow">
+                    {guide.requiresPremium ? 'Premium reference' : 'Member reference'}
+                  </span>
+                  <h2>{guide.title}</h2>
+                  <p className="muted">{guide.description}</p>
+                  <p className="edition-meta">Updated {formatDate(guide.updatedAt)}</p>
+                  <span className="edition-text-link">Explore guide & download ↗</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+        {canRead && !guides?.docs.length && (
+          <div className="edition-empty">
+            No guides are available with your current access.{' '}
+            <a href="mailto:membership@nicotine360.org">Contact membership</a> to explore Premium.
+          </div>
         )}
       </div>
     </>
-  )
-}
-
-async function GuideList({ payload }: { payload: Awaited<ReturnType<typeof getPayload>> }) {
-  const { docs: guides } = await payload.find({
-    collection: 'guides',
-    limit: 100,
-    sort: '-createdAt',
-    depth: 1,
-    overrideAccess: true,
-  })
-
-  if (guides.length === 0) return <p className="muted">No guides yet.</p>
-
-  return (
-    <div className="guide-grid">
-      {guides.map((g) => {
-        const file = g.file && typeof g.file === 'object' ? g.file : null
-        return (
-          <Link key={g.id} href={`/guides/${g.slug}`} className="guide-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`https://placehold.co/480x620/e3e8ee/285888?text=${encodeURIComponent(g.title)}`}
-              alt=""
-              role="presentation"
-              className="guide-card-cover"
-            />
-            <div className="guide-card-body">
-              <h3>{g.title}</h3>
-              {g.description && <p className="muted">{g.description}</p>}
-              <p className="excerpt-meta">
-                {formatDate(g.updatedAt)}
-                {file?.filesize ? ` · ${(file.filesize / 1024 / 1024).toFixed(1)} MB` : ''}
-              </p>
-              <span className="btn btn-secondary" style={{ marginTop: 8 }}>
-                Download PDF
-              </span>
-            </div>
-          </Link>
-        )
-      })}
-    </div>
   )
 }

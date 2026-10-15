@@ -86,14 +86,22 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     components: {
-      afterNavLinks: ['./components/admin/AnalyticsNavLink#AnalyticsNavLink'],
+      beforeNavLinks: ['./components/admin/workspace/WorkspaceNav#WorkspaceNav'],
       graphics: {
         Logo: './components/admin/graphics/Logo#Logo',
         Icon: './components/admin/graphics/Icon#Icon',
       },
       views: {
+        dashboard: { Component: './components/admin/workspace/WorkspaceDashboard#WorkspaceDashboard' },
+        tradeReports: { Component: './components/admin/workspace/StaffTools#TradeReportsView', path: '/trade-reports', exact: true, meta: { title: 'Trade Barometer' } },
+        trademarkReports: { Component: './components/admin/workspace/StaffTools#TrademarkReportsView', path: '/trademark-reports', exact: true, meta: { title: 'Trademark reports' } },
+        datasetImports: { Component: './components/admin/workspace/StaffTools#DatasetImportsView', path: '/datasets', exact: true, meta: { title: 'Dataset imports' } },
+        datasetImport: { Component: './components/admin/workspace/StaffTools#DatasetImportView', path: '/datasets/:id/import', exact: true, meta: { title: 'Import dataset' } },
+        eventsWorkspace: { Component: './components/admin/workspace/StaffTools#EventsWorkspaceView', path: '/events', exact: true, meta: { title: 'Event management' } },
+        manageEvent: { Component: './components/admin/workspace/StaffTools#ManageEventView', path: '/events/:id/manage', exact: true, meta: { title: 'Manage event' } },
+        accessCheck: { Component: './components/admin/workspace/StaffTools#AccessCheckView', path: '/access-check', exact: true, meta: { title: 'Reader access' } },
         analytics: {
-          Component: './components/admin/analytics/AnalyticsView#AnalyticsView',
+          Component: './components/admin/workspace/StaffTools#WorkspaceAnalyticsView',
           path: '/analytics',
           meta: { title: 'Analytics' },
         },

@@ -4,12 +4,12 @@
  * is a single-file change.
  */
 export const ADMIN_GROUPS = {
-  accounts: 'Accounts & Access',
-  taxonomy: 'Taxonomy',
-  tracking: 'Tracking',
-  publishing: 'Guides & Publications',
-  data: 'Data',
+  accounts: 'Audience & access',
+  taxonomy: 'Reference library',
+  tracking: 'News & tracking',
+  publishing: 'Publishing',
+  data: 'Datasets',
   events: 'Events',
-  media: 'Media',
-  system: 'System',
+  media: 'Files & media',
+  system: 'Logs & settings',
 } as const

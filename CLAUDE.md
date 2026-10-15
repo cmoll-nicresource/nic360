@@ -6,9 +6,13 @@ Read this first. Field-level detail for every entity lives in `docs/entity-map.m
 
 A rebuild of Nicotine360 (nicotine360.org), a subscription news and intelligence site for the nicotine and tobacco industry, run by a 501(c)(6) trade organization with five staff. Readers get access through their employer's company-wide subscription (mostly via membership dues) or by buying a ticket to an event.
 
-**Current goal: a working skeleton prototype.** Every collection exists in Payload with its real fields and access rules, the site renders it, and seed scripts fill it with placeholder data. Data migration from the old site, redirects and visual polish come later.
+**Original goal: a working skeleton prototype.** The five milestones below are complete. The project now also includes migration tooling, search, analytics, and monthly trade reporting; real migrated data exists in non-local environments. Treat this milestone list as project history, `docs/entity-map.md` as the current feature map, and `docs/ttb-trade-report.md` as the trade operational handoff. Railway beta trade database setup is complete; the report fixes are deployed to beta; signed-in staff-flow verification remains open.
 
 ## Stack
+
+The reader experience refresh (dashboard, discovery, publications/guides/events, complete dataset exploration and exports) is documented in `docs/frontend-experience.md`. Its current behavior supersedes the older design-review checklist.
+
+The current staff interface lives under `/admin`, including trade reports, dataset imports, event management and reader access diagnostics. See `docs/admin-workspace.md` for the role-aware dashboard, custom-view shell, legacy redirects and verification notes.
 
 | Part | Choice |
 |---|---|
@@ -95,9 +99,13 @@ Our site is the source of truth for who receives what. Mailchimp only mirrors it
 
 ## US Tobacco Trade Barometer
 
-A monthly, upload-triggered report (not scheduled): any editor uploads the two files Census emails each month at `/staff/trade-reports`, which loads them into a `ref`/`trade`/`report` Postgres schema set (same database, namespaced away from Payload's own tables), refreshes the US Imports/US Exports Datasets, and drafts the Trade Barometer as a PDF Publication Issue. See `docs/ttb-trade-report.md` for setup/testing/known-issues and the entity map's "US Tobacco Trade Barometer" section for field-level detail. **Production doesn't have the required schema/historical data yet** — check that doc before assuming this works in production.
+A monthly, upload-triggered report (not scheduled): any editor uploads the two files Census emails each month at `/admin/trade-reports`, which loads them into a `ref`/`trade`/`report` Postgres schema set (same database, namespaced away from Payload's own tables), refreshes the US Imports/US Exports Datasets, and drafts the Trade Barometer as a PDF Publication Issue. See `docs/ttb-trade-report.md` for the numeric-conversion repair, tests, and verification. **Railway beta trade database prerequisites were restored and verified October 14, 2026. Report fixes are deployed to beta; signed-in staff-flow verification remains open. Never run the prototype's destructive schema.sql against an existing trade database.**
 
 ## Conventions
+
+Trade report updates: the PDF cover contents link to internal chapter destinations. The upload job and preview renderer automatically enrich missing US-trade inputs with matching monthly FRED BOPTEXP/BOPTIMP/BOPGSTB figures for the report month; buildReport remains network-free. Figures are converted from millions to billions and labeled goods/services, BOP, seasonally adjusted. See the trade runbook for source-gap handling, manual overrides, source snapshots, and tests.
+
+Missing TRQ inputs are also fetched automatically from the latest weekly CBP Commodity Status PDF. The date lookup checks the last 14 US Eastern calendar dates to handle holiday shifts. PDF.js extracts only ID-prefix-24 / exact-Tobacco rows; headers, units, countries, quota periods, exclusions and percentages are validated. The section shows its weekly release date even when the tobacco report month is older. Source failures stop PDF generation; explicit complete manual inputs override automation. All six release dates use the generation date in US Eastern, the tobacco lead-in is removed, duty-free summaries are finished prose, and readiness checks reject unresolved editorial markers. See the trade runbook and real-PDF fixture tests before changing the parser.
 
 - One file per collection in `src/collections/`. Shared field builders (index terms, excerpt core) live in `src/fields/`. Access functions go in `src/access/`, hooks in `src/hooks/`.
 - Field names and types follow `docs/entity-map.md`. If a field has to change, update the entity map in the same commit.

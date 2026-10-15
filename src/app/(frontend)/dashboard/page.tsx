@@ -1,139 +1,204 @@
-import { headers as getHeaders } from 'next/headers.js'
+import { currentEditions } from '@/lib/currentEditions'
 import Link from 'next/link'
-import { getPayload } from 'payload'
-import React from 'react'
-
-import config from '@/payload.config'
-import { getReaderPlan, planSatisfies, type ReaderPlan } from '@/access/readerPlan'
 import { SiteNav } from '@/components/SiteNav'
 import { NoSubscriptionNotice } from '@/components/NoSubscriptionNotice'
 import {
-  AnnouncementIcon,
-  DashboardIcon,
-  DocumentationIcon,
-  JournalIcon,
-  LawIcon,
-  ScheduleIcon,
-  StampIcon,
-} from '@/components/brandIcons'
+  AccessPanel,
+  EventCard,
+  IssueCard,
+  NewsRow,
+  SectionHeading,
+} from '@/components/frontend/Editorial'
+import { frontendContext } from '@/lib/frontendContext'
+import { formatDate } from '@/lib/formatDate'
+import { StatusBadge } from '@/components/StatusBadge'
+import { billStatusPill } from '@/lib/statusPill'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Dashboard' }
-
-type Product = {
-  href: string
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  description: string
-  requires: 'base' | 'premium'
-  collection?: 'articles' | 'bills' | 'trademarks'
-}
-
-const PRODUCTS: Product[] = [
-  { href: '/articles', icon: AnnouncementIcon, title: 'News', description: 'News from across the industry.', requires: 'base', collection: 'articles' },
-  { href: '/bills', icon: LawIcon, title: 'Legislation', description: 'Legislation tracked via StateNet.', requires: 'base', collection: 'bills' },
-  { href: '/trademarks', icon: StampIcon, title: 'Trademarks', description: 'Weekly USPTO filings.', requires: 'base', collection: 'trademarks' },
-  { href: '/guides', icon: DocumentationIcon, title: 'Guides', description: 'Reference guides and how-tos.', requires: 'base' },
-  { href: '/publications', icon: JournalIcon, title: 'Publications', description: 'Newsletters and issues.', requires: 'base' },
-  { href: '/datasets', icon: DashboardIcon, title: 'Data', description: 'Market, tax and trade datasets you can filter and download.', requires: 'premium' },
-]
+export const metadata = { title: 'Your briefing' }
 
 export default async function DashboardPage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  if (!user || !('collection' in user) || user.collection !== 'users') {
+  const { payload, user, plan, canRead, canReadData } = await frontendContext()
+  if (user?.collection !== 'users')
     return (
       <>
         <SiteNav />
-        <div className="page">
-          <h1>Dashboard</h1>
-          <p>
-            You need to be signed in as a reader. <Link href="/signup">Create an account</Link> or{' '}
-            <Link href="/account">sign in</Link>.
-          </p>
+        <div className="page-wide">
+          <h1>Your industry briefing</h1>
+          <AccessPanel title="Your daily industry briefing." />
         </div>
       </>
     )
-  }
-
-  const fullUser = await payload.findByID({ collection: 'users', id: user.id, depth: 1, overrideAccess: true })
-  const plan = await getReaderPlan(fullUser, payload)
-  const tierLabel: Record<ReaderPlan, string> = { none: 'No subscription', base: 'Base', premium: 'Premium' }
-
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const newCounts: Partial<Record<'articles' | 'bills' | 'trademarks', number>> = {}
-  if (plan !== 'none') {
-    const results = await Promise.all(
-      (['articles', 'bills', 'trademarks'] as const).map((c) =>
-        payload.count({
-          collection: c,
-          where: { createdAt: { greater_than_equal: sevenDaysAgo.toISOString() } },
-          overrideAccess: true,
-        }),
-      ),
+  if (!canRead)
+    return (
+      <>
+        <SiteNav />
+        <div className="page-wide">
+          <h1>Welcome, {user.firstName}</h1>
+          <NoSubscriptionNotice payload={payload} />
+        </div>
+      </>
     )
-    newCounts.articles = results[0].totalDocs
-    newCounts.bills = results[1].totalDocs
-    newCounts.trademarks = results[2].totalDocs
-  }
-
+  const published = { _status: { equals: 'published' as const } }
+  const [news, issues, bills, datasets, events] = await Promise.all([
+    payload.find({
+      collection: 'articles',
+      where: published,
+      sort: '-sourceDate',
+      limit: 5,
+      depth: 1,
+      user,
+      overrideAccess: false,
+    }),
+    currentEditions(),
+    payload.find({
+      collection: 'bills',
+      where: published,
+      sort: '-billDate',
+      limit: 3,
+      depth: 1,
+      user,
+      overrideAccess: false,
+    }),
+    payload.find({
+      collection: 'datasets',
+      sort: '-lastImport.importedAt',
+      limit: 3,
+      depth: 0,
+      user,
+      overrideAccess: false,
+    }),
+    payload.find({
+      collection: 'events',
+      where: { and: [published, { endDate: { greater_than_equal: new Date().toISOString() } }] },
+      sort: 'startsAt',
+      limit: 1,
+      depth: 1,
+      user,
+      overrideAccess: false,
+    }),
+  ])
+  const currentIssues = issues.issues
+  const executive =
+    currentIssues.find((issue) =>
+      /executive|daily.*summary/i.test(
+        typeof issue.publication === 'object' ? issue.publication.title : '',
+      ),
+    ) || currentIssues[0]
+  const trade = currentIssues.find(
+    (issue) =>
+      typeof issue.publication === 'object' &&
+      issue.publication.generator === 'monthly-trade-barometer',
+  )
+  const rest = currentIssues.filter((issue) => issue.id !== executive?.id).slice(0, 3)
   return (
     <>
       <SiteNav />
-      <div className="page-wide">
-        <div className="dashboard-header">
+      <div className="page-wide edition-dashboard">
+        <header className="edition-welcome">
           <div>
-            <h1>Welcome back, {fullUser.firstName}</h1>
-            <p className="muted">
-              Plan: <span className={`badge badge-${plan}`}>{tierLabel[plan]}</span>
+            <p className="edition-eyebrow">
+              YOUR INDUSTRY BRIEFING / {formatDate(new Date().toISOString())}
             </p>
+            <h1>Good to see you, {user.firstName}.</h1>
+            <p>The latest reporting, policy developments, and intelligence in one place.</p>
           </div>
-        </div>
-
-        {plan === 'none' ? (
-          <NoSubscriptionNotice payload={payload} />
-        ) : (
-          <div className="product-grid">
-            {PRODUCTS.map((p) => {
-              const unlocked = planSatisfies(plan, p.requires)
-              const Icon = p.icon
-              const newCount = p.collection ? newCounts[p.collection] : undefined
-              const inner = (
-                <>
-                  <div className="icon">
-                    <Icon />
-                  </div>
-                  <h3>{p.title}</h3>
-                  <p>{unlocked ? p.description : `${p.description} Premium only.`}</p>
-                  {unlocked && newCount ? (
-                    <p className="muted tnum" style={{ marginTop: 4, fontWeight: 600, color: 'var(--nrc-teal)' }}>
-                      {newCount} new this week
-                    </p>
-                  ) : null}
-                </>
-              )
-              return unlocked ? (
-                <Link key={p.href} href={p.href} className="product-card">
-                  {inner}
-                </Link>
-              ) : (
-                <div key={p.href} className="product-card locked">
-                  {inner}
-                </div>
-              )
-            })}
-            <Link href="/events" className="product-card">
-              <div className="icon">
-                <ScheduleIcon />
-              </div>
-              <h3>Events</h3>
-              <p>Conferences and webinars — open to everyone, ticketed separately.</p>
+          <Link href="/account" className="edition-membership">
+            {plan === 'premium' ? 'Premium' : 'Base'} member <span>Manage your preferences ↗</span>
+          </Link>
+        </header>
+        <nav className="edition-shortcuts" aria-label="Explore intelligence">
+          {[
+            ['/articles', 'News'],
+            ['/bills', 'Legislation'],
+            ['/trademarks', 'Trademarks'],
+            ['/datasets', 'Data'],
+            ['/publications', 'Publications'],
+            ['/guides', 'Guides'],
+            ['/events', 'Events'],
+          ].map(([href, label]) => (
+            <Link key={href} href={href}>
+              {label} ↗
             </Link>
-          </div>
+          ))}
+        </nav>
+        <div className="edition-briefing-grid">
+          <section>
+            <SectionHeading
+              eyebrow="START HERE"
+              title="Your latest briefing"
+              href="/publications"
+            />
+            {executive ? (
+              <IssueCard issue={executive} />
+            ) : (
+              <div className="edition-empty">Your latest published briefings will appear here.</div>
+            )}
+          </section>
+          <section className="edition-policy-panel">
+            <SectionHeading eyebrow="POLICY WATCH" title="Latest legislation" href="/bills" />
+            {bills.docs.length ? (
+              bills.docs.map((bill) => (
+                <Link href={`/bills/${bill.id}`} className="edition-policy-row" key={bill.id}>
+                  <span className="edition-meta">
+                    {bill.billNumber} · {formatDate(bill.billDate)}
+                  </span>
+                  <h3>{bill.title}</h3>
+                  <StatusBadge status={billStatusPill(bill)} />
+                </Link>
+              ))
+            ) : (
+              <p className="muted">No published legislation yet.</p>
+            )}
+          </section>
+        </div>
+        <div className="edition-content-grid">
+          <section>
+            <SectionHeading eyebrow="THE NEWS DESK" title="Across the industry" href="/articles" />
+            {news.docs.map((article) => (
+              <NewsRow key={article.id} article={article} summary />
+            ))}
+          </section>
+          <aside>
+            <SectionHeading
+              eyebrow="MARKETS & TRADE"
+              title="New in intelligence"
+              href="/datasets"
+            />
+            {trade && <IssueCard issue={trade} />}
+            {datasets.docs.map((dataset) => (
+              <Link href={`/datasets/${dataset.slug}`} className="edition-update" key={dataset.id}>
+                <span className="edition-eyebrow">{dataset.category}</span>
+                <h3>{dataset.title}</h3>
+                <p className="edition-meta">
+                  {dataset.lastImport?.importedAt
+                    ? `Updated ${formatDate(dataset.lastImport.importedAt)}`
+                    : 'Explore dataset'}
+                  {!canReadData && ' · Premium'}
+                </p>
+              </Link>
+            ))}
+            {events.docs[0] && (
+              <div className="edition-aside-event">
+                <SectionHeading title="Next on the calendar" href="/events" />
+                <EventCard event={events.docs[0]} />
+              </div>
+            )}
+          </aside>
+        </div>
+        {!!rest.length && (
+          <section className="edition-section">
+            <SectionHeading
+              eyebrow="THE READING ROOM"
+              title="Latest editions"
+              href="/publications"
+            />
+            <div className="edition-issue-grid">
+              {rest.map((issue) => (
+                <IssueCard key={issue.id} issue={issue} />
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </>

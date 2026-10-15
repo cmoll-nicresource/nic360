@@ -1,100 +1,99 @@
-import { headers as getHeaders } from 'next/headers.js'
+import { currentEditions } from '@/lib/currentEditions'
 import Link from 'next/link'
-import { getPayload } from 'payload'
-import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
-import { JournalIcon } from '@/components/brandIcons'
-
-import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
-import { staffHasRole } from '@/access/staffRoles'
-import { sentenceCase } from '@/lib/textCase'
-
+import { AccessPanel, PublicationCover, SectionHeading } from '@/components/frontend/Editorial'
+import { frontendContext } from '@/lib/frontendContext'
+import { formatDate } from '@/lib/formatDate'
 export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Publications',
-  description: 'Daily and weekly briefings, delivered to your inbox and archived here.',
+  description: 'Your library of industry briefings and reports.',
 }
-
 export default async function PublicationsPage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const isStaff = staffHasRole(user, 'editor')
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
-  const canRead = isStaff || planSatisfies(plan, 'base')
-
+  const { canRead } = await frontendContext()
+  const { publications, issues } = await currentEditions()
   return (
     <>
       <SiteNav />
-      <div className="header-band">
+      <header className="header-band">
         <div className="header-band-inner">
           <div>
-            <p className="header-band-eyebrow">Content</p>
-            <h1 className="page-heading">
-              <span className="icon-badge">
-                <JournalIcon />
-              </span>
-              Publications
-            </h1>
-            <p>Daily and weekly briefings, delivered to your inbox and archived here.</p>
+            <p className="edition-eyebrow">THE READING ROOM</p>
+            <h1>A clearer view of your industry.</h1>
+            <p>
+              Daily briefings, specialist reporting and monthly analysis. Read the latest edition or
+              explore the archive.
+            </p>
           </div>
+          {canRead && (
+            <Link href="/account" className="edition-text-link">
+              Manage email preferences ↗
+            </Link>
+          )}
         </div>
-      </div>
-      <div className="page">
+      </header>
+      <div className="page-wide">
         {!canRead ? (
-          <div className="locked-content">
-            Sign in with a Base or Premium subscription to view publications.{' '}
-            <Link href="/account">Sign in</Link>
-          </div>
+          <AccessPanel
+            title="Your industry. In perspective."
+            description="Sign in with a Base or Premium subscription to read the publication library."
+          />
         ) : (
-          <PublicationList payload={payload} />
+          <>
+            {['news', 'legislation', 'trademarks'].map((category) => {
+              const docs = publications.filter((p) =>
+                p.category?.includes(category as 'news' | 'legislation' | 'trademarks'),
+              )
+              if (!docs.length) return null
+              return (
+                <section key={category} className="edition-section">
+                  <SectionHeading
+                    eyebrow="PUBLICATIONS"
+                    title={
+                      category === 'news'
+                        ? 'News & analysis'
+                        : category === 'legislation'
+                          ? 'Policy & legislation'
+                          : 'Trademark intelligence'
+                    }
+                  />
+                  <div className="edition-publication-grid">
+                    {docs.map((publication) => {
+                      const latest = issues.find(
+                        (issue) =>
+                          (typeof issue.publication === 'object'
+                            ? issue.publication.id
+                            : issue.publication) === publication.id,
+                      )
+                      return (
+                        <Link
+                          href={`/publications/${publication.slug}`}
+                          key={publication.id}
+                          className="edition-publication-card"
+                        >
+                          <PublicationCover publication={publication} date={latest?.issueDate} />
+                          <div>
+                            <span className="tag-pill">{publication.frequency}</span>
+                            <h3>{publication.title}</h3>
+                            <p className="muted">{publication.description}</p>
+                            <p className="edition-meta">
+                              {latest
+                                ? `Latest edition · ${formatDate(latest.issueDate)}`
+                                : 'Browse the archive'}
+                            </p>
+                            <span className="edition-text-link">Explore editions ↗</span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </section>
+              )
+            })}
+            {!publications.length && <p className="muted">Published briefings will appear here.</p>}
+          </>
         )}
       </div>
-    </>
-  )
-}
-
-const CATEGORIES = [
-  { value: 'news', label: 'News' },
-  { value: 'legislation', label: 'Legislation' },
-  { value: 'trademarks', label: 'Trademarks' },
-] as const
-
-async function PublicationList({ payload }: { payload: Awaited<ReturnType<typeof getPayload>> }) {
-  const { docs: publications } = await payload.find({
-    collection: 'publications',
-    limit: 100,
-    sort: 'title',
-    overrideAccess: true,
-  })
-
-  if (publications.length === 0) return <p className="muted">No publications yet.</p>
-
-  return (
-    <>
-      {CATEGORIES.map((c) => {
-        const inCategory = publications.filter((p) => p.category?.includes(c.value))
-        if (inCategory.length === 0) return null
-        return (
-          <div key={c.value} style={{ marginBottom: 24 }}>
-            <h2>{c.label}</h2>
-            <div className="card">
-              {inCategory.map((p) => (
-                <Link key={p.id} href={`/publications/${p.slug}`} className="excerpt-list-item">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <h3 style={{ margin: 0 }}>{p.title}</h3>
-                    {p.frequency && <span className="tag-pill">{sentenceCase(p.frequency)}</span>}
-                  </div>
-                  {p.description && <div className="excerpt-meta">{p.description}</div>}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )
-      })}
     </>
   )
 }

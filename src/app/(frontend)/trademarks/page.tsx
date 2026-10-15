@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { StampIcon } from '@/components/brandIcons'
+import { EditorialPhoto } from '@/components/frontend/EditorialPhoto'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
@@ -14,13 +15,18 @@ import { PAGE_SIZE, parsePage } from '@/lib/pagination'
 import { Pagination } from '@/components/Pagination'
 import { StatusBadge } from '@/components/StatusBadge'
 import { trademarkStatusPill } from '@/lib/statusPill'
-import { parseTrademarkFilters, trademarkFiltersToQueryString, trademarkWhere } from '@/lib/trademarkFilters'
+import {
+  parseTrademarkFilters,
+  trademarkFiltersToQueryString,
+  trademarkWhere,
+} from '@/lib/trademarkFilters'
 import type { Trademark } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Trademarks',
-  description: 'New tobacco and nicotine trademark filings, renewals and cancellations from the USPTO, updated every week.',
+  description:
+    'New tobacco and nicotine trademark filings, renewals and cancellations from the USPTO, updated every week.',
 }
 
 export default async function TrademarksPage({
@@ -38,14 +44,20 @@ export default async function TrademarksPage({
   const { user } = await payload.auth({ headers })
 
   const isStaff = !!user && 'collection' in user && user.collection === 'staff'
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
+  const plan =
+    user && 'collection' in user && user.collection === 'users'
+      ? await getReaderPlan(user, payload)
+      : 'none'
   const canRead = isStaff || planSatisfies(plan, 'base')
-  const { totalDocs: totalTrademarks } = await payload.count({ collection: 'trademarks', overrideAccess: true })
+  const { totalDocs: totalTrademarks } = await payload.count({
+    collection: 'trademarks',
+    overrideAccess: true,
+  })
 
   return (
     <>
       <SiteNav />
-      <div className="header-band">
+      <div className="header-band header-band--photographic">
         <div className="header-band-inner">
           <div>
             <p className="header-band-eyebrow">Tracking</p>
@@ -55,9 +67,19 @@ export default async function TrademarksPage({
               </span>
               Trademarks
             </h1>
-            <p>New tobacco and nicotine trademark filings, renewals and cancellations from the USPTO, updated every week.</p>
+            <p>
+              New tobacco and nicotine trademark filings, renewals and cancellations from the USPTO,
+              updated every week.
+            </p>
           </div>
           <span className="header-band-meta">{totalTrademarks.toLocaleString()} trademarks</span>
+          <EditorialPhoto
+            photo="stamp"
+            className="editorial-header-photo"
+            decorative
+            eager
+            sizes="(max-width: 700px) 100vw, 360px"
+          />
         </div>
       </div>
       <div className="page">
@@ -89,7 +111,12 @@ async function TrademarkTable({
   let totalPages = 1
 
   if (filters.keyword) {
-    const rankedIds = await searchColumnsForIds(payload, 'trademarks', ['title', 'owner', 'goods'], filters.keyword)
+    const rankedIds = await searchColumnsForIds(
+      payload,
+      'trademarks',
+      ['title', 'owner', 'goods'],
+      filters.keyword,
+    )
     if (rankedIds.length > 0) {
       const { docs } = await payload.find({
         collection: 'trademarks',
@@ -148,7 +175,11 @@ async function TrademarkTable({
                   <td>
                     {image?.url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={image.url} alt="" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                      <img
+                        src={image.url}
+                        alt=""
+                        style={{ width: 32, height: 32, objectFit: 'contain' }}
+                      />
                     ) : null}
                   </td>
                   <td>

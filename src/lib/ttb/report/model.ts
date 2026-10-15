@@ -2,7 +2,7 @@
 
 export type Block =
   | { kind: "heading"; text: string; level: 1 | 2 | 3 }
-  /** Text may contain [[...]] markers: editorial placeholders rendered highlighted. */
+  /** Finished prose; PDF readiness validation rejects editorial markers. */
   | { kind: "para"; text: string; italic?: boolean }
   | { kind: "chart"; png: Buffer; width: number; height: number }
   | { kind: "table"; table: Table }

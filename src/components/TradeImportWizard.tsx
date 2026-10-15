@@ -109,16 +109,16 @@ export function TradeImportWizard() {
     return (
       <form onSubmit={handleUpload} className="card">
         <div className="field">
-          <label>Import file (Imp_MMYYYY.xls)</label>
-          <input type="file" name="importFile" accept=".xls,.xlsx" />
+          <label htmlFor="trade-import-file">Import file (Imp_MMYYYY.xls)</label>
+          <input id="trade-import-file" type="file" name="importFile" accept=".xls,.xlsx" />
         </div>
         <div className="field">
-          <label>Export file (Exp_MMYYYY.xls)</label>
-          <input type="file" name="exportFile" accept=".xls,.xlsx" />
+          <label htmlFor="trade-export-file">Export file (Exp_MMYYYY.xls)</label>
+          <input id="trade-export-file" type="file" name="exportFile" accept=".xls,.xlsx" />
         </div>
         <div className="field">
-          <label>Year override (optional)</label>
-          <input type="number" name="year" value={year} onChange={(e) => setYear(e.target.value)} placeholder="Only if the file name's year is wrong" />
+          <label htmlFor="trade-year">Year override (optional)</label>
+          <input id="trade-year" type="number" name="year" value={year} onChange={(e) => setYear(e.target.value)} placeholder="Only if the file name's year is wrong" />
         </div>
         {error && <p style={{ color: '#8a2b2b' }}>{error}</p>}
         <button type="submit" disabled={busy}>
@@ -137,15 +137,18 @@ export function TradeImportWizard() {
         <LoadSummary fp={preview.export} />
 
         <div className="field">
-          <label>Report inputs (optional JSON — total US trade, TRQ usage, commentary)</label>
+          <label htmlFor="trade-report-inputs">Report inputs (optional JSON — total US trade, TRQ usage, commentary)</label>
           <textarea
+            id="trade-report-inputs"
             value={inputsJson}
             onChange={(e) => setInputsJson(e.target.value)}
             rows={6}
-            placeholder='{"released": "...", "usTrade": {...}, "commentary": {...}, "trq": {...}}'
+            placeholder='{"usTrade": {...}, "commentary": {...}, "trq": {...}}'
           />
           <p className="muted" style={{ fontSize: 13 }}>
-            Left blank, the report highlights these figures as placeholders for you to fill in by hand afterward.
+            US trade figures and the latest weekly CBP tobacco quota figures are fetched automatically.
+            You can override them with usTrade or trq inputs. The release date is the generation date.
+            Missing required figures stop PDF generation; commentary is optional.
           </p>
         </div>
 

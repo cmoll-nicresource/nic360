@@ -1,9 +1,12 @@
 // Builds the report: one chapter per published part, each with its narrative, charts,
-// and the country detail tables. Figures come from the database; facts the database
-// can't know (total US trade, TRQ usage, commentary, release date) come from an inputs
-// file, and anything missing is left as a highlighted [[placeholder]] for the editor.
+// and country detail tables. Required external figures are resolved before building;
+// incomplete data stops generation. Release dates use the generation day in US Eastern.
 
 import type pg from "pg";
+import { type UsTrade, usTradeParagraphs } from '../usTrade';
+import type { Trq } from '../trq';
+import { tradeNumber } from '../numeric';
+import { assertReportInputs, assertReportReady, generationDate } from './readiness';
 import { stackedBarSvg, svgToPng } from "./chart";
 import {
   type Basis, type Figures, type Line, type LineFigures, type MonthPoint,
@@ -19,19 +22,12 @@ import {
 } from "./text";
 
 export interface Inputs {
-  released?: string;
-  /** Total US merchandise trade (Census FT-900), in billions of dollars. */
-  usTrade?: {
-    exports: { month: number; prevMonth: number; ytd: number; prevYtd: number };
-    imports: { month: number; prevMonth: number; ytd: number; prevYtd: number };
-  };
+  /** Billions of dollars. Automatic FRED inputs cover goods and services;
+   * legacy manual inputs without source metadata retain the merchandise basis. */
+  usTrade?: UsTrade;
   /** Editorial sentences, keyed by where they go. */
-  commentary?: { usTrade?: string; tobaccoTrade?: string };
-  trq?: {
-    periodLabel: string;
-    quotaYear: string;
-    rows: { country: string; imported: number; quota: number }[];
-  };
+  commentary?: { usTrade?: string };
+  trq?: Trq;
 }
 
 interface Ctx {
@@ -42,9 +38,9 @@ interface Ctx {
   lines: Map<string, Line[]>;
   inputs: Inputs;
   cache: Map<string, LineFigures[]>;
+  releaseDate: string;
 }
 
-const placeholder = (s: string) => `[[${s}]]`;
 const para = (text: string): Block => ({ kind: "para", text });
 const h = (text: string, level: 1 | 2 | 3 = 2): Block => ({ kind: "heading", text, level });
 
@@ -225,7 +221,10 @@ async function part1(ctx: Ctx): Promise<Chapter> {
   blocks.push(h("Balance of US Trade"));
   const prevMonthName = ctx.mo === 1 ? `December ${p.yr - 1}` : `${monthName(ctx.mo - 1)} ${p.yr}`;
   const us = inputs.usTrade;
-  if (us) {
+  if (us?.source) {
+    blocks.push(...usTradeParagraphs(us, ctx.yr, ctx.mo, inputs.commentary?.usTrade).map(para));
+    blocks.push({ kind: 'para', italic: true, text: `Source: US Census Bureau / BEA via FRED (${us.source.series.join(', ')}). Goods and services, balance of payments basis, seasonally adjusted; billions of dollars. Retrieved ${us.source.retrievedAt.slice(0, 10)}. Figures are subject to revision.` });
+  } else if (us) {
     const B = 1e9;
     const def = (us.exports.month - us.imports.month) * B, defPrev = (us.exports.prevMonth - us.imports.prevMonth) * B;
     const defYtd = (us.exports.ytd - us.imports.ytd) * B, defPrevYtd = (us.exports.prevYtd - us.imports.prevYtd) * B;
@@ -235,7 +234,7 @@ async function part1(ctx: Ctx): Promise<Chapter> {
       `The nation’s merchandise trade ${surplusWord(def)} in ${p.month} ${grew ? "grew" : "shrank"} by ${money(Math.abs(Math.abs(def) - Math.abs(defPrev)))} `
       + `(from the revised ${prevMonthName} ${surplusWord(defPrev)} of ${money(Math.abs(defPrev))}) to ${money(Math.abs(def))} as imports `
       + `${dir(us.imports.month, us.imports.prevMonth)} while exports ${dir(us.exports.month, us.exports.prevMonth)}. `
-      + `${inputs.commentary?.usTrade ?? placeholder("Commentary on what drove the change, from the Census FT-900 release.")} `
+      + `${inputs.commentary?.usTrade ? `${inputs.commentary.usTrade} ` : ''}`
       + `The year-to-date ${p.yr} trade ${surplusWord(defYtd)} figure of ${money(Math.abs(defYtd))} was ${money(Math.abs(Math.abs(defYtd) - Math.abs(defPrevYtd)))} `
       + `or ${changePhrase(Math.abs(defYtd), Math.abs(defPrevYtd)).replace(/^(up|down) /, "")} ${Math.abs(defYtd) >= Math.abs(defPrevYtd) ? "greater" : "less"} `
       + `than the comparable ${p.prevYr} figure of ${money(Math.abs(defPrevYtd))}.`,
@@ -251,7 +250,7 @@ async function part1(ctx: Ctx): Promise<Chapter> {
     };
     blocks.push(para(`${flowSentence("import", us.imports)} ${flowSentence("export", us.exports)}`));
   } else {
-    blocks.push(para(placeholder("Total US trade figures not supplied. Add usTrade to the inputs file (Census FT-900: exports and general imports for this month, the revised prior month, YTD and prior YTD, in billions).")));
+    throw new Error('US trade figures are required to generate the report');
   }
 
   // Tobacco trade
@@ -271,8 +270,7 @@ async function part1(ctx: Ctx): Promise<Chapter> {
   const absPair = (a: number, b: number) => pctParen(Math.abs(a), Math.abs(b));
   blocks.push(h("Balance of US Tobacco Trade"));
   blocks.push(para(
-    `${inputs.commentary?.tobaccoTrade ?? placeholder("Lead-in on the main driver, e.g. “Due to a significant rise in flue-cured leaf exports,”")} `
-    + `the U.S. tobacco industry in ${p.month} reported a monthly trade ${surplusWord(bal)} of ${money(Math.abs(bal))} `
+    `The U.S. tobacco industry in ${p.month} reported a monthly trade ${surplusWord(bal)} of ${money(Math.abs(bal))} `
     + `(${money(Math.abs(balNet))} ${surplusWord(balNet)} net of oriental) compared to the ${money(Math.abs(balPrev))} ${surplusWord(balPrev)} from ${prevMonthName}.${streak} `
     + `For ${p.ytd()}, there was a tobacco industry trade ${surplusWord(total(ytd))} of ${money(Math.abs(total(ytd)))} `
     + `(${money(Math.abs(totalNet(ytd)))} net of oriental), ${Math.abs(total(ytd)) <= Math.abs(total(ytdPrev)) ? "down" : "up"} ${money(Math.abs(Math.abs(total(ytd)) - Math.abs(total(ytdPrev))))} `
@@ -289,7 +287,7 @@ async function part1(ctx: Ctx): Promise<Chapter> {
     + `The ${leafBalNet(ytd) >= 0 ? "positive" : "negative"} balance of trade in leaf (net of oriental) for ${p.ytd()} was ${money(Math.abs(leafBalNet(ytd)))} ${absPair(leafBalNet(ytd), leafBalNet(ytdPrev))}, `
     + `while the ${prodBal(ytd) >= 0 ? "positive" : "negative"} balance of trade in tobacco products totaled ${money(Math.abs(prodBal(ytd)))} ${absPair(prodBal(ytd), prodBal(ytdPrev))}.`,
   ));
-  if (inputs.released) blocks.push({ kind: "para", text: `Released ${inputs.released}`, italic: true });
+  released(ctx, blocks);
 
   // Chart: monthly balance by products and leaf (net of oriental), millions
   const last13 = hist.slice(-13);
@@ -301,11 +299,11 @@ async function part1(ctx: Ctx): Promise<Chapter> {
   // Balance table
   const usRows: Row[] = us
     ? [
-      ["Exports [f.a.s. value]", us.exports.month, us.exports.ytd, us.exports.prevYtd],
-      ["General imports [customs]", us.imports.month, us.imports.ytd, us.imports.prevYtd],
-      ["Surplus or (deficit)", us.exports.month - us.imports.month, us.exports.ytd - us.imports.ytd, us.exports.prevYtd - us.imports.prevYtd],
+      [us.source ? "Exports [BOP basis]" : "Exports [f.a.s. value]", us.exports.month, us.exports.ytd, us.exports.prevYtd],
+      [us.source ? "Imports [BOP basis]" : "General imports [customs]", us.imports.month, us.imports.ytd, us.imports.prevYtd],
+      ["Surplus or (deficit)", us.balance?.month ?? us.exports.month - us.imports.month, us.balance?.ytd ?? us.exports.ytd - us.imports.ytd, us.balance?.prevYtd ?? us.exports.prevYtd - us.imports.prevYtd],
     ].map(([label, ...v]) => ({ cells: [{ text: label as string, indent: 1 }, ...(v as number[]).map((n) => ({ text: b1(n), align: "right" as const }))] }))
-    : [{ cells: [{ text: placeholder("Total US figures not supplied"), indent: 1 }, { text: "" }, { text: "" }, { text: "" }] }];
+    : [];
   const M = 1e6;
   const tob = (label: string, f: (b: Balance) => number) => ({
     cells: [{ text: label, indent: 1 }, ...[now, ytd, ytdPrev].map((b) => ({ text: b1(f(b) / M), align: "right" as const }))],
@@ -314,7 +312,7 @@ async function part1(ctx: Ctx): Promise<Chapter> {
     title: "Total US and Tobacco Industry Balance of Trade",
     header: [{ heading: true, cells: [{ text: "" }, { text: "This Month", align: "right" }, { text: String(p.yr), align: "right" }, { text: String(p.prevYr), align: "right" }] }],
     rows: [
-      { bold: true, cells: [{ text: "Total US (Billions of US$)" }, { text: "" }, { text: "" }, { text: "" }] },
+      { bold: true, cells: [{ text: us?.source ? "Total US goods and services (Billions of US$, seasonally adjusted)" : "Total US (Billions of US$)" }, { text: "" }, { text: "" }, { text: "" }] },
       ...usRows,
       { bold: true, cells: [{ text: "Tobacco Industry (Millions of US$)" }, { text: "" }, { text: "" }, { text: "" }] },
       tob("Exports [f.a.s. value]", (b) => b.leafExp + b.prodExp),
@@ -343,9 +341,11 @@ async function part1(ctx: Ctx): Promise<Chapter> {
       header: [{ heading: true, cells: ["Country", "Cigarette Leaf Imported", `${t.quotaYear} Quota Level`, "Quantity Remaining", "% TRQ"].map((x, i) => ({ text: x, align: i ? "right" as const : "left" as const })) }],
       rows, widths: [3, 2, 2, 2, 1.2], fontSize: 9,
     } });
-    blocks.push({ kind: "para", text: "Source: The US Department of Homeland Security - Automated Commercial Environment (ACE) system", italic: true });
+    blocks.push({ kind: "para", text: t.source
+      ? `Source: US Customs and Border Protection, Commodity Status Report dated ${t.source.releaseDate}, via ACE. Allocated quantities as of this weekly release; quota effective dates ${t.source.effectiveBegin} to ${t.source.effectiveEnd}. ${t.source.url}`
+      : "Source: The US Department of Homeland Security - Automated Commercial Environment (ACE) system", italic: true });
   } else {
-    blocks.push(para(placeholder("TRQ usage not supplied. Add trq to the inputs file (period, quota year, and imported vs quota by country from ACE).")));
+    throw new Error('TRQ figures are required to generate the report');
   }
 
   // Leaf balance chart: cigarette leaf types net of oriental vs cigar and other leaf
@@ -606,8 +606,7 @@ async function part4(ctx: Ctx): Promise<Chapter> {
 
 /**
  * Duty-free entries under special programs (Census rate provision 18) by country.
- * The database can't tell GSP from CBI or free-trade-agreement entries, so this is
- * an editor's note with the figures rather than finished text.
+ * Report the recorded rate-provision category without inferring a specific program.
  */
 async function specialProgramNote(ctx: Ctx, chapterId: string, description: string, what: string): Promise<string> {
   const line = ctx.lines.get(chapterId)!.find((l) => l.description === description)!;
@@ -616,11 +615,15 @@ async function specialProgramNote(ctx: Ctx, chapterId: string, description: stri
        from report.line_member m join trade.import_fact f on f.hts = m.hts
        left join ref.country ct on ct.cty_code = f.cty_code
       where m.line_id = $1 and f.yr = $2 and f.mo = $3 and f.rate_prov = 18
+        and (m.valid_from is null or make_date(f.yr, f.mo, 1) >= m.valid_from)
+        and (m.valid_to is null or make_date(f.yr, f.mo, 1) <= m.valid_to)
       group by 1 having sum(f.con_val_mo) > 0 order by 3 desc limit 8`,
     [line.lineId, ctx.yr, ctx.mo],
   );
-  const list = rows.map((r) => `${r.country} ${quantity(r.q, line.unit ?? "KG", false)} ${money(r.v, false)}`).join("; ");
-  return placeholder(`GSP / Caribbean Basin duty-free sentence for ${ctx.p.month}. Special-program duty-free ${what} entries this month (rate provision 18, includes free-trade agreements): ${list || "none"}. Keep only GSP and CBI beneficiary countries.`);
+  const list = rows.map((r) => `${r.country} (${quantity(tradeNumber(r.q, 'duty-free quantity'), line.unit ?? "KG", false)}, valued at ${money(tradeNumber(r.v, 'duty-free value'), false)})`).join("; ");
+  return list
+    ? `In ${ctx.p.month}, the leading suppliers of ${what} imports for consumption recorded as duty-free under special provisions (Census rate provision 18) were: ${list}.`
+    : `No ${what} imports for consumption were recorded under the special duty-free provisions (Census rate provision 18) in ${ctx.p.month}.`;
 }
 
 // ------------------------------------------------------------------ Part 5: product imports
@@ -732,7 +735,7 @@ async function part6(ctx: Ctx): Promise<Chapter> {
 // ------------------------------------------------------------------ assembly
 
 function released(ctx: Ctx, b: Block[]) {
-  b.push({ kind: "para", text: `Released ${ctx.inputs.released ?? placeholder("release date")}`, italic: true });
+  b.push({ kind: "para", text: `Released ${ctx.releaseDate}`, italic: true });
 }
 
 function chapterOf(ctx: Ctx, partNo: number, title: string, narrative: Block[], tables: Block[]): Chapter {
@@ -741,13 +744,14 @@ function chapterOf(ctx: Ctx, partNo: number, title: string, narrative: Block[], 
   return { partNo, title, sections };
 }
 
-export async function buildReport(c: pg.ClientBase, yr: number, mo: number, inputs: Inputs): Promise<Report> {
-  const ctx: Ctx = { c, yr, mo, p: period(yr, mo), lines: await loadLines(c), inputs, cache: new Map() };
+export async function buildReport(c: pg.ClientBase, yr: number, mo: number, inputs: Inputs, generatedAt = new Date()): Promise<Report> {
+  assertReportInputs(inputs, yr, mo);
+  const ctx: Ctx = { c, yr, mo, p: period(yr, mo), lines: await loadLines(c), inputs, cache: new Map(), releaseDate: generationDate(generatedAt) };
   const notes: string[] = [];
   for (const [label, t] of [["exports", "trade.export_fact"], ["imports", "trade.import_fact"]] as const) {
     for (const y of [yr, yr - 1]) {
       const { rows } = await c.query(`select 1 from ${t} where yr = $1 and mo = $2 limit 1`, [y, mo]);
-      if (!rows.length) notes.push(`No ${label} loaded for ${monthName(mo)} ${y}; figures that depend on it are zero.`);
+      if (!rows.length) throw new Error(`Cannot generate a complete report: no ${label} loaded for ${monthName(mo)} ${y}.`);
     }
   }
   const chapters: Chapter[] = [];
@@ -756,5 +760,7 @@ export async function buildReport(c: pg.ClientBase, yr: number, mo: number, inpu
     ctx.p = period(yr, mo);
     chapters.push(await build(ctx));
   }
-  return { title: "US Tobacco Trade Barometer", subtitle: period(yr, mo).month, chapters, notes };
+  const report = { title: "US Tobacco Trade Barometer", subtitle: period(yr, mo).month, chapters, notes };
+  assertReportReady(report);
+  return report;
 }

@@ -1,5 +1,6 @@
 // Cleaning: blanks, duplicates, key clashes, month checks. Ported verbatim from ttb-trade/src/normalise.ts.
 import { type Flow, OPTIONAL_MEASURES, SPEC } from './columns'
+import { tradeNumber } from './numeric'
 import type { Row } from './read'
 
 export type Fact = Record<string, number | string | null>
@@ -25,14 +26,12 @@ const blank = (v: unknown) => v === null || v === undefined || String(v).trim() 
 
 function toInt(v: unknown, col: string, row: number): number {
   const n = Number(String(v).trim())
-  if (!Number.isInteger(n)) throw new Error(`row ${row + 2}: ${col} is not a whole number (${String(v)})`)
+  if (!Number.isSafeInteger(n)) throw new Error(`row ${row + 2}: ${col} is not a safe whole number (${String(v)})`)
   return n
 }
 
 function toNum(v: unknown, col: string, row: number): number {
-  const n = Number(String(v).trim())
-  if (!Number.isFinite(n)) throw new Error(`row ${row + 2}: ${col} is not a number (${String(v)})`)
-  return n
+  return tradeNumber(String(v).trim(), `row ${row + 2}: ${col}`)
 }
 
 /**
@@ -137,7 +136,7 @@ export function normalise(rows: Row[], flow: Flow, year?: number): Normalised {
     const merged: Fact = { ...list[0] }
     for (const m of spec.measures) {
       const vals = list.map((f) => f[m]).filter((v): v is number => v !== null)
-      merged[m] = vals.length ? vals.reduce((a, b) => a + b, 0) : null
+      merged[m] = vals.length ? tradeNumber(vals.reduce((a, b) => a + b, 0), `merged ${m}`) : null
     }
     facts.push(merged)
   }

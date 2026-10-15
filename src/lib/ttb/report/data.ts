@@ -1,4 +1,5 @@
 import type pg from "pg";
+import { tradeNumber } from '../numeric';
 
 /** Which set of measures a figure comes from. */
 export type Basis = "export" | "consumption" | "general";
@@ -43,6 +44,14 @@ export const zero = (): Figures => ({
   qtyPrevMo: 0, valPrevMo: 0,
 });
 
+// SQL result types are deliberately unknown: a TS annotation cannot make
+// pg's NUMERIC strings into numbers at runtime.
+interface AggregateRow {
+  line_id: number; cty_code: number; country: string; yr: number;
+  q_mo: unknown; v_mo: unknown; c_mo: unknown;
+  q_yr: unknown; v_yr: unknown; c_yr: unknown;
+}
+
 const flowOf = (b: Basis) => (b === "export" ? "export" : "import");
 
 /** Column expressions for quantity, value and CIF (customs value + charges) on each basis. */
@@ -80,7 +89,7 @@ export async function loadLines(c: pg.ClientBase): Promise<Map<string, Line[]>> 
     const line: Line = {
       lineId: r.line_id, chapterId: r.chapter_id, sortOrder: r.sort_order, description: r.description,
       part1Desc: r.part1_desc ?? r.description.toUpperCase(), shortName: r.short_name ?? r.description,
-      indent: r.indent, chartGroup: r.chart_group || null, qtyDivisor: Number(r.qty_divisor ?? 1) || 1,
+      indent: r.indent, chartGroup: r.chart_group || null, qtyDivisor: tradeNumber(r.qty_divisor ?? 1, 'qty_divisor') || 1,
       isTotal: r.is_total, unit: r.unit,
     };
     if (!out.has(line.chapterId)) out.set(line.chapterId, []);
@@ -99,7 +108,7 @@ export async function loadChapterFigures(
   const mm = measureSql(basis, "mo");
   const yy = measureSql(basis, "yr");
   const ids = lines.map((l) => l.lineId);
-  const { rows } = await c.query(
+  const { rows } = await c.query<AggregateRow>(
     `select m.line_id, f.cty_code, coalesce(ct.name, f.cty_code::text) as country, f.yr,
             sum(${mm.q}) q_mo, sum(${mm.v}) v_mo, sum(${mm.c}) c_mo,
             sum(${yy.q}) q_yr, sum(${yy.v}) v_yr, sum(${yy.c}) c_yr
@@ -116,12 +125,18 @@ export async function loadChapterFigures(
     const m = byLine.get(r.line_id)!;
     if (!m.has(r.cty_code)) m.set(r.cty_code, { ctyCode: r.cty_code, country: r.country, ...zero() });
     const f = m.get(r.cty_code)!;
+    const qMo = tradeNumber(r.q_mo, 'q_mo');
+    const vMo = tradeNumber(r.v_mo, 'v_mo');
+    const cMo = tradeNumber(r.c_mo, 'c_mo');
+    const qYr = tradeNumber(r.q_yr, 'q_yr');
+    const vYr = tradeNumber(r.v_yr, 'v_yr');
+    const cYr = tradeNumber(r.c_yr, 'c_yr');
     if (r.yr === yr) {
-      f.qtyMo += r.q_mo; f.valMo += r.v_mo; f.cifMo += r.c_mo;
-      f.qtyYtd += r.q_yr; f.valYtd += r.v_yr; f.cifYtd += r.c_yr;
+      f.qtyMo += qMo; f.valMo += vMo; f.cifMo += cMo;
+      f.qtyYtd += qYr; f.valYtd += vYr; f.cifYtd += cYr;
     } else {
-      f.qtyPrev += r.q_yr; f.valPrev += r.v_yr; f.cifPrev += r.c_yr;
-      f.qtyPrevMo += r.q_mo; f.valPrevMo += r.v_mo;
+      f.qtyPrev += qYr; f.valPrev += vYr; f.cifPrev += cYr;
+      f.qtyPrevMo += qMo; f.valPrevMo += vMo;
     }
   }
   const units = await unitsInUse(c, basis, ids, yr);
@@ -131,7 +146,9 @@ export async function loadChapterFigures(
       .filter((f) => f.qtyMo || f.valMo || f.qtyYtd || f.valYtd || f.qtyPrev || f.valPrev)
       .sort((a, b) => a.country.localeCompare(b.country));
     const total = zero();
-    for (const f of countries) for (const k of Object.keys(total) as (keyof Figures)[]) total[k] += f[k];
+    for (const f of countries) for (const k of Object.keys(total) as (keyof Figures)[]) {
+      total[k] = tradeNumber(total[k] + f[k], `line ${line.lineId} total ${k}`);
+    }
     return { line, total, countries };
   });
 }
@@ -143,7 +160,7 @@ export async function loadChapterFigures(
  */
 async function unitsInUse(c: pg.ClientBase, basis: Basis, ids: number[], yr: number) {
   const t = basis === "export" ? "trade.export_fact" : "trade.import_fact";
-  const { rows } = await c.query(
+  const { rows } = await c.query<{ line_id: number; units: string[] }>(
     `select m.line_id, array_agg(distinct case when ${DOZEN_LINE} and h.unit_qy1 = 'NO' then 'DOZ' else h.unit_qy1 end) as units
        from report.line_member m ${lineJoins}
       where m.line_id = any($1) and h.unit_qy1 is not null
@@ -161,7 +178,7 @@ export async function loadMonthlySeries(
   c: pg.ClientBase, lines: Line[], basis: Basis, from: [number, number], to: [number, number],
 ): Promise<Map<number, MonthPoint[]>> {
   const mm = measureSql(basis, "mo");
-  const { rows } = await c.query(
+  const { rows } = await c.query<{ line_id: number; yr: number; mo: number; q: unknown; v: unknown }>(
     `select m.line_id, f.yr, f.mo, sum(${mm.q}) q, sum(${mm.v}) v
        from report.line_member m ${lineJoins}
        join ${factSql(basis)} and ${memberValid}
@@ -181,7 +198,7 @@ export async function loadMonthlySeries(
   for (const r of rows) {
     const pts = out.get(r.line_id)!;
     const p = pts.find((x) => x.yr === r.yr && x.mo === r.mo);
-    if (p) { p.qty = r.q; p.val = r.v; }
+    if (p) { p.qty = tradeNumber(r.q, 'monthly q'); p.val = tradeNumber(r.v, 'monthly v'); }
   }
   return out;
 }

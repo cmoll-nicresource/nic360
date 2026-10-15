@@ -1,91 +1,145 @@
-import { headers as getHeaders } from 'next/headers.js'
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { getPayload } from 'payload'
-import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
-
-import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
-
+import { AccessPanel, NewsRow, SectionHeading } from '@/components/frontend/Editorial'
+import { frontendContext } from '@/lib/frontendContext'
+import { hasDistinctExcerpt, sourceLabel } from '@/lib/editorial'
+import { formatDate } from '@/lib/formatDate'
+import { sentenceCase } from '@/lib/textCase'
 export const dynamic = 'force-dynamic'
-
 export default async function ArticleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const isStaff = !!user && 'collection' in user && user.collection === 'staff'
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
-  const canReadFull = isStaff || planSatisfies(plan, 'base')
-
-  const article = await payload
-    .findByID({ collection: 'articles', id, depth: 1, overrideAccess: true })
-    .catch(() => null)
+  const { payload, user, canRead } = await frontendContext()
+  const { docs } = await payload.find({
+    collection: 'articles',
+    where: { and: [{ id: { equals: id } }, { _status: { equals: 'published' } }] },
+    limit: 1,
+    depth: 1,
+    user,
+    overrideAccess: false,
+  })
+  const article = docs[0]
   if (!article) notFound()
-
+  const primarySubject = typeof article.primarySubject === 'object' ? article.primarySubject : null
+  const related = primarySubject
+    ? await payload.find({
+        collection: 'articles',
+        where: {
+          and: [
+            { _status: { equals: 'published' } },
+            { id: { not_equals: article.id } },
+            { primarySubject: { equals: primarySubject.id } },
+          ],
+        },
+        sort: '-sourceDate',
+        limit: 3,
+        depth: 1,
+        user,
+        overrideAccess: false,
+      })
+    : null
+  const groups = [
+    {
+      label: 'Subjects',
+      key: 'subject',
+      terms: [...(primarySubject ? [primarySubject] : []), ...(article.subjects || [])],
+    },
+    { label: 'Markets & locations', key: 'location', terms: article.locations || [] },
+    { label: 'Sectors', key: 'sector', terms: article.sectors || [] },
+    { label: 'Products', key: 'product', terms: article.products || [] },
+  ]
+  const source = sourceLabel(typeof article.source === 'object' ? article.source?.name : null)
   return (
     <>
       <SiteNav />
-      <div className="page">
-        <p>
-          <Link href="/articles">&larr; All articles</Link>
-        </p>
-        <h1>{article.title}</h1>
-        <p className="excerpt-meta">
-          {article.source && typeof article.source === 'object' ? article.source.name : null}
-          {article.sourceDate ? ` · ${new Date(article.sourceDate).toLocaleDateString()}` : null}
-          {article.sourceUrl ? (
-            <>
-              {' · '}
-              <a href={article.sourceUrl} target="_blank" rel="noreferrer">
-                Original source
-              </a>
-            </>
-          ) : null}
-        </p>
-
-        <div className="card">
-          {canReadFull ? (
-            <RichText data={article.excerpt} />
-          ) : (
-            <div className="locked-content">
-              Full excerpt requires a Base or Premium subscription.{' '}
-              <Link href="/account">Sign in</Link> with your company&apos;s access, or contact your
-              administrator.
-            </div>
-          )}
+      <div className="page-wide">
+        <div className="breadcrumbs">
+          <Link href="/articles">News</Link>
+          <span>/</span>
+          <span>{primarySubject ? sentenceCase(primarySubject.name) : 'Industry reporting'}</span>
         </div>
-
-        <div className="card">
-          <h3>Index terms</h3>
-          <p className="excerpt-meta">
-            <strong>Primary subject:</strong>{' '}
-            {article.primarySubject && typeof article.primarySubject === 'object'
-              ? article.primarySubject.name
-              : '—'}
+        <header className="edition-article-header">
+          <p className="edition-eyebrow">THE NEWS DESK / {source}</p>
+          <h1>{article.title}</h1>
+          <p className="edition-meta">
+            {source}
+            {article.sourceDate ? ` · ${formatDate(article.sourceDate)}` : ''}
           </p>
-          <p className="excerpt-meta">
-            <strong>Subjects:</strong>{' '}
-            {article.subjects
-              ?.map((s) => (typeof s === 'object' ? s.name : s))
-              .join(', ') || '—'}
-          </p>
-          <p className="excerpt-meta">
-            <strong>Sectors:</strong>{' '}
-            {article.sectors?.map((s) => (typeof s === 'object' ? s.name : s)).join(', ') || '—'}
-          </p>
-          <p className="excerpt-meta">
-            <strong>Products:</strong>{' '}
-            {article.products?.map((p) => (typeof p === 'object' ? p.name : p)).join(', ') || '—'}
-          </p>
-          <p className="excerpt-meta">
-            <strong>Locations:</strong>{' '}
-            {article.locations?.map((l) => (typeof l === 'object' ? l.name : l)).join(', ') || '—'}
-          </p>
+        </header>
+        <div className="edition-content-grid">
+          <article>
+            <div className="edition-article-body">
+              {canRead && article.excerpt ? (
+                <>
+                  {hasDistinctExcerpt(article.excerpt, article.title) ? (
+                    <RichText data={article.excerpt} />
+                  ) : (
+                    <p>Read the original reporting from {source}.</p>
+                  )}
+                  {article.sourceUrl && (
+                    <a
+                      href={article.sourceUrl}
+                      className="btn btn-secondary"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Read the original at {source} ↗
+                    </a>
+                  )}
+                </>
+              ) : (
+                <AccessPanel
+                  title="Go beyond the headline."
+                  description="Read the curated excerpt with a Base or Premium subscription."
+                />
+              )}
+            </div>
+            {!!related?.docs.length && (
+              <section className="edition-section">
+                <SectionHeading eyebrow="KEEP READING" title="The wider picture" />
+                {related.docs.map((a) => (
+                  <NewsRow key={a.id} article={a} />
+                ))}
+              </section>
+            )}
+          </article>
+          <aside>
+            <p className="edition-eyebrow">EXPLORE THIS STORY</p>
+            {groups.map((group) => {
+              const ids = new Set<number>()
+              const terms = group.terms.filter((term) => {
+                if (typeof term !== 'object' || ids.has(term.id)) return false
+                ids.add(term.id)
+                return true
+              })
+              if (!terms.length) return null
+              return (
+                <div className="edition-topic-group" key={group.key}>
+                  <h3>{group.label}</h3>
+                  <div>
+                    {terms.map(
+                      (term) =>
+                        typeof term === 'object' && (
+                          <Link
+                            href={`/articles?${group.key}=${term.id}`}
+                            className="tag-pill"
+                            key={term.id}
+                          >
+                            {sentenceCase(term.name)}
+                          </Link>
+                        ),
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+            <div className="edition-sidebar-note">
+              <h2>Need the policy context?</h2>
+              <p>Track related bills and regulatory developments.</p>
+              <Link href="/bills">Explore legislation ↗</Link>
+            </div>
+          </aside>
         </div>
       </div>
     </>

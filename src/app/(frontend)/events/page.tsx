@@ -1,97 +1,68 @@
-import { getPayload } from 'payload'
-import Link from 'next/link'
-import React from 'react'
+﻿import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
-import { ScheduleIcon } from '@/components/brandIcons'
-
-import config from '@/payload.config'
+import { EventCard, SectionHeading } from '@/components/frontend/Editorial'
+import { frontendContext } from '@/lib/frontendContext'
 import { CHANNELS } from '@/config/channels'
 import { formatDate } from '@/lib/formatDate'
-
 export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Events',
-  description: 'Conferences and webinars across our channels.',
+  description: 'Conversations and connections across the nicotine industry.',
 }
-
 export default async function EventsPage() {
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-
-  const { docs: events } = await payload.find({
+  const { payload, now: requestTime } = await frontendContext()
+  const { docs } = await payload.find({
     collection: 'events',
+    where: { _status: { equals: 'published' } },
     sort: 'startsAt',
     limit: 100,
-    overrideAccess: true,
+    depth: 1,
+    overrideAccess: false,
   })
-
-  const now = Date.now()
-  const upcoming = events.filter((e) => new Date(e.endDate).getTime() >= now)
-  const past = events.filter((e) => new Date(e.endDate).getTime() < now).reverse()
-
+  const now = Date.parse(requestTime)
+  const upcoming = docs.filter((e) => new Date(e.endDate).getTime() >= now)
+  const past = docs.filter((e) => new Date(e.endDate).getTime() < now).reverse()
   return (
     <>
       <SiteNav />
-      <div className="header-band">
+      <header className="header-band">
         <div className="header-band-inner">
           <div>
-            <p className="header-band-eyebrow">Organization</p>
-            <h1 className="page-heading">
-              <span className="icon-badge">
-                <ScheduleIcon />
-              </span>
-              Events
-            </h1>
-            <p>Conferences and webinars across our channels.</p>
+            <p className="edition-eyebrow">CONVERSATIONS & CONNECTIONS</p>
+            <h1>Meet the industry.</h1>
+            <p>
+              Join the people shaping the future of nicotine and tobacco. Conferences, forums and
+              online conversations, open to everyone.
+            </p>
           </div>
         </div>
-      </div>
-      <div className="page">
-        <h2>Upcoming</h2>
-        {upcoming.length === 0 && <p className="muted">No upcoming events scheduled.</p>}
-        <div className="teaser-grid" style={{ marginBottom: 40 }}>
-          {upcoming.map((e) => (
-            <Link key={e.id} href={`/events/${e.id}`} className="teaser-card event-teaser-card">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://placehold.co/480x240/${CHANNELS[e.channel].brandColor.replace('#', '')}/ffffff?text=${encodeURIComponent(CHANNELS[e.channel].name)}`}
-                alt=""
-                role="presentation"
-                className="event-teaser-image"
-              />
-              <div style={{ padding: 16 }}>
-                <span className="badge" style={{ background: `${CHANNELS[e.channel].brandColor}1a`, color: CHANNELS[e.channel].brandColor }}>
-                  {CHANNELS[e.channel].name}
-                </span>
-                <h3>{e.name}</h3>
-                <p className="muted">
-                  {formatDate(e.startsAt)}
-                  {e.venue?.address ? ` · ${e.venue.address}` : ''}
-                </p>
-                <span className="btn" style={{ marginTop: 8 }}>
-                  Get tickets
-                </span>
-              </div>
-            </Link>
+      </header>
+      <div className="page-wide">
+        <SectionHeading eyebrow="ON THE CALENDAR" title="Upcoming events" />
+        <div className="edition-event-grid">
+          {upcoming.map((event) => (
+            <EventCard key={event.id} event={event} />
           ))}
         </div>
-
-        {past.length > 0 && (
-          <>
-            <h2>Past events</h2>
-            <div className="card">
-              {past.map((e) => (
-                <Link key={e.id} href={`/events/${e.id}`} className="excerpt-list-item">
-                  <h3>{e.name}</h3>
-                  <div className="excerpt-meta">
-                    {CHANNELS[e.channel].name}
-                    <span className="dot">·</span>
-                    {formatDate(e.startsAt)}
-                  </div>
+        {!upcoming.length && (
+          <div className="edition-empty">Our next events will be announced here.</div>
+        )}
+        {!!past.length && (
+          <section className="edition-section">
+            <SectionHeading eyebrow="THE ARCHIVE" title="Past conversations" />
+            <div className="edition-past-events">
+              {past.map((event) => (
+                <Link href={`/events/${event.id}`} key={event.id}>
+                  <span className="edition-meta">{formatDate(event.startsAt)}</span>
+                  <h3>{event.name}</h3>
+                  <span>
+                    {CHANNELS[event.channel].name}
+                    {event.hasReplay ? ' · Attendee replays' : ''} ↗
+                  </span>
                 </Link>
               ))}
             </div>
-          </>
+          </section>
         )}
       </div>
     </>

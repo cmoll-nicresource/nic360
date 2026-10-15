@@ -693,7 +693,7 @@ input[type='radio'] {
 /* Native, unclassed buttons (e.g. a component's plain <button>) get the
    same baseline as .btn so nothing on the site renders as an unstyled
    browser control. */
-button:not(.btn):not(.nav-logout-btn):not(.tab-link) {
+button:where(:not(.btn):not(.nav-logout-btn):not(.tab-link):not(.nav-dropdown-label):not(.nav-toggle-btn)) {
   height: var(--control-height);
   padding: 0 18px;
   font-family: inherit;
@@ -707,12 +707,12 @@ button:not(.btn):not(.nav-logout-btn):not(.tab-link) {
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-button:not(.btn):not(.nav-logout-btn):not(.tab-link):hover {
+button:where(:not(.btn):not(.nav-logout-btn):not(.tab-link):not(.nav-dropdown-label):not(.nav-toggle-btn)):hover {
   background: var(--nrc-primary-dark);
   border-color: var(--nrc-primary-dark);
 }
 
-button:not(.btn):not(.nav-logout-btn):not(.tab-link):disabled {
+button:where(:not(.btn):not(.nav-logout-btn):not(.tab-link):not(.nav-dropdown-label):not(.nav-toggle-btn)):disabled {
   opacity: 0.6;
   cursor: default;
 }

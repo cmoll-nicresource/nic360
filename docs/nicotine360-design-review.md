@@ -1,5 +1,7 @@
 # Nicotine360 beta: design finishing touches
 
+Historical review. The October 15 implementation and verification handoff is [frontend-experience.md](./frontend-experience.md); use that for current behavior rather than treating these original checkboxes as outstanding work.
+
 Oct 14, 2026 · @Papa
 
 The bones are good (a sensible navy and orange palette, Inter with Source Serif, a clear structure), but the site reads as a prototype because of unstyled form controls, emoji icons, underlined everything, empty-feeling pages and internal wording left visible to readers. Reviewed while logged in as a Premium user on 14 pages plus detail views, at 1440px desktop and 390px phone width, with styles read from the live CSS.

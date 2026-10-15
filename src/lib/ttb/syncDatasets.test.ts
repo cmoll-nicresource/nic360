@@ -33,4 +33,8 @@ describe('buildDatasetRowValues', () => {
   it('returns an empty array for no rows', () => {
     expect(buildDatasetRowValues([], 2026, KEYS, new Map())).toEqual([])
   })
+
+  it.each([NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])('rejects an invalid annual value (%j)', (value) => {
+    expect(() => buildDatasetRowValues([{ commodity: 'X', country: 'Atlantis', value }], 2026, KEYS, new Map())).toThrow(/dataset value/)
+  })
 })

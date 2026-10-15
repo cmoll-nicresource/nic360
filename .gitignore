@@ -24,3 +24,9 @@ tma-ext
 # Standalone POC (own package.json/README/21MB db dump) — ported piece by piece into
 # src/lib/ttb/ instead of committed wholesale.
 ttb-trade
+
+# Generated report previews and rendered QA pages.
+/tmp/
+
+# Licensed full-resolution photography masters; deploy only optimized web copies.
+/assets/photography/originals/

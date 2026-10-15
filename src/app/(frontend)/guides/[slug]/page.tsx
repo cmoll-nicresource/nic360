@@ -1,89 +1,84 @@
-import { headers as getHeaders } from 'next/headers.js'
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPayload } from 'payload'
-import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
-
-import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
-import { staffHasRole } from '@/access/staffRoles'
+import { AccessPanel, GuideCover } from '@/components/frontend/Editorial'
+import { frontendContext } from '@/lib/frontendContext'
 import { formatDate } from '@/lib/formatDate'
-
 export const dynamic = 'force-dynamic'
-
 export default async function GuideDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const isStaff = staffHasRole(user, 'editor')
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
-  const canRead = isStaff || planSatisfies(plan, 'base')
-
-  return (
-    <>
-      <SiteNav />
-      <div className="page">
-        <div className="breadcrumbs">
-          <Link href="/guides">Guides</Link>
+  const { payload, user, canRead, plan, isStaff } = await frontendContext()
+  if (!canRead)
+    return (
+      <>
+        <SiteNav />
+        <div className="page-wide">
+          <h1>Reference guides</h1>
+          <AccessPanel title="Your reference library awaits." premium />
         </div>
-        {!canRead ? (
-          <div className="locked-content">
-            Sign in with a Base or Premium subscription to view this guide.{' '}
-            <Link href="/account">Sign in</Link>
-          </div>
-        ) : (
-          <GuideDetail payload={payload} slug={slug} />
-        )}
-      </div>
-    </>
-  )
-}
-
-async function GuideDetail({ payload, slug }: { payload: Awaited<ReturnType<typeof getPayload>>; slug: string }) {
+      </>
+    )
   const { docs } = await payload.find({
     collection: 'guides',
-    where: { slug: { equals: slug } },
-    depth: 1,
+    where: {
+      and: [
+        { slug: { equals: slug } },
+        { _status: { equals: 'published' } },
+        ...(!isStaff && plan !== 'premium' ? [{ requiresPremium: { equals: false } }] : []),
+      ],
+    },
     limit: 1,
-    overrideAccess: true,
+    depth: 1,
+    user,
+    overrideAccess: false,
   })
   const guide = docs[0]
   if (!guide) notFound()
-
-  const file = guide.file && typeof guide.file === 'object' ? guide.file : null
-  const sizeMb = file?.filesize ? (file.filesize / 1024 / 1024).toFixed(1) : null
-
+  const file = typeof guide.file === 'object' ? guide.file : null
+  const size = file?.filesize ? `${(file.filesize / 1024 / 1024).toFixed(1)} MB` : null
   return (
-    <div className="guide-detail-grid">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`https://placehold.co/400x520/e3e8ee/285888?text=${encodeURIComponent(guide.title)}`}
-        alt=""
-        role="presentation"
-        style={{ width: '100%', borderRadius: 8, border: '1px solid var(--nrc-border)' }}
-      />
-      <div>
-        <h1>{guide.title}</h1>
-        {guide.description && <p className="muted">{guide.description}</p>}
-        <p className="excerpt-meta">
-          {formatDate(guide.updatedAt)}
-          {sizeMb ? <span className="dot">·</span> : null}
-          {sizeMb ? `${sizeMb} MB` : null}
-        </p>
-        <div className="card">
-          {file?.url ? (
-            <a href={file.url} target="_blank" rel="noreferrer" className="btn">
-              Download PDF{sizeMb ? ` (${sizeMb} MB)` : ''}
-            </a>
-          ) : (
-            <p className="muted">No file attached.</p>
-          )}
+    <>
+      <SiteNav />
+      <div className="page-wide">
+        <div className="breadcrumbs">
+          <Link href="/guides">Guides</Link>
+          <span>/</span>
+          <span>{guide.title}</span>
+        </div>
+        <div className="edition-guide-detail">
+          <GuideCover guide={guide} />
+          <div>
+            <p className="edition-eyebrow">
+              NICOTINE360 / {guide.requiresPremium ? 'PREMIUM REFERENCE' : 'MEMBER REFERENCE'}
+            </p>
+            <h1>{guide.title}</h1>
+            <p className="edition-deck">{guide.description}</p>
+            <dl className="edition-facts">
+              <div>
+                <dt>Last updated</dt>
+                <dd>{formatDate(guide.updatedAt)}</dd>
+              </div>
+              <div>
+                <dt>Format</dt>
+                <dd>PDF{size ? ` · ${size}` : ''}</dd>
+              </div>
+            </dl>
+            {file?.url ? (
+              <a className="btn" href={file.url} target="_blank" rel="noreferrer">
+                Download guide{size ? ` (${size})` : ''} ↓
+              </a>
+            ) : (
+              <p className="muted">
+                This guide’s download is being updated. Please check back soon.
+              </p>
+            )}
+            <p className="edition-download-note">
+              For questions about this reference,{' '}
+              <a href="mailto:membership@nicotine360.org">contact our team</a>.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

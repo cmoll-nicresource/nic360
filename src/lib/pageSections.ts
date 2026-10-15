@@ -33,6 +33,7 @@ const PREFIX_TO_SECTION: Array<{ prefix: string; key: SectionKey }> = [
   { prefix: '/account', key: 'account' },
   { prefix: '/signup', key: 'signup' },
   { prefix: '/staff', key: 'staff-tools' },
+  { prefix: '/admin', key: 'staff-tools' },
   { prefix: '/access-check', key: 'staff-tools' },
 ]
 

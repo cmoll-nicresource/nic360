@@ -5,6 +5,7 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import { getPayload } from 'payload'
 import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
+import { PublicationCover } from '@/components/frontend/Editorial'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
@@ -15,7 +16,11 @@ import type { PublicationAd } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
 
-const EXCERPT_PATH: Record<string, string> = { articles: 'articles', bills: 'bills', trademarks: 'trademarks' }
+const EXCERPT_PATH: Record<string, string> = {
+  articles: 'articles',
+  bills: 'bills',
+  trademarks: 'trademarks',
+}
 
 export default async function IssueDetailPage({
   params,
@@ -29,13 +34,16 @@ export default async function IssueDetailPage({
   const { user } = await payload.auth({ headers })
 
   const isStaff = staffHasRole(user, 'editor')
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
+  const plan =
+    user && 'collection' in user && user.collection === 'users'
+      ? await getReaderPlan(user, payload)
+      : 'none'
   const canRead = isStaff || planSatisfies(plan, 'base')
 
   return (
     <>
       <SiteNav />
-      <div className="page">
+      <div className="page edition-issue-reading">
         {!canRead ? (
           <div className="locked-content">
             Sign in with a Base or Premium subscription to view this issue.{' '}
@@ -61,7 +69,11 @@ function AdCard({ ad }: { ad: PublicationAd }) {
     <div className="nic-ad">
       <a href={`/api/ads/${ad.id}/click`}>
         {/* eslint-disable-next-line @next/next/no-img-element -- admin-uploaded ad art of arbitrary size/host; a plain <img> avoids Next's image-domain config for this one case */}
-        <img src={image.url} alt={image.alt || 'Advertisement'} style={{ maxWidth: '100%', display: 'block' }} />
+        <img
+          src={image.url}
+          alt={image.alt || 'Advertisement'}
+          style={{ maxWidth: '100%', display: 'block' }}
+        />
       </a>
     </div>
   )
@@ -99,7 +111,12 @@ function renderSectionsWithAds(
         adIndex++
       }
 
-      if (typeof item.value === 'object' && item.value && 'id' in item.value && 'title' in item.value) {
+      if (
+        typeof item.value === 'object' &&
+        item.value &&
+        'id' in item.value &&
+        'title' in item.value
+      ) {
         const value = item.value as { id: number; title: string }
         const href = `/${EXCERPT_PATH[item.relationTo]}/${value.id}`
         currentList.push(
@@ -136,6 +153,7 @@ async function IssueDetail({
 
   const file = issue.file && typeof issue.file === 'object' ? issue.file : null
   const publication = typeof issue.publication === 'object' ? issue.publication : null
+  if (publication?.slug !== slug) notFound()
 
   const adItemCount =
     issue.format === 'excerpt-list'
@@ -143,7 +161,9 @@ async function IssueDetail({
       : issue.format === 'pdf-report'
         ? PDF_REPORT_AD_ITEM_CAP
         : 0
-  const ads = publication ? await getActiveAdsForPublication(payload, publication.id, adSlotCount(adItemCount)) : []
+  const ads = publication
+    ? await getActiveAdsForPublication(payload, publication.id, adSlotCount(adItemCount))
+    : []
 
   return (
     <>
@@ -171,11 +191,20 @@ async function IssueDetail({
 
       {issue.format === 'pdf-report' && (
         <div className="card">
+          {publication && (
+            <PublicationCover publication={publication} date={issue.issueDate} compact />
+          )}
           {issue.summary && <RichText data={issue.summary} />}
           {ads.map((ad) => (
             <AdCard key={ad.id} ad={ad} />
           ))}
-          {file?.url && <p><a href={file.url}>Download PDF</a></p>}
+          {file?.url && (
+            <p>
+              <a href={file.url} className="btn">
+                Download report (PDF) ↓
+              </a>
+            </p>
+          )}
         </div>
       )}
 

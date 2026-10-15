@@ -28,8 +28,16 @@ import { ReAddButton as ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705 } from '../
 import { ManageEventLink as ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c } from '../../../components/admin/ManageEventLink'
 import { Icon as Icon_16e62c7e42dfe7700742ba3a13bf8900 } from '../../../components/admin/graphics/Icon'
 import { Logo as Logo_13338d86bf8cb9661b50b401726320cd } from '../../../components/admin/graphics/Logo'
-import { AnalyticsNavLink as AnalyticsNavLink_dfaa68b15b5cb19cfd188d894db3d451 } from '../../../components/admin/AnalyticsNavLink'
-import { AnalyticsView as AnalyticsView_68c573d130feaef34f843da1220968e1 } from '../../../components/admin/analytics/AnalyticsView'
+import { WorkspaceNav as WorkspaceNav_74eddeb5ab912fa47a634b4965d750f4 } from '../../../components/admin/workspace/WorkspaceNav'
+import { WorkspaceDashboard as WorkspaceDashboard_e66f0dcfc50f86bf45f76f701aff96c2 } from '../../../components/admin/workspace/WorkspaceDashboard'
+import { TradeReportsView as TradeReportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
+import { TrademarkReportsView as TrademarkReportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
+import { DatasetImportsView as DatasetImportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
+import { DatasetImportView as DatasetImportView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
+import { EventsWorkspaceView as EventsWorkspaceView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
+import { ManageEventView as ManageEventView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
+import { AccessCheckView as AccessCheckView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
+import { WorkspaceAnalyticsView as WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -64,7 +72,15 @@ export const importMap = {
   "./components/admin/ManageEventLink#ManageEventLink": ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c,
   "./components/admin/graphics/Icon#Icon": Icon_16e62c7e42dfe7700742ba3a13bf8900,
   "./components/admin/graphics/Logo#Logo": Logo_13338d86bf8cb9661b50b401726320cd,
-  "./components/admin/AnalyticsNavLink#AnalyticsNavLink": AnalyticsNavLink_dfaa68b15b5cb19cfd188d894db3d451,
-  "./components/admin/analytics/AnalyticsView#AnalyticsView": AnalyticsView_68c573d130feaef34f843da1220968e1,
+  "./components/admin/workspace/WorkspaceNav#WorkspaceNav": WorkspaceNav_74eddeb5ab912fa47a634b4965d750f4,
+  "./components/admin/workspace/WorkspaceDashboard#WorkspaceDashboard": WorkspaceDashboard_e66f0dcfc50f86bf45f76f701aff96c2,
+  "./components/admin/workspace/StaffTools#TradeReportsView": TradeReportsView_63ff882a65d91f75560ed44e3e743a40,
+  "./components/admin/workspace/StaffTools#TrademarkReportsView": TrademarkReportsView_63ff882a65d91f75560ed44e3e743a40,
+  "./components/admin/workspace/StaffTools#DatasetImportsView": DatasetImportsView_63ff882a65d91f75560ed44e3e743a40,
+  "./components/admin/workspace/StaffTools#DatasetImportView": DatasetImportView_63ff882a65d91f75560ed44e3e743a40,
+  "./components/admin/workspace/StaffTools#EventsWorkspaceView": EventsWorkspaceView_63ff882a65d91f75560ed44e3e743a40,
+  "./components/admin/workspace/StaffTools#ManageEventView": ManageEventView_63ff882a65d91f75560ed44e3e743a40,
+  "./components/admin/workspace/StaffTools#AccessCheckView": AccessCheckView_63ff882a65d91f75560ed44e3e743a40,
+  "./components/admin/workspace/StaffTools#WorkspaceAnalyticsView": WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

@@ -12,11 +12,15 @@ pnpm seed               # wipes and fills every collection with placeholder data
 pnpm dev                 # http://localhost:3000
 ```
 
-Admin panel: `/admin`. Every seeded account's password is `ChangeMe123!` (printed by `pnpm seed`).
+Admin panel: `/admin`. Staff tasks are grouped into imports/reports, publishing and operations; see [docs/admin-workspace.md](./docs/admin-workspace.md) for routes, permissions and verification. Every seeded account's password is `ChangeMe123!` (printed by `pnpm seed`).
 
 ## Testing
 
-`pnpm test` runs the unit test suite (Vitest, `src/**/*.test.ts`) — no database or network needed; it covers pure logic only (reader access plan derivation, event ticket pricing, CSV import mapping, the TMOG trademark-feed parser and classifier). `pnpm test:watch` reruns on change. There's no integration/e2e layer yet — collection access rules, hooks and API routes are still verified manually.
+The current reader layouts, search, dataset explorer and access checks are described in [docs/frontend-experience.md](./docs/frontend-experience.md).
+
+`pnpm test` runs the offline Vitest suite, including trade-report database-response regressions and actual PDF table-layout checks. `pnpm test:watch` reruns on change. `pnpm test:trade-report` opts into read-only integration checks against local Postgres with the restored trade history; these are skipped in the offline suite. Collection access rules, hooks and HTTP flows still require manual verification.
+
+`pnpm trade:check` checks trade prerequisites without initializing Payload or changing the database. `pnpm trade:render 2026 8` generates a local PDF preview under `tmp/` from a read-only snapshot. Setup, verification, and the guarded production restore plan are in [docs/ttb-trade-report.md](./docs/ttb-trade-report.md).
 
 Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verification, password reset, event invites) print to the console instead of sending — fine for local dev. In any environment where they are set, real migrated user data means every outgoing account email is still redirected to a safe address by default (`EMAIL_SAFE_MODE`, on unless explicitly set to `off`) — see `src/lib/emailSafeMode.ts`. Without `STRIPE_SECRET_KEY`, event ticket checkout fails at the point of creating a Stripe session (everything up to and including 100%-off/free tickets still works, since those skip Stripe entirely).
 
@@ -27,24 +31,24 @@ Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verific
 - Collections: `staff` (editor/gatekeeper/admin roles), `users` (readers), `access-providers`, `media`.
 - `src/access/readerPlan.ts` is the one place that decides a reader's effective plan (none/base/premium) from their Access Provider's status, plan and license expiry — every `access.read` function and protected route calls it rather than re-deriving the logic.
 - `src/hooks/assignAccessProviderOnVerify.ts` auto-attaches a verified reader to the Access Provider whose `allowedDomains` matches their email.
-- `/access-check` renders the "what can this user read" table from `pnpm seed`'s data — the milestone's done-when page.
-- `/account` is the reader-facing profile page; publication email preferences are stubbed until Milestone 4.
+- `/admin/access-check` shows effective reader access for gatekeeper/admin staff. The former `/access-check` URL redirects there.
+- `/account` is the reader-facing profile page, including publication email preferences for eligible subscribers.
 
 ### Milestone 2: excerpts
 
 - Taxonomies: `sectors`, `products` (flat), `subjects` (tree via self-relationship), `locations` (region > country > state > city hierarchy), `sources`.
-- Content: `articles`, `bills` (Content/Index tabs, `actions` array), `trademarks` (unindexed, image required).
+- Content: `articles`, `bills` (Content/Index tabs, `actions` array), `trademarks` (unindexed, image optional when the USPTO image is unavailable).
 - `src/access/excerptAccess.ts`: Articles/Bills are publicly readable at the collection level (titles/teasers for anyone) with the body fields (`excerpt`, `abstract`, `fullText`) gated behind `canReadFullContent` (Base+ or staff); Trademarks have no public teaser, so the whole collection requires Base+.
-- Front end: `/articles`, `/bills` (filterable by sector/product/subject/location, via `src/lib/excerptFilters.ts`) and `/trademarks` (no filters, per the entity map), each with detail pages.
+- Front end: `/articles`, `/bills` (keyword/date and sector/product/subject/location filters) and `/trademarks` (keyword/date filters), each with detail pages.
 - `pnpm seed` fills ~50 excerpts (25 articles, 15 bills, 10 trademarks) across the taxonomy.
 
 ### Milestone 3: data and guides
 
 - `datasets` (staff-defined columns, each with a stable `key` generated from its label), `dataset-rows` (JSON values, hidden from the admin nav, Premium-gated), `countries` (reference list for `country`-type columns, matched by name/alias/ISO code on import).
-- `guides` + `guide-files` (protected PDFs, served only through Payload's access-checked file route — Base+ required, same as the entity map's "no public URL" requirement).
-- Import: `src/lib/datasetImport.ts` (`parseCsv`, `suggestMapping`, `commitImport`) is the one shared pipeline used by **both** the staff upload wizard and `pnpm seed`, so seeding is a genuine exercise of the same code path, not a shortcut. Staff reach the wizard from a dataset's admin edit screen ("Import data →", via `admin.components.edit.beforeDocumentControls`) or directly at `/staff/datasets/[id]/import`; it previews headers/sample rows, lets staff adjust the header→column mapping, then confirms (bulk-inserting through the Local API — a production-scale import should go through the DB adapter directly instead, see the comment in `commitImport`).
-- **CSV only, not XLSX**: the npm `xlsx` package's last published version (0.18.5) is stale and carries known advisories; `papaparse` covers our actual need (we only need to read our own sample files and reader-facing exports) without that risk. "Excel download" is a CSV, which Excel opens natively.
-- `/datasets` (cards) → `/datasets/[slug]` (AG Grid, Premium-gated, CSV download) via `/api/datasets/[id]/rows` and `/api/datasets/[id]/export`. `/guides` → `/guides/[slug]` (Base+ gated).
+- `guides` require Premium by default; `requiresPremium: false` permits Base access to an individual guide. PDFs use the protected `guide-files` collection.
+- Import: `src/lib/datasetImport.ts` (`parseCsv`, `suggestMapping`, `commitImport`) is the one shared pipeline used by **both** the staff upload wizard and `pnpm seed`, so seeding is a genuine exercise of the same code path, not a shortcut. Staff reach the wizard from a dataset's admin edit screen ("Import data →", via `admin.components.edit.beforeDocumentControls`) or directly at `/admin/datasets/[id]/import`; it previews headers/sample rows, lets staff adjust the header→column mapping, then confirms (bulk-inserting through the Local API — a production-scale import should go through the DB adapter directly instead, see the comment in `commitImport`).
+- The generic dataset importer and reader exports use CSV (`papaparse`); "Excel download" is a CSV Excel can open. The separate Census trade uploader reads `.xls`/`.xlsx` with `xlsx`.
+- `/datasets` (cards) → `/datasets/[slug]` (AG Grid, Premium-gated, CSV download) via `/api/datasets/[id]/rows` and `/api/datasets/[id]/export`. `/guides` → `/guides/[slug]` uses per-guide plan checks.
 - `pnpm seed` imports two real sample spreadsheets (`docs/sample-data/*.csv`) into two datasets, and publishes two guides.
 
 ### Milestone 4: publications and Mailchimp
@@ -55,7 +59,7 @@ Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verific
 - `src/lib/issueEmail.ts` renders an Issue into the email template for its format. Both "Build from rules" and "Send"/"Send test" are buttons on the Issue's admin edit screen (`admin.components.edit.beforeDocumentControls`), calling `/api/publication-issues/[id]/build-from-rules` and `/api/publication-issues/[id]/send`; Send asks for confirmation and locks the issue against re-sending once it reports `sent`.
 - `/api/mailchimp/webhook` is the one exception to "our site is the source of truth": an unsubscribe/spam-complaint/cleaned event clears the reader's `emailPublications` and opens an `EmailFlag`; its admin-screen "Re-add" button restores their prior choices (which re-triggers the sync hook) and resolves the flag.
 - `src/hooks/syncMailchimpOnUserChange.ts` keeps Mailchimp in sync whenever a reader's name, email, provider or publication choices change, and defensively clears preferences if they're no longer Base/Premium-eligible (e.g. their company's license expired) — the account page's preference picker is also gated on eligibility.
-- `src/lib/trademarkReportJob.ts`: a fixture stand-in (`docs/sample-data/uspto-fixture.json`), kept for offline testing. Superseded as the production path by `src/lib/tmog/*`, which streams and parses the real USPTO Trademark Official Gazette feed and runs weekly via Payload's job-queue cron (`src/jobs/tmogImportTask.ts`) — see `docs/entity-map.md`'s Trademark reports section for the full pipeline. Both share `src/lib/trademarkReportIssues.ts` for drafting the Weekly/Monthly report issues, and both log to `trademark-import-runs`. Manual triggers for either live at `/staff/trademark-reports`.
+- `src/lib/trademarkReportJob.ts`: a fixture stand-in (`docs/sample-data/uspto-fixture.json`), kept for offline testing. Superseded as the production path by `src/lib/tmog/*`, which streams and parses the real USPTO Trademark Official Gazette feed and runs weekly via Payload's job-queue cron (`src/jobs/tmogImportTask.ts`) — see `docs/entity-map.md`'s Trademark reports section for the full pipeline. Both share `src/lib/trademarkReportIssues.ts` for drafting the Weekly/Monthly report issues, and both log to `trademark-import-runs`. Manual triggers for either live at `/admin/trademark-reports`.
 - `/publications` → `/publications/[slug]` → `/publications/[slug]/issues/[id]` (Base+ gated, draft issues hidden from readers).
 - `pnpm seed` creates 5 publications, builds one issue from rules and sends it for real (same code path as the admin buttons) so the outbox has a genuine example, plus a ready-to-try draft issue, an EmailFlag, and sets two readers' preferences (exercising the sync hook).
 
@@ -67,4 +71,4 @@ Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verific
 - **Found and fixed while testing this milestone**: Payload's default password-reset email always links to `/admin/reset`, which only works for the `admin.user` collection (`staff`) — readers' reset tokens silently went nowhere. `users` now has its own `auth.forgotPassword.generateEmailHTML` pointing at a real `/reset-password/[token]` page, and the dev email fallback was changed from nodemailer's silent `jsonTransport` to a small transport that actually prints the email (both bugs had been invisible until this milestone's invite-by-email flow required reading one).
 - `pnpm seed` seeds speakers, sponsors, three events across all three channels (one with `hasReplay`), sessions, a discount code, and a demo two-ticket purchase with that code applied (reusing the real pricing/validation functions, not hand-rolled numbers).
 
-This completes every milestone in CLAUDE.md's prototype scope.
+This completes every milestone in CLAUDE.md's original prototype scope. Later work added migration tooling, search, analytics, and the US Tobacco Trade Barometer. The entity map documents current behavior; the trade runbook records outstanding production verification. Newsletter bulk delivery through the live SES implementation remains stubbed; account emails use a separate SES transport.

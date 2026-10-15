@@ -1,148 +1,160 @@
-import { headers as getHeaders } from 'next/headers.js'
 import Link from 'next/link'
-import { getPayload } from 'payload'
-import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
-import { AnnouncementIcon } from '@/components/brandIcons'
-
-import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { NewsRow } from '@/components/frontend/Editorial'
 import { ExcerptFilterBar } from '@/components/ExcerptFilterBar'
-import { excerptFiltersToQueryString, excerptWhere, parseExcerptFilters } from '@/lib/excerptFilters'
-import { formatDate } from '@/lib/formatDate'
+import { Pagination } from '@/components/Pagination'
+import { frontendContext } from '@/lib/frontendContext'
+import {
+  excerptFiltersToQueryString,
+  excerptWhere,
+  parseExcerptFilters,
+} from '@/lib/excerptFilters'
+import { groupByDate } from '@/lib/editorial'
 import { searchColumnsForIds, sortByIdOrder } from '@/lib/fullTextSearch'
 import { PAGE_SIZE, parsePage } from '@/lib/pagination'
-import { Pagination } from '@/components/Pagination'
-import { TagPill } from '@/components/StatusBadge'
 import type { Article } from '@/payload-types'
-
 export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'News',
-  description: 'News found across the internet, indexed by location, sector, product and subject.',
+  description: 'The latest reporting across the nicotine and tobacco industry.',
 }
-
 export default async function ArticlesPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const resolvedSearchParams = await searchParams
-  const filters = parseExcerptFilters(resolvedSearchParams)
-  const page = parsePage(resolvedSearchParams.page)
-
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const isStaff = !!user && 'collection' in user && user.collection === 'staff'
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
-  const canReadFull = isStaff || planSatisfies(plan, 'base')
-
-  const [{ docs: sectors }, { docs: products }, { docs: subjects }, { docs: locations }, { totalDocs: totalArticles }] =
-    await Promise.all([
-      payload.find({ collection: 'sectors', limit: 100, sort: 'name', overrideAccess: true }),
-      payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: true }),
-      payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: true }),
-      payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: true }),
-      payload.count({ collection: 'articles', overrideAccess: true }),
-    ])
-
-  const baseWhere = excerptWhere(filters, 'sourceDate')
+  const params = await searchParams
+  const filters = parseExcerptFilters(params)
+  const page = parsePage(params.page)
+  const { payload, user, canRead } = await frontendContext()
+  const published = { _status: { equals: 'published' as const } }
+  const [sectors, products, subjects, locations, count] = await Promise.all([
+    payload.find({ collection: 'sectors', limit: 100, sort: 'name', overrideAccess: false }),
+    payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: false }),
+    payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: false }),
+    payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: false }),
+    payload.count({ collection: 'articles', where: published, overrideAccess: false }),
+  ])
+  const where = { and: [published, excerptWhere(filters, 'sourceDate')] }
   let articles: Article[] = []
   let totalDocs = 0
   let totalPages = 1
-
   if (filters.keyword) {
-    const rankedIds = await searchColumnsForIds(payload, 'articles', ['title', 'search_text'], filters.keyword)
-    if (rankedIds.length > 0) {
-      const { docs } = await payload.find({
+    const ids = await searchColumnsForIds(
+      payload,
+      'articles',
+      canRead ? ['title', 'search_text'] : ['title'],
+      filters.keyword.slice(0, 160),
+    )
+    if (ids.length) {
+      const result = await payload.find({
         collection: 'articles',
-        where: { and: [baseWhere, { id: { in: rankedIds } }].filter((w) => Object.keys(w).length) },
+        where: { and: [where, { id: { in: ids } }] },
         depth: 1,
-        limit: 100,
-        overrideAccess: true,
+        limit: 500,
+        user,
+        overrideAccess: false,
       })
-      articles = sortByIdOrder(docs, rankedIds)
-      totalDocs = articles.length
+      const ordered = sortByIdOrder(result.docs, ids)
+      totalDocs = ordered.length
+      totalPages = Math.ceil(totalDocs / PAGE_SIZE)
+      articles = ordered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
     }
   } else {
     const result = await payload.find({
       collection: 'articles',
-      where: baseWhere,
-      depth: 1,
+      where,
       sort: '-sourceDate',
-      limit: PAGE_SIZE,
       page,
-      overrideAccess: true,
+      limit: PAGE_SIZE,
+      depth: 1,
+      user,
+      overrideAccess: false,
     })
     articles = result.docs
     totalDocs = result.totalDocs
     totalPages = result.totalPages
   }
-
-  const queryString = excerptFiltersToQueryString(filters)
-
+  const query = excerptFiltersToQueryString(filters)
   return (
     <>
       <SiteNav />
-      <div className="header-band">
+      <header className="header-band">
         <div className="header-band-inner">
           <div>
-            <p className="header-band-eyebrow">Tracking</p>
-            <h1 className="page-heading">
-              <span className="icon-badge">
-                <AnnouncementIcon />
-              </span>
-              News
-            </h1>
+            <p className="edition-eyebrow">THE NEWS DESK</p>
+            <h1>Across the industry.</h1>
             <p>
-              News found across the internet, indexed by location, sector, product and subject.
-              {!canReadFull && ' Sign in with a Base or Premium subscription to read full excerpts.'}
+              Reporting from around the world, organized by the topics, markets and policies that
+              matter to your work.
             </p>
           </div>
-          <span className="header-band-meta">{totalArticles.toLocaleString()} articles · updated today</span>
+          <span className="header-band-meta">
+            {count.totalDocs.toLocaleString()} articles in the archive
+          </span>
         </div>
-      </div>
-      <div className="page">
-        <ExcerptFilterBar
-          basePath="/articles"
-          sectors={sectors}
-          products={products}
-          subjects={subjects}
-          locations={locations}
-          filters={filters}
-        />
-
-        <div className="card">
-          {articles.length === 0 && <p className="muted">No articles match these filters.</p>}
-          {articles.map((a) => (
-            <Link key={a.id} href={`/articles/${a.id}`} className="excerpt-list-item">
-              <h3>{a.title}</h3>
-              <div className="excerpt-meta">
-                {a.source && typeof a.source === 'object' ? a.source.name : null}
-                {a.sourceDate ? <span className="dot">·</span> : null}
-                {a.sourceDate ? formatDate(a.sourceDate) : null}
-                {a.primarySubject && typeof a.primarySubject === 'object' ? (
-                  <>
-                    <span className="dot">·</span>
-                    <TagPill>{a.primarySubject.name}</TagPill>
-                  </>
-                ) : null}
-              </div>
-            </Link>
+      </header>
+      <div className="page-wide edition-news-layout">
+        <aside className="edition-filter-column">
+          <p className="edition-eyebrow">REFINE YOUR READING</p>
+          <ExcerptFilterBar
+            basePath="/articles"
+            sectors={sectors.docs}
+            products={products.docs}
+            subjects={subjects.docs}
+            locations={locations.docs}
+            filters={filters}
+          />
+          <div className="edition-sidebar-note">
+            <h2>Follow the wider picture.</h2>
+            <p>Explore related policy developments and the data behind the headlines.</p>
+            <Link href="/bills">Legislation ↗</Link>
+            <Link href="/datasets">Market & trade data ↗</Link>
+            <Link href="/publications">Publication library ↗</Link>
+          </div>
+        </aside>
+        <section>
+          <div className="edition-results-heading">
+            <span>
+              {filters.keyword ? `Search results for “${filters.keyword}”` : 'Latest reporting'}
+            </span>
+            <span>
+              {totalDocs.toLocaleString()} results
+              {filters.keyword && totalDocs === 500 ? ' (first 500 matches)' : ''}
+            </span>
+          </div>
+          {[...groupByDate(articles, (article) => article.sourceDate)].map(([date, docs]) => (
+            <section className="edition-news-date" key={date}>
+              <h2>{date}</h2>
+              {docs.map((article) => (
+                <NewsRow key={article.id} article={article} summary={canRead} />
+              ))}
+            </section>
           ))}
-        </div>
-        {!filters.keyword && (
+          {!articles.length && (
+            <div className="edition-empty">
+              <h2>No matching articles.</h2>
+              <p>Try a broader keyword or clear a filter.</p>
+              <Link href="/articles">Reset your search →</Link>
+            </div>
+          )}
           <Pagination
-            basePath={`/articles${queryString ? `?${queryString}` : ''}`}
+            basePath={`/articles${query ? `?${query}` : ''}`}
             page={page}
             totalPages={totalPages}
             totalDocs={totalDocs}
             pageSize={PAGE_SIZE}
           />
-        )}
+          {!canRead && (
+            <div className="edition-member-note">
+              <strong>Go beyond the headlines.</strong>
+              <p>
+                Sign in with your company’s subscription to read curated excerpts and briefings.
+              </p>
+              <Link href="/login">Sign in ↗</Link>
+            </div>
+          )}
+        </section>
       </div>
     </>
   )

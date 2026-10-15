@@ -13,9 +13,7 @@ export function ManageEventLink() {
 
   return (
     <a
-      href={`/staff/events/${id}/manage`}
-      target="_blank"
-      rel="noreferrer"
+      href={`/admin/events/${id}/manage`}
       style={{
         display: 'inline-block',
         padding: '8px 14px',

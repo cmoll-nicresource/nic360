@@ -13,9 +13,7 @@ export function ImportDataLink() {
 
   return (
     <a
-      href={`/staff/datasets/${id}/import`}
-      target="_blank"
-      rel="noreferrer"
+      href={`/admin/datasets/${id}/import`}
       style={{
         display: 'inline-block',
         padding: '8px 14px',

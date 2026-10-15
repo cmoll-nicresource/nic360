@@ -4,6 +4,7 @@ import { buildCountryLookup, normalize } from '@/lib/datasetImport'
 import type { Dataset } from '@/payload-types'
 
 import type { Flow } from './columns'
+import { tradeNumber } from './numeric'
 
 const DATASET_SLUG: Record<Flow, string> = { import: 'us-imports', export: 'us-exports' }
 
@@ -39,7 +40,7 @@ export function buildDatasetRowValues(
     [keys.commodity]: r.commodity,
     [keys.country]: countryLookup.get(normalize(r.country)) ?? r.country,
     [keys.year]: year,
-    [keys.value]: Math.round(r.value),
+    [keys.value]: Math.round(tradeNumber(r.value, 'dataset value')),
   }))
 }
 
@@ -89,7 +90,7 @@ export async function syncDatasetForYear(payload: Payload, flow: Flow, year: num
   const { docs: countries } = await payload.find({ collection: 'countries', limit: 1000, overrideAccess: true })
   const countryLookup = buildCountryLookup(countries)
   const values = buildDatasetRowValues(
-    rows.map((r) => ({ commodity: r.commodity, country: r.country, value: Number(r.value) })),
+    rows.map((r) => ({ commodity: r.commodity, country: r.country, value: tradeNumber(r.value, 'annual value') })),
     year,
     keys,
     countryLookup,

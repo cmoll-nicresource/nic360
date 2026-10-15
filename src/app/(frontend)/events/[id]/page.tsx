@@ -1,149 +1,262 @@
-import { headers as getHeaders } from 'next/headers.js'
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { getPayload } from 'payload'
-import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
-
-import config from '@/payload.config'
+import { EventVisual, SectionHeading } from '@/components/frontend/Editorial'
+import { frontendContext } from '@/lib/frontendContext'
 import { CHANNELS } from '@/config/channels'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { hasActiveRegistration } from '@/access/eventAccess'
 import { EventCheckoutForm } from '@/components/EventCheckoutForm'
 import { formatDate } from '@/lib/formatDate'
-
 export const dynamic = 'force-dynamic'
-
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const event = await payload.findByID({ collection: 'events', id, depth: 1, overrideAccess: true }).catch(() => null)
+  const { payload, user, canRead, now } = await frontendContext()
+  const { docs } = await payload.find({
+    collection: 'events',
+    where: { and: [{ id: { equals: id } }, { _status: { equals: 'published' } }] },
+    limit: 1,
+    depth: 2,
+    user,
+    overrideAccess: false,
+  })
+  const event = docs[0]
   if (!event) notFound()
-
-  const isReader = !!user && 'collection' in user && user.collection === 'users'
-  const plan = isReader ? await getReaderPlan(user, payload) : 'none'
-  const isSubscriber = planSatisfies(plan, 'base')
-  const isRegistered = isReader && (await hasActiveRegistration(payload, user, event.id))
-  const canSeeReplay = Boolean(event.hasReplay) && isRegistered
-  const canSeeLivestream = Boolean(event.hasLivestream) && isRegistered
-
+  const isReader = user?.collection === 'users'
+  const registered = isReader && (await hasActiveRegistration(payload, user, event.id))
   const { docs: sessions } = await payload.find({
     collection: 'sessions',
-    where: { event: { equals: event.id } },
+    where: { and: [{ event: { equals: event.id } }, { _status: { equals: 'published' } }] },
     sort: 'day',
-    depth: 1,
     limit: 200,
-    overrideAccess: true,
+    depth: 1,
+    user,
+    overrideAccess: false,
   })
-
   const channel = CHANNELS[event.channel]
-
+  const past = new Date(event.endDate).getTime() < Date.parse(now)
+  const onSale = !past && event.ticketTypes?.some((t) => t.onSale)
   return (
     <>
       <SiteNav />
-      <div
-        className="hero"
-        style={{
-          background: `linear-gradient(180deg, rgba(14,42,71,0.55), rgba(14,42,71,0.85)), url(https://placehold.co/1600x500/${channel.brandColor.replace('#', '')}/ffffff?text=${encodeURIComponent(channel.name)})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="hero-inner" style={{ padding: '56px 24px' }}>
-          <p className="eyebrow">{channel.name}</p>
-          <h1 style={{ fontSize: 34 }}>{event.name}</h1>
-          <p className="hero-sub">
-            {formatDate(event.startsAt)} &ndash; {formatDate(event.endDate)}
-            {event.venue?.address ? ` · ${event.venue.address}` : ''}
-          </p>
-        </div>
-      </div>
-      <div className="page">
+      <div className="page-wide">
         <div className="breadcrumbs">
           <Link href="/events">Events</Link>
+          <span>/</span>
+          <span>{event.name}</span>
         </div>
-
-        {event.description && (
-          <div className="card">
-            <h2>About</h2>
-            <RichText data={event.description} />
-          </div>
-        )}
-
-        {event.hasLivestream && (
-          <div className="card">
-            <h2>Livestream</h2>
-            {canSeeLivestream ? (
-              <p>
-                <Link href={`/events/${event.id}/livestream`} className="btn">
-                  Watch the livestream →
-                </Link>
-              </p>
-            ) : (
-              <p className="muted">The livestream is available to registered attendees.</p>
-            )}
-          </div>
-        )}
-
-        <div className="card">
-          <h2>Tickets</h2>
-          {isReader ? (
-            <EventCheckoutForm
-              eventId={String(event.id)}
-              ticketTypes={event.ticketTypes ?? []}
-              isSubscriber={isSubscriber}
-              buyerName={`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()}
-              buyerEmail={'email' in user ? (user.email as string) : ''}
-            />
-          ) : (
-            <p className="muted">
-              <Link href="/account">Sign in</Link> to buy tickets.
+        <header className="edition-event-hero">
+          <div>
+            <p className="edition-eyebrow">
+              {channel.name} / {channel.format === 'online' ? 'ONLINE EVENT' : 'INDUSTRY FORUM'}
             </p>
-          )}
-        </div>
-
-        <div className="card">
-          <h2>Agenda</h2>
-          {sessions.length === 0 && <p className="muted">Agenda not yet published.</p>}
-          {sessions.map((s) => (
-            <div key={s.id} className="excerpt-list-item">
-              <h3>{s.title}</h3>
-              <div className="excerpt-meta">
-                {formatDate(s.day)} · {s.type}
-                {s.room ? ` · ${s.room}` : ''}
-              </div>
-              {s.description && <p>{s.description}</p>}
-              {s.speakers && s.speakers.length > 0 && (
-                <p className="excerpt-meta">
-                  Speakers:{' '}
-                  {s.speakers.map((sp) => (typeof sp === 'object' ? sp.name : sp)).join(', ')}
+            <h1>{event.name}</h1>
+            {event.tagline && <p className="edition-deck">{event.tagline}</p>}
+            <p className="edition-event-date">
+              {formatDate(event.startsAt)} – {formatDate(event.endDate)}
+            </p>
+            {event.venue?.address && <p>{event.venue.address}</p>}
+            <div className="edition-actions">
+              {onSale && (
+                <a href="#tickets" className="btn btn-accent">
+                  {registered ? 'View registration options' : 'Registration & tickets'}
+                </a>
+              )}
+              <a href="#agenda" className="btn btn-secondary">
+                {past ? 'Explore the sessions' : 'View the agenda'} ↓
+              </a>
+            </div>
+          </div>
+          <EventVisual event={event} eager />
+        </header>
+        <nav className="edition-shortcuts" aria-label="Event sections">
+          <a href="#about">About ↓</a>
+          <a href="#agenda">Agenda ↓</a>
+          {!!event.speakers?.length && <a href="#speakers">Speakers ↓</a>}
+          {event.venue?.address && <a href="#venue">Venue ↓</a>}
+          <a href="#tickets">{past ? 'Attendee access' : 'Registration'} ↓</a>
+        </nav>
+        <div className="edition-event-layout">
+          <div>
+            {event.description && (
+              <section id="about" className="edition-event-section">
+                <SectionHeading eyebrow="THE CONVERSATION" title="About the event" />
+                <div className="edition-prose">
+                  <RichText data={event.description} />
+                </div>
+              </section>
+            )}
+            <section id="agenda" className="edition-event-section">
+              <SectionHeading eyebrow="THE PROGRAMME" title="Agenda" />
+              {!sessions.length && (
+                <p className="muted">
+                  The programme is being developed. Check back for the latest sessions and speakers.
                 </p>
               )}
-              {event.hasReplay &&
-                (canSeeReplay && s.replayEmbed ? (
-                  <div
-                    className="locked-content"
-                    style={{ borderStyle: 'solid' }}
-                    dangerouslySetInnerHTML={{ __html: s.replayEmbed }}
-                  />
-                ) : (
-                  <p className="muted">Replay available to registered attendees.</p>
-                ))}
-            </div>
-          ))}
-        </div>
-
-        {event.sponsors && event.sponsors.length > 0 && (
-          <div className="card">
-            <h2>Sponsors</h2>
-            {event.sponsors.map((sp) => (typeof sp === 'object' ? <p key={sp.id}>{sp.name}</p> : null))}
+              {sessions.map((session) => (
+                <article className="edition-session" key={session.id}>
+                  <div className="edition-session-date">
+                    {formatDate(session.day)}
+                    <span>
+                      {session.type}
+                      {session.room ? ` · ${session.room}` : ''}
+                    </span>
+                  </div>
+                  <div>
+                    <h3>{session.title}</h3>
+                    {session.description && <p>{session.description}</p>}
+                    {!!session.speakers?.length && (
+                      <p className="edition-meta">
+                        {session.speakers
+                          .map((s) => (typeof s === 'object' ? s.name : ''))
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </p>
+                    )}
+                    {event.hasReplay &&
+                      (registered && session.replayEmbed ? (
+                        <div
+                          className="edition-replay"
+                          dangerouslySetInnerHTML={{ __html: session.replayEmbed }}
+                        />
+                      ) : (
+                        <p className="edition-meta">
+                          Session replays are available to registered attendees.
+                        </p>
+                      ))}
+                  </div>
+                </article>
+              ))}
+            </section>
+            {!!event.speakers?.length && (
+              <section id="speakers" className="edition-event-section">
+                <SectionHeading eyebrow="THE PEOPLE" title="Speakers" />
+                <div className="edition-speaker-grid">
+                  {event.speakers.map((speaker) => {
+                    if (typeof speaker !== 'object') return null
+                    const image = typeof speaker.headshot === 'object' ? speaker.headshot : null
+                    return (
+                      <article key={speaker.id}>
+                        {image?.url ? (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={image.url} alt="" />
+                          </>
+                        ) : (
+                          <div className="edition-speaker-initials" aria-hidden="true">
+                            {speaker.name
+                              .split(' ')
+                              .map((s) => s[0])
+                              .slice(0, 2)
+                              .join('')}
+                          </div>
+                        )}
+                        <h3>{speaker.name}</h3>
+                        <p className="edition-meta">
+                          {[speaker.role, speaker.company].filter(Boolean).join(' · ')}
+                        </p>
+                        {speaker.bio && <p>{speaker.bio}</p>}
+                      </article>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+            {event.venue?.address && (
+              <section id="venue" className="edition-event-section">
+                <SectionHeading eyebrow="THE LOCATION" title={event.venue.address} />
+                {event.venue.description && <RichText data={event.venue.description} />}
+                {event.accommodation?.description && (
+                  <RichText data={event.accommodation.description} />
+                )}
+                {event.accommodation?.bookingUrl && (
+                  <a
+                    href={event.accommodation.bookingUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-secondary"
+                  >
+                    Accommodation & booking ↗
+                  </a>
+                )}
+              </section>
+            )}
+            {!!event.sponsors?.length && (
+              <section className="edition-event-section">
+                <SectionHeading eyebrow="WITH THANKS" title="Our sponsors" />
+                <div className="edition-sponsor-grid">
+                  {event.sponsors.map((sponsor) => {
+                    if (typeof sponsor !== 'object') return null
+                    const logo = typeof sponsor.logo === 'object' ? sponsor.logo : null
+                    return (
+                      <div key={sponsor.id}>
+                        {logo?.url ? (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={logo.url} alt={sponsor.name} />
+                          </>
+                        ) : (
+                          <strong>{sponsor.name}</strong>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
           </div>
-        )}
+          <aside className="edition-event-registration" id="tickets">
+            <p className="edition-eyebrow">{past ? 'ATTENDEE ACCESS' : 'JOIN THE CONVERSATION'}</p>
+            <h2>
+              {registered
+                ? 'You’re registered.'
+                : past
+                  ? 'The conversation continues.'
+                  : 'Plan your visit.'}
+            </h2>
+            <p>
+              {formatDate(event.startsAt)}
+              {event.venue?.address ? ` · ${event.venue.address}` : ''}
+            </p>
+            {event.hasLivestream &&
+              (registered ? (
+                <Link href={`/events/${event.id}/livestream`} className="btn">
+                  Watch the livestream ↗
+                </Link>
+              ) : (
+                <p className="edition-meta">
+                  Livestream access is available to registered attendees.
+                </p>
+              ))}
+            {past ? (
+              <p className="muted">
+                {event.hasReplay
+                  ? 'Sign in with your registered attendee account to access available session replays.'
+                  : 'Registration for this event has closed.'}
+              </p>
+            ) : onSale && isReader ? (
+              <EventCheckoutForm
+                eventId={String(event.id)}
+                ticketTypes={event.ticketTypes ?? []}
+                isSubscriber={canRead}
+                buyerName={`${user.firstName || ''} ${user.lastName || ''}`.trim()}
+                buyerEmail={user.email || ''}
+              />
+            ) : onSale ? (
+              <>
+                <p>Sign in or create an account to choose your ticket.</p>
+                <Link className="btn" href="/login">
+                  Sign in to register
+                </Link>
+              </>
+            ) : (
+              <p className="muted">
+                Registration details will be announced here.{' '}
+                <a href={`mailto:${channel.contactEmail}`}>Contact the event team</a> for updates.
+              </p>
+            )}
+          </aside>
+        </div>
       </div>
     </>
   )

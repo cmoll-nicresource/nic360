@@ -11,6 +11,7 @@ import { loadMonthlyFile, type LoadResult } from './monthly'
 import { type Inputs, buildReport } from './report/chapters'
 import { renderPdf } from './report/pdf'
 import { syncDatasetForYear } from './syncDatasets'
+import { resolveReportInputs } from './reportInputs'
 
 export type UploadedFile = { fileName: string; buffer: Buffer }
 
@@ -165,14 +166,18 @@ async function generateReportIssue(payload: Payload, yr: number, mo: number, inp
   })
   const publication = pubs[0]
   if (!publication) {
-    notes.push('No publication with generator "monthly-trade-barometer" found — report was not drafted as an issue.')
-    return null
+    throw new Error('No publication with generator "monthly-trade-barometer" found; a complete report issue cannot be created.')
   }
 
+  const resolved = await resolveReportInputs(inputs, yr, mo)
+  if (resolved.inputs.usTrade?.source) notes.push(`US trade source snapshot (billions): ${JSON.stringify(resolved.inputs.usTrade)}`)
+  if (resolved.inputs.trq?.source) notes.push(`CBP TRQ source snapshot (kilograms): ${JSON.stringify(resolved.inputs.trq)}`)
+  notes.push(...resolved.notes)
+  if (resolved.notes.length) throw new Error(`Cannot generate a complete PDF. ${resolved.notes.join(' ')}`)
   const client = await payload.db.pool.connect()
   let report: Awaited<ReturnType<typeof buildReport>>
   try {
-    report = await buildReport(client, yr, mo, inputs)
+    report = await buildReport(client, yr, mo, resolved.inputs)
   } finally {
     client.release()
   }

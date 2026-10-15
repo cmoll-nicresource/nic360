@@ -28,6 +28,8 @@
   ],
   "exclude": [
     "node_modules",
+    // Generated PDF previews and temporary rendering tools, not app sources.
+    "tmp",
     // One-off migration scripts (run via tsx, never imported by the app).
     // Loosely typed by design — ids come from in-memory old-id -> new-id
     // Maps, not Payload's own generated types — so they shouldn't block

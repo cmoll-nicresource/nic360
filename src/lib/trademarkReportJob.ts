@@ -110,7 +110,12 @@ export async function runTrademarkReportJob(payload: Payload) {
       })
 
       if (existing[0]) {
-        await payload.update({ collection: 'trademarks', id: existing[0].id, data, overrideAccess: true })
+        await payload.update({
+          collection: 'trademarks',
+          id: existing[0].id,
+          data,
+          overrideAccess: true,
+        })
         updatedCount += 1
       } else {
         await payload.create({ collection: 'trademarks', data, overrideAccess: true })
@@ -118,7 +123,7 @@ export async function runTrademarkReportJob(payload: Payload) {
       }
     }
 
-    const issuesCreated = await buildTrademarkReportIssues(payload, { cancellations, renewals })
+    const issuesCreated = await buildTrademarkReportIssues(payload, { monthly: false })
 
     const finished = await payload.update({
       collection: 'trademark-import-runs',

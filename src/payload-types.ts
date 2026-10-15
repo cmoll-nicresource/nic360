@@ -1226,7 +1226,7 @@ export interface Guide {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * PDFs for Guides. Served through Payload's access-checked file route, never a public URL.
+ * Protected PDF attachments for guides and publication issues.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guide-files".
@@ -1532,7 +1532,7 @@ export interface LivestreamPing {
   createdAt: string;
 }
 /**
- * A log of which reader visited which front-end page and when, for first-party traffic reporting (no third-party analytics). Staff visits are not tracked. See /staff/analytics for the dashboard.
+ * A log of which reader visited which front-end page and when, for first-party traffic reporting (no third-party analytics). Staff visits are not tracked. See /admin/analytics for the dashboard.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "page-views".

@@ -3,6 +3,7 @@ import React from 'react'
 
 import { SiteFooter } from '@/components/SiteFooter'
 import './styles.css'
+import './edition.css'
 
 const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
 const serif = Source_Serif_4({ subsets: ['latin'], variable: '--font-serif', display: 'swap' })
@@ -19,9 +20,7 @@ export const metadata = {
     siteName: 'Nicotine360',
     title: 'Nicotine360',
     description: DESCRIPTION,
-    // Placeholder until a real branded share-card image exists (see
-    // docs/nicotine360-design-review.md, Imagery > Open Graph share card).
-    images: [{ url: 'https://placehold.co/1200x630/0e2a47/ffffff?text=Nicotine360', width: 1200, height: 630 }],
+    images: [{ url: '/share-card.png', width: 1200, height: 630 }],
   },
 }
 
