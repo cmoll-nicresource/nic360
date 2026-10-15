@@ -2,6 +2,7 @@ import Papa from 'papaparse'
 import type { Payload } from 'payload'
 
 import type { Country, Dataset } from '@/payload-types'
+import { writeDatasetRows } from './writeDatasetRows'
 
 export type ParsedSpreadsheet = {
   headers: string[]
@@ -32,7 +33,8 @@ export function suggestMapping(
   for (const header of headers) {
     const normalizedHeader = normalize(header)
     const match = columns.find(
-      (col) => normalize(col.label) === normalizedHeader || normalize(col.key ?? '') === normalizedHeader,
+      (col) =>
+        normalize(col.label) === normalizedHeader || normalize(col.key ?? '') === normalizedHeader,
     )
     mapping[header] = match?.key ?? null
   }
@@ -125,44 +127,23 @@ export async function commitImport({
       if (!columnKey) continue
       const column = columnsByKey.get(columnKey)
       if (!column) continue
-      const { value, unmatchedCountry } = coerceValue(sourceRow[header] ?? '', column.type, countryLookup)
+      const { value, unmatchedCountry } = coerceValue(
+        sourceRow[header] ?? '',
+        column.type,
+        countryLookup,
+      )
       values[columnKey] = value
       if (unmatchedCountry) unmatchedCountries.add(unmatchedCountry)
     }
     rowsToInsert.push(values)
   }
 
-  if (replace) {
-    await payload.delete({
-      collection: 'dataset-rows',
-      where: { dataset: { equals: dataset.id } },
-      overrideAccess: true,
-    })
-  }
-
-  // A production-scale import (thousands of rows) should bulk-insert directly
-  // through the database adapter; the Local API loop below is simple and fine
-  // at prototype/sample-file scale.
-  for (const values of rowsToInsert) {
-    await payload.create({
-      collection: 'dataset-rows',
-      data: { dataset: dataset.id, values },
-      overrideAccess: true,
-    })
-  }
-
-  await payload.update({
-    collection: 'datasets',
-    id: dataset.id,
-    data: {
-      lastImport: {
-        file: fileId,
-        mapping,
-        importedAt: new Date().toISOString(),
-        rowCount: rowsToInsert.length,
-      },
-    },
-    overrideAccess: true,
+  await writeDatasetRows(payload, {
+    datasetId: dataset.id,
+    rows: rowsToInsert,
+    replace: replace ? 'all' : undefined,
+    mapping,
+    fileId,
   })
 
   return { rowCount: rowsToInsert.length, unmatchedCountries: [...unmatchedCountries] }

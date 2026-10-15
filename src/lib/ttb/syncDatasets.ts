@@ -5,6 +5,7 @@ import type { Dataset } from '@/payload-types'
 
 import type { Flow } from './columns'
 import { tradeNumber } from './numeric'
+import { writeDatasetRows } from '../writeDatasetRows'
 
 const DATASET_SLUG: Record<Flow, string> = { import: 'us-imports', export: 'us-exports' }
 
@@ -59,7 +60,11 @@ const BASIS_SQL: Record<Flow, { table: string; valueCol: string; where: string }
  * figures; exports: domestic only — see ttb-trade/README.md's "Reporting
  * conventions").
  */
-export async function syncDatasetForYear(payload: Payload, flow: Flow, year: number): Promise<{ rowCount: number; skipped: string | null }> {
+export async function syncDatasetForYear(
+  payload: Payload,
+  flow: Flow,
+  year: number,
+): Promise<{ rowCount: number; skipped: string | null }> {
   const { docs } = await payload.find({
     collection: 'datasets',
     where: { slug: { equals: DATASET_SLUG[flow] } },
@@ -70,11 +75,26 @@ export async function syncDatasetForYear(payload: Payload, flow: Flow, year: num
   if (!dataset) return { rowCount: 0, skipped: `no "${DATASET_SLUG[flow]}" dataset found` }
 
   const keys = resolveColumnKeys(dataset)
-  if (!keys) return { rowCount: 0, skipped: `"${dataset.title}" is missing a text/country/year/number column` }
+  if (!keys)
+    return {
+      rowCount: 0,
+      skipped: `"${dataset.title}" is missing a text/country/year/number column`,
+    }
 
   const basis = BASIS_SQL[flow]
-  const { rows } = await payload.db.pool.query<{ commodity: string; country: string; value: string }>(
-    `with latest as (select max(mo) as mo from ${basis.table} where yr = $1 and ${basis.where})
+  const { docs: countries } = await payload.find({
+    collection: 'countries',
+    limit: 1000,
+    overrideAccess: true,
+  })
+  const countryLookup = buildCountryLookup(countries)
+  const result = await writeDatasetRows(payload, {
+    datasetId: dataset.id,
+    replace: { yearKey: keys.year, year },
+    skipEmpty: true,
+    rows: async (client) => {
+      const { rows } = await client.query<{ commodity: string; country: string; value: string }>(
+        `with latest as (select max(mo) as mo from ${basis.table} where yr = $1 and ${basis.where})
      select h.description as commodity, c.name as country, sum(f.${basis.valueCol}) as value
        from ${basis.table} f
        join ref.hts h on h.hts = f.hts
@@ -83,45 +103,22 @@ export async function syncDatasetForYear(payload: Payload, flow: Flow, year: num
       where f.yr = $1 and ${basis.where} and f.mo = latest.mo
       group by h.description, c.name
      having sum(f.${basis.valueCol}) is not null and sum(f.${basis.valueCol}) != 0`,
-    [year],
-  )
-  if (rows.length === 0) return { rowCount: 0, skipped: `no ${flow} facts loaded for ${year}` }
-
-  const { docs: countries } = await payload.find({ collection: 'countries', limit: 1000, overrideAccess: true })
-  const countryLookup = buildCountryLookup(countries)
-  const values = buildDatasetRowValues(
-    rows.map((r) => ({ commodity: r.commodity, country: r.country, value: tradeNumber(r.value, 'annual value') })),
-    year,
-    keys,
-    countryLookup,
-  )
-
-  // Replace this year's rows only — other years' rows (migrated from the old
-  // site) are untouched, same delete-then-insert shape commitImport() uses
-  // for a full re-import, just scoped to one year.
-  const { docs: existing } = await payload.find({
-    collection: 'dataset-rows',
-    where: { dataset: { equals: dataset.id } },
-    limit: 20000,
-    depth: 0,
-    overrideAccess: true,
+        [year],
+      )
+      return buildDatasetRowValues(
+        rows.map((r) => ({
+          commodity: r.commodity,
+          country: r.country,
+          value: tradeNumber(r.value, 'annual value'),
+        })),
+        year,
+        keys,
+        countryLookup,
+      )
+    },
   })
-  const staleIds = existing
-    .filter((d) => (d.values as Record<string, unknown>)[keys.year] === year)
-    .map((d) => d.id)
-  if (staleIds.length > 0) {
-    await payload.delete({ collection: 'dataset-rows', where: { id: { in: staleIds } }, overrideAccess: true })
+  return {
+    rowCount: result.inserted,
+    skipped: result.skippedEmpty ? `no ${flow} facts loaded for ${year}` : null,
   }
-  for (const v of values) {
-    await payload.create({ collection: 'dataset-rows', data: { dataset: dataset.id, values: v }, overrideAccess: true })
-  }
-
-  await payload.update({
-    collection: 'datasets',
-    id: dataset.id,
-    data: { lastImport: { importedAt: new Date().toISOString(), rowCount: existing.length - staleIds.length + values.length } },
-    overrideAccess: true,
-  })
-
-  return { rowCount: values.length, skipped: null }
 }
