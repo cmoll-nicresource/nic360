@@ -1,0 +1,20 @@
+{
+  "Rules": [
+    {
+      "ID": "ExpireUploadSnapshotsAfter45Days",
+      "Status": "Enabled",
+      "Filter": {"Prefix": "uploads/"},
+      "Expiration": {"Days": 45},
+      "NoncurrentVersionExpiration": {"NoncurrentDays": 7},
+      "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1}
+    },
+    {
+      "ID": "ExpireRecoveryRehearsalArchivesAfter90Days",
+      "Status": "Enabled",
+      "Filter": {"Prefix": "database-rehearsals/"},
+      "Expiration": {"Days": 90},
+      "NoncurrentVersionExpiration": {"NoncurrentDays": 7},
+      "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1}
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 Current completed work and next steps: [project checklist](docs/project-status.md). Operational monitoring: [alerts runbook](docs/operations.md). Older milestone descriptions below are project history.
 
+Scheduled backups and the October 16 isolated restore rehearsal are documented in [backup and recovery](docs/backup-recovery.md).
+
 Payload CMS 3 + Next.js rebuild of Nicotine360. See [CLAUDE.md](./CLAUDE.md) for the project brief and [docs/entity-map.md](./docs/entity-map.md) for field-level detail. Build order and "done when" criteria for each milestone are in CLAUDE.md.
 
 ## Setup

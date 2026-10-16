@@ -1,0 +1,23 @@
+{
+  "serviceId": "23767817-4f5e-447f-bb1e-21d76724bb95",
+  "serviceName": "upload-backups",
+  "projectId": "25c268df-a654-427e-96c1-e40abcafadd8",
+  "environmentId": "64cc889c-d636-4d79-83b7-3a33c7d890de",
+  "source": {"image": "rclone/rclone@sha256:2687085f718d3c628f7fdfb77c52a1d344332aed543110bb88088f2c70d43eb5"},
+  "deploy": {
+    "cronSchedule": "0 8 * * *",
+    "restartPolicyType": "NEVER",
+    "startCommand": "/bin/sh -c 'printf \"%s\" \"$BACKUP_SCRIPT_B64\" | base64 -d > /tmp/uploads-backup.sh; exec /bin/sh /tmp/uploads-backup.sh'"
+  },
+  "backupBucket": "nic360-backups-226541720866-us-east-1",
+  "awsRegion": "us-east-1",
+  "iamUser": "nic360-upload-backup-writer",
+  "script": "ops/backups/uploads.sh",
+  "scriptVariable": "BACKUP_SCRIPT_B64",
+  "sourceVariableReferences": {
+    "UPLOAD_SOURCE_BUCKET": "${{nic360.S3_BUCKET}}",
+    "RCLONE_CONFIG_R2_ENDPOINT": "${{nic360.S3_ENDPOINT}}",
+    "RCLONE_CONFIG_R2_ACCESS_KEY_ID": "${{nic360.S3_ACCESS_KEY_ID}}",
+    "RCLONE_CONFIG_R2_SECRET_ACCESS_KEY": "${{nic360.S3_SECRET_ACCESS_KEY}}"
+  }
+}

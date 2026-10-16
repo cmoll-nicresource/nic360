@@ -12,12 +12,13 @@ Updated October 15, 2026. This is the current work list. The original milestones
 - Issue-editor preview of current unsaved content, desktop/mobile widths and protected attached PDF viewing. Refresh after editing; this is a browser approximation of email rendering, not an Outlook/Gmail emulator.
 - Operations monitoring: admin alert history, staff email digests, failed/stalled newsletters/imports and missing scheduled trademark imports/reports. See [operations](./operations.md).
 - Source committed/pushed to GitHub with automated checks. Earlier notes saying the report work is uncommitted are historical.
+- October 16: recurring database/upload backups enabled and isolated recovery verified; see [backup and recovery](./backup-recovery.md). Ninety stable tables and all 950 existing upload objects matched. Ten pre-existing missing prototype/sample file entries are documented there.
 
 ## Next work, in priority order
 
 1. **Human inbox review:** inspect the already-delivered `[TEST] Nicotine360 newsletter delivery verification` email at `cmoll@nicotineresource.org`; review real publication samples in Outlook/Gmail and on mobile. The complaint/bounce simulator notifications are separate messages.
 2. **Small staff newsletter pilot:** add an explicit internal recipient selection, preview eligible/excluded audience counts, then deliver to that reviewed staff group. Current global beta safe mode stays on; no migrated audience send is authorized.
-3. **Backup/recovery rehearsal:** verify scheduled database and uploaded-file backups and restore to an isolated environment. The verified one-time pre-trade backup is evidence of that restore, not proof of a recurring backup policy.
+3. **Backup operations follow-up:** inspect the next automatic database/upload run, add independent missing-backup notifications, and repeat the recovery drill after significant schema/storage changes. The initial rehearsal and recurring schedules are completed; details and limits are in the backup runbook.
 4. **Stripe test workflow:** configure the beta test webhook secret, then exercise paid/free/discounted checkout, colleague invitations, duplicate notifications and appropriate failed-payment behavior. Hosted requests currently fail closed without configuration.
 5. **Reader/staff acceptance pass:** walk through signup, verification, reset, membership tiers, report review/publish and event management on beta. Earlier local checks cover much of this; distinguish those from external-user acceptance.
 6. **Launch decisions:** domain/cutover, member communications, whether/how to retain old redirects, consent/audience review and the deliberate decision to enable reader email. Do not turn off safe mode as part of routine testing.
