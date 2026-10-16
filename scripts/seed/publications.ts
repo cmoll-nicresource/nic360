@@ -2,7 +2,10 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import type { Payload } from 'payload'
-import { publicationSelectionRules } from '../../src/lib/publicationSelectionPolicy'
+import {
+  publicationSelectionRules,
+  VAPOR_PRODUCT_NAMES,
+} from '../../src/lib/publicationSelectionPolicy'
 
 import { lexicalFromText } from '../../src/lib/lexical'
 import { buildSectionsFromRules } from '../../src/lib/publicationRules'
@@ -58,11 +61,11 @@ export async function seedPublications(payload: Payload) {
 
   const { docs: vaporProductDocs } = await payload.find({
     collection: 'products',
-    where: { name: { equals: 'Vapor/E-liquid' } },
-    limit: 1,
+    where: { name: { in: VAPOR_PRODUCT_NAMES } },
+    limit: 100,
     overrideAccess: true,
   })
-  const vaporProductId = vaporProductDocs[0]?.id
+  const vaporProductIds = vaporProductDocs.map((p) => p.id)
 
   const defs = [
     {
@@ -136,7 +139,7 @@ export async function seedPublications(payload: Payload) {
       mailchimpSegmentId: 'sim_segment_vapor_news_clippings',
       selectionRules: {
         excerptTypes: ['articles'] as ('articles' | 'bills' | 'trademarks')[],
-        ...(vaporProductId ? { products: { include: [vaporProductId] } } : {}),
+        ...(vaporProductIds.length ? { products: { include: vaporProductIds } } : {}),
       },
     },
     {

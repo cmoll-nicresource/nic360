@@ -6,7 +6,7 @@ Confirmed October 16, 2026:
 | --- | --- | --- |
 | US News Clippings | Published news articles only | At least one US location, including descendants. All products, including vapor. |
 | Global News Clippings | Published news articles only | At least one location outside the US hierarchy. US plus non-US stories qualify; US-only stories do not. |
-| Vapor News Clippings | Published news articles only | Existing Vapor/E-liquid product filter, any geography. |
+| Vapor News Clippings | Published news articles only | Vapor/E-liquid, Vapors/Tanks/Mods, Electronic Cigarettes and E-Liquid product terms, any geography. |
 | Daily US Legislative Snapshot / Weekly US Legislative Report | Published bills | US locations, including descendants. |
 
 All publications named Clippings select news articles rather than bills or trademarks. Named US/Global publications enforce their geographic boundaries during building, even if the saved filters are incomplete. Other saved subject/sector filters continue to narrow selection. US News Clippings covers all products. Untagged excerpts do not satisfy US or Global geography requirements.

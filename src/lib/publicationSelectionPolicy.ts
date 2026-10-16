@@ -1,5 +1,12 @@
 import type { Publication } from '@/payload-types'
 
+export const VAPOR_PRODUCT_NAMES = [
+  'Vapor/E-liquid',
+  'Vapors/Tanks/Mods (VTMs)',
+  'Electronic Cigarettes (e-cigarettes)',
+  'E-Liquid',
+]
+
 export function publicationGeography(publication: Pick<Publication, 'slug'>) {
   if (publication.slug === 'global-news-clippings') return 'non-us'
   return [

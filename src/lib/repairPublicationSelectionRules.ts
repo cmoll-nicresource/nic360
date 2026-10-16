@@ -1,5 +1,5 @@
 import type { Payload } from 'payload'
-import { publicationSelectionRules } from './publicationSelectionPolicy'
+import { publicationSelectionRules, VAPOR_PRODUCT_NAMES } from './publicationSelectionPolicy'
 
 export async function repairPublicationSelectionRules(payload: Payload, apply = false) {
   const countries = await payload.find({
@@ -11,6 +11,14 @@ export async function repairPublicationSelectionRules(payload: Payload, apply = 
   })
   if (countries.docs.length !== 1)
     throw new Error('A unique United States country location is required.')
+  const vapor = await payload.find({
+    collection: 'products',
+    where: { name: { in: VAPOR_PRODUCT_NAMES } },
+    limit: 100,
+    sort: 'id',
+    depth: 0,
+    overrideAccess: true,
+  })
   const changes = []
   let page = 1,
     more = true
@@ -26,6 +34,18 @@ export async function repairPublicationSelectionRules(payload: Payload, apply = 
     })
     for (const publication of result.docs) {
       const after = publicationSelectionRules(publication, countries.docs[0].id)
+      if (publication.slug === 'vapor-news-clippings')
+        after.products = {
+          ...after.products,
+          include: [
+            ...new Set([
+              ...(after.products?.include ?? []).map((ref) =>
+                typeof ref === 'object' ? ref.id : ref,
+              ),
+              ...vapor.docs.map((p) => p.id),
+            ]),
+          ],
+        }
       if (JSON.stringify(after) === JSON.stringify(publication.selectionRules ?? {})) continue
       changes.push({
         id: publication.id,
