@@ -1,6 +1,6 @@
 # Event checkout and Stripe verification
 
-October 16, 2026. The checkout implementation has been hardened and tested locally; **real Stripe test-mode card delivery is still pending a test API key**. Neither local nor beta had `STRIPE_SECRET_KEY` or `STRIPE_WEBHOOK_SECRET` configured at preflight. Do not treat mocked Stripe responses or signed offline fixtures as proof of an actual Stripe payment.
+October 16, 2026. Checkout hardening is deployed and the free/comped/invitation path is verified on beta; **real Stripe test-mode card delivery is still pending a test API key**. Neither local nor beta had `STRIPE_SECRET_KEY` or `STRIPE_WEBHOOK_SECRET` configured at preflight. Do not treat mocked Stripe responses or signed offline fixtures as proof of an actual Stripe payment.
 
 ## Behavior
 
@@ -38,6 +38,8 @@ It adds the pending registration enum, order session/expiry/error fields, invita
 Official references: [Stripe fulfillment and duplicate/concurrent calls](https://docs.stripe.com/checkout/fulfillment.md?payment-ui=stripe-hosted), [webhook signatures/retries](https://docs.stripe.com/webhooks), [test cards and declines](https://docs.stripe.com/testing).
 
 ## Regression verification
+
+Controlled beta browser/API verification used one temporary verified buyer, one new colleague, an internal test event and temporary discount codes. Verified reader authorization, missing Stripe setup rejecting paid checkout before creating an order, invalid/expired/ticket-restricted/exhausted codes, duplicate-attendee rejection, comped and zero-price fulfillment, the paid success page and colleague event access. The automatic queue accepted one actual **Your Nicotine360 event invitation** at `2026-10-16T13:12:00.445Z`, redirected to `cmoll@nicotineresource.org` by safe mode. Repeating fulfillment and the invitation worker preserved the sent timestamp and did not send another invitation. Fixtures and temporary SSH access were removed. No real card or migrated reader was used.
 
 Offline tests cover real Stripe HMAC validation, invalid signatures, retryable fulfillment failure and test/live isolation. Disposable PostgreSQL integration tests cover pending access, exact cent allocation, concurrent seat/code reservation, subscriber pricing, code restrictions, duplicate fulfillment, new/existing colleagues, partial invitation retry, free/comped fulfillment, session mismatch/unpaid refusal, expiration and late-payment capacity protection. Email and Stripe requests are mocked in integration tests; no automated regression sends email or charges a card.
 
