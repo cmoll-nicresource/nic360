@@ -4,8 +4,8 @@ import MessageValidator from 'sns-validator'
 
 import config from '@/payload.config'
 import { parseSesEvent } from '@/lib/ses'
-import { flagUserByEmail } from '@/lib/emailFlags'
-import { incrementPublicationIssueStat } from '@/lib/incrementStat'
+import { processSesEvent } from '@/lib/ses/processEvent'
+import { createHash } from 'node:crypto'
 import { allowLocalWebhookSimulation } from '@/lib/localSafety'
 import { snsSubscriptionUrl } from '@/lib/snsSubscriptionUrl'
 
@@ -80,59 +80,11 @@ export async function POST(request: Request) {
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })
 
-  switch (event.type) {
-    case 'Bounce':
-      for (const email of event.emails)
-        await flagUserByEmail(payload, email, 'cleaned', event.occurredAt)
-      if (event.issueId)
-        await incrementPublicationIssueStat(
-          payload,
-          event.issueId,
-          'stats_bounces',
-          event.emails.length,
-        )
-      break
-    case 'Complaint':
-      for (const email of event.emails)
-        await flagUserByEmail(payload, email, 'spam complaint', event.occurredAt)
-      if (event.issueId)
-        await incrementPublicationIssueStat(
-          payload,
-          event.issueId,
-          'stats_complaints',
-          event.emails.length,
-        )
-      break
-    case 'Delivery':
-      if (event.issueId)
-        await incrementPublicationIssueStat(
-          payload,
-          event.issueId,
-          'stats_delivered',
-          event.emails.length,
-        )
-      break
-    case 'Open':
-      if (event.issueId)
-        await incrementPublicationIssueStat(
-          payload,
-          event.issueId,
-          'stats_opens',
-          event.emails.length,
-        )
-      break
-    case 'Click':
-      if (event.issueId)
-        await incrementPublicationIssueStat(
-          payload,
-          event.issueId,
-          'stats_clicks',
-          event.emails.length,
-        )
-      break
-    case 'Send':
-      break
-  }
+  const eventKey = createHash('sha256')
+    .update(String(body.TopicArn))
+    .update(String(body.MessageId || body.Message))
+    .digest('hex')
+  await processSesEvent(payload, event, eventKey)
 
   return NextResponse.json({ ok: true })
 }

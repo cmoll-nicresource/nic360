@@ -25,8 +25,10 @@ export const syncMailchimpOnUserChange: CollectionAfterChangeHook<User> = async 
     doc.email !== previousDoc?.email ||
     doc.firstName !== previousDoc?.firstName ||
     doc.lastName !== previousDoc?.lastName ||
-    JSON.stringify(doc.emailPublications ?? []) !== JSON.stringify(previousDoc?.emailPublications ?? []) ||
-    JSON.stringify(doc.accessProvider ?? null) !== JSON.stringify(previousDoc?.accessProvider ?? null)
+    JSON.stringify(doc.emailPublications ?? []) !==
+      JSON.stringify(previousDoc?.emailPublications ?? []) ||
+    JSON.stringify(doc.accessProvider ?? null) !==
+      JSON.stringify(previousDoc?.accessProvider ?? null)
 
   if (!relevantFieldsChanged) return doc
 
@@ -43,6 +45,8 @@ export const syncMailchimpOnUserChange: CollectionAfterChangeHook<User> = async 
     })
     return doc
   }
+  // SES uses the current CMS audience. Mailchimp remains a historical import source.
+  if (process.env.EMAIL_PROVIDER !== 'mailchimp') return doc
 
   const { docs: allPublications } = await req.payload.find({
     collection: 'publications',
@@ -52,7 +56,9 @@ export const syncMailchimpOnUserChange: CollectionAfterChangeHook<User> = async 
     req,
   })
 
-  const subscribedIds = new Set((doc.emailPublications ?? []).map((p) => (typeof p === 'object' ? p.id : p)))
+  const subscribedIds = new Set(
+    (doc.emailPublications ?? []).map((p) => (typeof p === 'object' ? p.id : p)),
+  )
 
   const interests: Record<string, boolean> = {}
   for (const pub of allPublications) {

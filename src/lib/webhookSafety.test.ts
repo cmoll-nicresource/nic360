@@ -5,7 +5,7 @@ import { POST as ses } from '@/app/api/ses/webhook/route'
 import { POST as mailchimp } from '@/app/api/mailchimp/webhook/route'
 import { snsSubscriptionUrl } from './snsSubscriptionUrl'
 import type { Payload } from 'payload'
-import { incrementPublicationIssueStat } from './incrementStat'
+import { processSesEvent } from './ses/processEvent'
 const { validate } = vi.hoisted(() => ({ validate: vi.fn() }))
 vi.mock('@/payload.config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
@@ -21,6 +21,7 @@ vi.mock('@/lib/stripe', () => ({
 vi.mock('@/lib/orderFulfillment', () => ({ markOrderPaid: vi.fn() }))
 vi.mock('@/lib/emailFlags', () => ({ flagUserByEmail: vi.fn() }))
 vi.mock('@/lib/incrementStat', () => ({ incrementPublicationIssueStat: vi.fn() }))
+vi.mock('@/lib/ses/processEvent', () => ({ processSesEvent: vi.fn() }))
 vi.mock('@/lib/mailchimp', () => ({ getMailchimpClient: vi.fn() }))
 vi.mock('sns-validator', () => ({
   default: class {
@@ -96,7 +97,11 @@ it('accepts a verified notification from the configured SNS topic', async () => 
     }),
   )
   expect(response.status).toBe(200)
-  expect(incrementPublicationIssueStat).toHaveBeenCalledWith(payload, 42, 'stats_delivered', 1)
+  expect(processSesEvent).toHaveBeenCalledWith(
+    payload,
+    expect.objectContaining({ type: 'Delivery', issueId: 42 }),
+    expect.any(String),
+  )
 })
 it('only permits confirmation URLs for the signed topic and token', () => {
   const body = {

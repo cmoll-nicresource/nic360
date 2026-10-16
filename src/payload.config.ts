@@ -1,4 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { NewsletterDeliveries } from './collections/NewsletterDeliveries'
+import { SesEvents } from './collections/SesEvents'
+import { newsletterSendTask } from './jobs/newsletterSendTask'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -92,14 +95,51 @@ export default buildConfig({
         Icon: './components/admin/graphics/Icon#Icon',
       },
       views: {
-        dashboard: { Component: './components/admin/workspace/WorkspaceDashboard#WorkspaceDashboard' },
-        tradeReports: { Component: './components/admin/workspace/StaffTools#TradeReportsView', path: '/trade-reports', exact: true, meta: { title: 'Trade Barometer' } },
-        trademarkReports: { Component: './components/admin/workspace/StaffTools#TrademarkReportsView', path: '/trademark-reports', exact: true, meta: { title: 'Trademark reports' } },
-        datasetImports: { Component: './components/admin/workspace/StaffTools#DatasetImportsView', path: '/datasets', exact: true, meta: { title: 'Dataset imports' } },
-        datasetImport: { Component: './components/admin/workspace/StaffTools#DatasetImportView', path: '/datasets/:id/import', exact: true, meta: { title: 'Import dataset' } },
-        eventsWorkspace: { Component: './components/admin/workspace/StaffTools#EventsWorkspaceView', path: '/events', exact: true, meta: { title: 'Event management' } },
-        manageEvent: { Component: './components/admin/workspace/StaffTools#ManageEventView', path: '/events/:id/manage', exact: true, meta: { title: 'Manage event' } },
-        accessCheck: { Component: './components/admin/workspace/StaffTools#AccessCheckView', path: '/access-check', exact: true, meta: { title: 'Reader access' } },
+        dashboard: {
+          Component: './components/admin/workspace/WorkspaceDashboard#WorkspaceDashboard',
+        },
+        tradeReports: {
+          Component: './components/admin/workspace/StaffTools#TradeReportsView',
+          path: '/trade-reports',
+          exact: true,
+          meta: { title: 'Trade Barometer' },
+        },
+        trademarkReports: {
+          Component: './components/admin/workspace/StaffTools#TrademarkReportsView',
+          path: '/trademark-reports',
+          exact: true,
+          meta: { title: 'Trademark reports' },
+        },
+        datasetImports: {
+          Component: './components/admin/workspace/StaffTools#DatasetImportsView',
+          path: '/datasets',
+          exact: true,
+          meta: { title: 'Dataset imports' },
+        },
+        datasetImport: {
+          Component: './components/admin/workspace/StaffTools#DatasetImportView',
+          path: '/datasets/:id/import',
+          exact: true,
+          meta: { title: 'Import dataset' },
+        },
+        eventsWorkspace: {
+          Component: './components/admin/workspace/StaffTools#EventsWorkspaceView',
+          path: '/events',
+          exact: true,
+          meta: { title: 'Event management' },
+        },
+        manageEvent: {
+          Component: './components/admin/workspace/StaffTools#ManageEventView',
+          path: '/events/:id/manage',
+          exact: true,
+          meta: { title: 'Manage event' },
+        },
+        accessCheck: {
+          Component: './components/admin/workspace/StaffTools#AccessCheckView',
+          path: '/access-check',
+          exact: true,
+          meta: { title: 'Reader access' },
+        },
         analytics: {
           Component: './components/admin/workspace/StaffTools#WorkspaceAnalyticsView',
           path: '/analytics',
@@ -138,6 +178,8 @@ export default buildConfig({
     TradeImportRuns,
     MailchimpOutbox,
     SesOutbox,
+    NewsletterDeliveries,
+    SesEvents,
     Speakers,
     Sponsors,
     Events,
@@ -151,13 +193,16 @@ export default buildConfig({
   globals: [MailchimpSettings],
   plugins,
   jobs: {
-    tasks: [tmogImportTask],
+    tasks: [tmogImportTask, newsletterSendTask],
     // Ticks the 'tmog-import' queue every Friday at 12:00 UTC: picks up
     // whatever's queued (including the job the task's own `schedule` just
     // auto-queued for this tick) and runs it. Not used on serverless hosts,
     // but this project deploys as a persistent Railway service, so the
     // in-process cron check is fine.
-    autoRun: [{ cron: '0 12 * * 5', queue: 'tmog-import', limit: 1 }],
+    autoRun: [
+      { cron: '0 12 * * 5', queue: 'tmog-import', limit: 1 },
+      { cron: '* * * * *', queue: 'newsletters', limit: 1 },
+    ],
   },
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

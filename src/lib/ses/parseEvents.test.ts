@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import { parseSesEvent } from './parseEvents'
 
-function mail(overrides: Partial<{ destination: string[]; tags: Record<string, string[]>; timestamp: string }> = {}) {
+function mail(
+  overrides: Partial<{
+    destination: string[]
+    tags: Record<string, string[]>
+    timestamp: string
+  }> = {},
+) {
   return {
     timestamp: '2026-10-11T12:00:00.000Z',
     messageId: 'msg-1',
@@ -22,9 +28,10 @@ describe('parseSesEvent', () => {
     })
     expect(event).toEqual({
       type: 'Delivery',
+      messageId: 'msg-1',
       emails: ['reader@example.com'],
       issueId: 42,
-      occurredAt: '2026-10-11T12:00:00.000Z',
+      occurredAt: '2026-10-11T12:00:01.000Z',
       bounceType: undefined,
     })
   })
@@ -33,7 +40,11 @@ describe('parseSesEvent', () => {
     const event = parseSesEvent({
       eventType: 'Open',
       mail: mail(),
-      open: { timestamp: '2026-10-11T12:05:00.000Z', userAgent: 'Mozilla/5.0', ipAddress: '1.2.3.4' },
+      open: {
+        timestamp: '2026-10-11T12:05:00.000Z',
+        userAgent: 'Mozilla/5.0',
+        ipAddress: '1.2.3.4',
+      },
     })
     expect(event?.type).toBe('Open')
     expect(event?.emails).toEqual(['reader@example.com'])
@@ -63,9 +74,10 @@ describe('parseSesEvent', () => {
     })
     expect(event).toEqual({
       type: 'Bounce',
+      messageId: 'msg-1',
       emails: ['a@example.com'],
       issueId: 42,
-      occurredAt: '2026-10-11T12:00:00.000Z',
+      occurredAt: '2026-10-11T12:00:02.000Z',
       bounceType: 'Permanent',
     })
   })
@@ -89,7 +101,13 @@ describe('parseSesEvent', () => {
   })
 
   it('returns null when there is no affected recipient', () => {
-    expect(parseSesEvent({ eventType: 'Bounce', mail: mail({ destination: [] }), bounce: { bouncedRecipients: [] } })).toBeNull()
+    expect(
+      parseSesEvent({
+        eventType: 'Bounce',
+        mail: mail({ destination: [] }),
+        bounce: { bouncedRecipients: [] },
+      }),
+    ).toBeNull()
   })
 
   it('returns null for malformed input', () => {

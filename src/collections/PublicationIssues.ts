@@ -2,13 +2,46 @@ import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
+import { staffHasMinRole } from '@/access/staffRoles'
 
-const defaultFormatFromPublication: CollectionBeforeChangeHook = async ({ data, req, operation }) => {
+const defaultFormatFromPublication: CollectionBeforeChangeHook = async ({
+  data,
+  req,
+  operation,
+}) => {
   if (operation !== 'create' || data.format || !data.publication) return data
   const publication = await req.payload
     .findByID({ collection: 'publications', id: data.publication, depth: 0, req })
     .catch(() => null)
   if (publication) data.format = publication.format
+  return data
+}
+
+const protectNewsletterState: CollectionBeforeChangeHook = async ({
+  data,
+  originalDoc,
+  req,
+  operation,
+}) => {
+  if (operation !== 'update' || req.context.newsletterSystem) return data
+  if (originalDoc?.email?.status === 'sending')
+    throw new Error('This issue is being sent. Wait for delivery to finish before editing it.')
+  if (data.email && originalDoc?.email) {
+    for (const key of [
+      'provider',
+      'campaignId',
+      'status',
+      'sentAt',
+      'sentBy',
+      'sendHtml',
+      'sendSubject',
+      'targetCount',
+      'lastError',
+      'sendAdIds',
+      'adsRecorded',
+    ])
+      data.email[key] = originalDoc.email[key]
+  }
   return data
 }
 
@@ -36,14 +69,19 @@ export const PublicationIssues: CollectionConfig = {
     delete: staffCanWrite,
   },
   hooks: {
-    beforeChange: [defaultFormatFromPublication],
+    beforeChange: [defaultFormatFromPublication, protectNewsletterState],
   },
   fields: [
     {
       type: 'row',
       fields: [
         { name: 'publication', type: 'relationship', relationTo: 'publications', required: true },
-        { name: 'issueDate', type: 'date', required: true, defaultValue: () => new Date().toISOString() },
+        {
+          name: 'issueDate',
+          type: 'date',
+          required: true,
+          defaultValue: () => new Date().toISOString(),
+        },
       ],
     },
     { name: 'title', type: 'text', required: true },
@@ -69,7 +107,8 @@ export const PublicationIssues: CollectionConfig = {
       type: 'array',
       admin: {
         condition: (data) => data?.format === 'excerpt-list',
-        description: 'One group per section. "Build from rules" fills this in; reorder/edit freely after.',
+        description:
+          'One group per section. "Build from rules" fills this in; reorder/edit freely after.',
       },
       fields: [
         { name: 'heading', type: 'text', required: true },
@@ -118,6 +157,33 @@ export const PublicationIssues: CollectionConfig = {
         },
         { name: 'previewText', label: 'Preview text', type: 'text' },
         {
+          name: 'sendHtml',
+          type: 'textarea',
+          admin: { hidden: true },
+          access: { read: staffHasMinRole('editor') },
+        },
+        {
+          name: 'sendSubject',
+          type: 'text',
+          admin: { hidden: true },
+          access: { read: staffHasMinRole('editor') },
+        },
+        { name: 'targetCount', type: 'number', admin: { readOnly: true } },
+        { name: 'lastError', type: 'textarea', admin: { readOnly: true } },
+        {
+          name: 'sendAdIds',
+          type: 'json',
+          admin: { hidden: true },
+          access: { read: staffHasMinRole('editor') },
+        },
+        {
+          name: 'adsRecorded',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: { hidden: true },
+          access: { read: staffHasMinRole('editor') },
+        },
+        {
           name: 'provider',
           type: 'select',
           admin: { readOnly: true, description: 'Which sender actually sent this issue.' },
@@ -127,7 +193,10 @@ export const PublicationIssues: CollectionConfig = {
           name: 'campaignId',
           label: 'Campaign/message ref',
           type: 'text',
-          admin: { readOnly: true, description: 'Mailchimp campaign id, or the SES send batch, set when sent.' },
+          admin: {
+            readOnly: true,
+            description: 'Mailchimp campaign id, or the SES send batch, set when sent.',
+          },
         },
         {
           name: 'status',
@@ -146,7 +215,8 @@ export const PublicationIssues: CollectionConfig = {
       index: true,
       admin: {
         position: 'sidebar',
-        description: "Old site's publications.id (the per-issue table, confusingly not publication_categories), for migration idempotency.",
+        description:
+          "Old site's publications.id (the per-issue table, confusingly not publication_categories), for migration idempotency.",
       },
     },
     {
@@ -158,7 +228,13 @@ export const PublicationIssues: CollectionConfig = {
           "Engagement counts, filled in by whichever provider sent this issue (Mailchimp's reporting API, or the SES event webhook). See /admin/analytics for aggregate reporting.",
       },
       fields: [
-        { name: 'recipientCount', label: 'Recipients', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+        {
+          name: 'recipientCount',
+          label: 'Recipients',
+          type: 'number',
+          defaultValue: 0,
+          admin: { readOnly: true },
+        },
         { name: 'delivered', type: 'number', defaultValue: 0, admin: { readOnly: true } },
         { name: 'opens', type: 'number', defaultValue: 0, admin: { readOnly: true } },
         { name: 'clicks', type: 'number', defaultValue: 0, admin: { readOnly: true } },

@@ -735,7 +735,7 @@ Our site is the **source of truth**; Mailchimp only mirrors it. This section des
 - **Expiry:** a nightly job re-syncs users whose provider expired that day (expiry has no save event to hook on) and does a full reconciliation to fix any drift.
 - **No outside sign-ups:** Mailchimp sign-up forms are turned off; changes made in Mailchimp are overwritten on the next sync.
 - **Unsubscribes are the one exception.** A Mailchimp webhook (unsubscribe, spam complaint, or address cleaned after bounces) clears that user's `emailPublications` on our side and opens an **EmailFlag** for follow-up, since nearly every case is a mistake or an overzealous firewall. The follow-up process is defined later (likely notifying the relationship manager).
-- **Re-subscribing** someone who unsubscribed: Mailchimp generally won't let an API flip them straight back to subscribed; it sends them a confirmation email instead. Current practice, which stays: staff delete the contact in Mailchimp by hand, then press **Re-add** on the EmailFlag, which restores `publicationsBefore` on the user, syncs them back to Mailchimp, and marks the flag resolved.
+- **Re-subscribing**: staff confirm the reader wants to resume and review any delivery problem (including independent AWS suppression), then press **Re-add**. It restores `publicationsBefore` and resolves the flag transactionally. Mailchimp contact deletion is no longer part of the SES workflow.
 
 ### EmailFlag (`email-flags`)
 
@@ -752,7 +752,7 @@ The user link becomes null when a reader is deleted; `recipientEmail` retains th
 | `publicationsBefore` | relationship → Publications, hasMany | what they were receiving, so it can be restored |
 | `status` | select: open · following up · resolved | |
 | `notes` | textarea | |
-| *(action)* | **Re-add** button | restores the user's publications and re-syncs, after staff delete the contact in Mailchimp |
+| *(action)* | **Re-add** button | restores prior choices after consent/delivery review, then resolves the flag atomically |
 
 ### Sending an issue
 
@@ -766,9 +766,12 @@ The CMS sends the issue when a staff member presses **Send** on a published issu
 | `email.campaignId` | text, read-only | Mailchimp campaign id, or a generated SES send-batch ref |
 | `email.status` | select: not sent · sending · sent · failed, read-only | |
 | `email.sentAt`, `email.sentBy` | date, relationship → Staff, read-only | |
+| `email.sendHtml`, `sendSubject`, `sendAdIds` | hidden text/text/JSON, staff-readable | Frozen content and ad selection for safe retries |
+| `email.targetCount`, `lastError` | number/text, read-only | Frozen eligible audience count and delivery/recovery result |
+| `email.adsRecorded` | hidden checkbox, staff-readable | Guards ad impressions across retries |
 
 - **Mailchimp path** (`src/app/api/publication-issues/[id]/send/route.ts`'s `sendViaMailchimp`): renders the issue into the email template for its format, creates a campaign targeted at the publication's `mailchimp.segmentId`, sets the content and sends it. A **Send test** button sends to a given address first.
-- **SES path** (`sendViaSes`): computes the recipient list fresh from our own data at send time (`src/lib/publicationRecipients.ts` — opted-in via `emailPublications`, still plan-eligible, not suppressed) rather than relying on synced audience state, then calls `SesClient.sendBulk()` (`src/lib/ses/`). See "Delivery stats" below for how engagement flows back.
+- **SES path** (`sendViaSes`): the default provider, with active/verified/opted-in/plan-eligible/unsuppressed recipients computed from the CMS. Live sends require a published issue, atomically snapshot content/audience and enqueue `send-newsletter` on the `newsletters` queue. A per-issue worker lock, per-recipient delivery log and acceptance callback prevent duplicate sends on concurrency/retry. The worker rechecks eligibility before every message. Simulations only log previews and leave the issue unsent. See [newsletter delivery](./newsletter-delivery.md) for schema preparation, recovery, safety and AWS setup.
 - After sending, the issue is locked against re-sending; editing its web version stays possible.
 
 ### Delivery stats and the Publications analytics tab
@@ -778,7 +781,7 @@ Added when the question "what's the click rate on the last 10 Daily Executive Su
 | Issue field (`stats` group) | Type | Notes |
 |---|---|---|
 | `recipientCount` | number | set at send time |
-| `delivered`, `opens`, `clicks`, `bounces`, `complaints` | number | counts, not unique — every event increments, no per-recipient dedup |
+| `delivered`, `opens`, `clicks`, `bounces`, `complaints` | number | distinct notification events; SNS retries are deduplicated, multiple opens/clicks still count |
 
 All read-only, filled in by whichever provider sent the issue: Mailchimp's Reports API (`GET /reports/{campaign_id}`, not yet wired up — a polling job would pull this periodically) or the SES event webhook below (built).
 
@@ -786,9 +789,13 @@ All read-only, filled in by whichever provider sent the issue: Mailchimp's Repor
 
 - `types.ts` / `parseEvents.ts`: `parseSesEvent()` is a pure function that normalizes one SES Configuration Set event (Bounce/Complaint/Delivery/Open/Click) into `{ type, emails, issueId, occurredAt }`. `issueId` comes from a message tag (`mail.tags.issueId`) set at send time — each bulk send tags every message with the Issue's id so events can be attributed back to it. Thoroughly unit-tested against realistic SES event JSON shapes.
 - `simulated.ts`: writes each bulk send to the new `ses-outbox` collection (full rendered HTML, recipient count) instead of calling AWS — same reviewing-before-a-real-account philosophy as `mailchimp-outbox`.
-- `live.ts`: stubbed with TODOs (real sending needs `@aws-sdk/client-sesv2`, an SES-verified sending domain, and a Configuration Set with Bounce/Complaint/Delivery/Open/Click event publishing to an SNS topic).
-- **Webhook** (`/api/ses/webhook`): receives the SNS-wrapped SES events. Confirms a `SubscriptionConfirmation` automatically; for a `Notification`, verifies the SNS signature (`sns-validator`) in live mode only — simulated mode skips verification since there's no real AWS cert to check a hand-built test payload against. Bounce/Complaint → `flagUserByEmail()` (`src/lib/emailFlags.ts`, shared with the Mailchimp webhook — same EmailFlags behavior either way: clears `emailPublications`, opens a flag, skips creating a duplicate if one's already open). Delivery/Open/Click → `incrementPublicationIssueStat()` (`src/lib/incrementStat.ts`), an atomic raw-SQL `UPDATE ... SET x = x + $1` rather than fetch-then-update, since a burst of near-simultaneous open events would otherwise lose increments to a race condition.
-- **Suppression** (`src/lib/suppressionList.ts`): anyone with an open EmailFlag is excluded from `getPublicationRecipients()` — no separate suppression store to maintain; it's the same EmailFlags queue staff already work from.
+- `live.ts`: real `@aws-sdk/client-ses` SendRawEmail calls with private MIME envelopes, readable plain text, signed unsubscribe footer and one-click headers, configuration-set attribution, test isolation and no blind SDK retries.
+- **Webhook** (`/api/ses/webhook`): hosted requests always require the configured topic and SNS signature. Confirmation URLs are constrained to the signed AWS topic/region/token. `processSesEvent` commits its receipt, preference/suppression changes, acceptance reconciliation and counters together. Notification retries are deduplicated; failed transactions can be retried safely. Test-tagged messages are logged without mutating audience preferences or issue statistics.
+- **Suppression** (`src/lib/suppressionList.ts`): open and following-up EmailFlags suppress retained and current addresses, even after reader deletion. All pages are read. Signed unsubscribe POSTs clear preferences and open a flag transactionally; GET only confirms. Account-level AWS suppression remains independent.
+
+**NewsletterDelivery (`newsletter-deliveries`)**: staff-readable immutable send log with unique `deliveryKey` (issue/address), nullable `issue`/`user`, `recipientEmail`, `status` (queued/sending/sent/failed/unknown/skipped), `providerMessageId` and `lastError`. Sent means accepted by SES; delivery events prove the receiving mail server accepted it. Unknown outcomes are never resent automatically.
+
+**SesEvent (`ses-events`)**: admin-readable immutable receipt log with unique `eventKey`, `kind`, `messageId` and `isTest`. Its unique key and transactional lock prevent SNS redelivery from repeating mutations or counters.
 
 **`/admin/analytics`'s Publications tab** (`src/lib/publicationAnalytics.ts`): search sent issues by publication, date range and/or a title keyword; see each matched issue's recipients/opens/clicks/bounces/complaints and computed open/click rate, plus totals and averages across the whole matched set. The average rate is the mean of each issue's *own* rate (issues with zero recipients excluded, not counted as 0%) — summed opens over summed recipients would let one huge issue dominate the average, which isn't what "average click rate across these issues" should mean.
 

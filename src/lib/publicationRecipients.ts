@@ -10,23 +10,41 @@ import type { SesRecipient } from '@/lib/ses'
  * who opted in (`emailPublications`), are still plan-eligible, and aren't
  * suppressed (bounced/complained/unsubscribed).
  */
-export async function getPublicationRecipients(payload: Payload, publicationId: number): Promise<SesRecipient[]> {
+export async function getPublicationRecipients(
+  payload: Payload,
+  publicationId: number,
+): Promise<SesRecipient[]> {
   const suppressed = await getSuppressedEmails(payload)
 
-  const { docs: users } = await payload.find({
-    collection: 'users',
-    where: { emailPublications: { in: [publicationId] } },
-    depth: 1,
-    limit: 5000,
-    overrideAccess: true,
-  })
-
   const recipients: SesRecipient[] = []
-  for (const user of users) {
-    if (suppressed.has(user.email.toLowerCase())) continue
-    const plan = await getReaderPlan(user, payload)
-    if (!planSatisfies(plan, 'base')) continue
-    recipients.push({ email: user.email, userId: user.id })
+  const seen = new Set<string>()
+  let page = 1
+  for (;;) {
+    const { docs: users, hasNextPage } = await payload.find({
+      collection: 'users',
+      where: {
+        and: [
+          { emailPublications: { in: [publicationId] } },
+          { status: { equals: 'active' } },
+          { _verified: { equals: true } },
+        ],
+      },
+      depth: 1,
+      limit: 500,
+      page,
+      overrideAccess: true,
+    })
+
+    for (const user of users) {
+      const email = user.email.trim().toLowerCase()
+      if (suppressed.has(email) || seen.has(email)) continue
+      const plan = await getReaderPlan(user, payload)
+      if (!planSatisfies(plan, 'base')) continue
+      seen.add(email)
+      recipients.push({ email, userId: user.id })
+    }
+    if (!hasNextPage) break
+    page++
   }
   return recipients
 }

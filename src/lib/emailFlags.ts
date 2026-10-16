@@ -1,4 +1,6 @@
-import type { Payload } from 'payload'
+import type { Payload, PayloadRequest } from 'payload'
+import { sql } from '@payloadcms/db-postgres'
+import { transactionDb } from './payloadTransaction'
 
 export type EmailFlagReason = 'unsubscribed' | 'spam complaint' | 'cleaned'
 
@@ -13,13 +15,21 @@ export async function flagUserByEmail(
   email: string,
   reason: EmailFlagReason,
   occurredAt: string,
+  req?: PayloadRequest,
 ): Promise<number | null> {
+  if (req?.transactionID) {
+    const transactionID = await req.transactionID
+    await transactionDb(payload, transactionID).execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext(${`email-flag:${email.toLowerCase()}`}))`,
+    )
+  }
   const { docs: users } = await payload.find({
     collection: 'users',
     where: { email: { equals: email.toLowerCase() } },
     limit: 1,
     depth: 0,
     overrideAccess: true,
+    req,
   })
   const user = users[0]
   if (!user) return null
@@ -29,22 +39,24 @@ export async function flagUserByEmail(
     where: { and: [{ user: { equals: user.id } }, { status: { in: ['open', 'following up'] } }] },
     limit: 0,
     overrideAccess: true,
+    req,
   })
   if (alreadyOpen > 0) return null
 
   const publicationsBefore = user.emailPublications ?? []
 
+  const flag = await payload.create({
+    collection: 'email-flags',
+    data: { user: user.id, reason, occurredAt, publicationsBefore, status: 'open' },
+    overrideAccess: true,
+    req,
+  })
   await payload.update({
     collection: 'users',
     id: user.id,
     data: { emailPublications: [] },
     overrideAccess: true,
-  })
-
-  const flag = await payload.create({
-    collection: 'email-flags',
-    data: { user: user.id, reason, occurredAt, publicationsBefore, status: 'open' },
-    overrideAccess: true,
+    req,
   })
 
   return flag.id

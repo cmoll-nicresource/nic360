@@ -5,9 +5,12 @@ export type SesSendInput = {
   subject: string
   html: string
   recipients: SesRecipient[]
+  test?: boolean
+  deliveryId?: number
+  onAccepted?: (messageId: string) => Promise<void>
 }
 
-export type SesSendResult = { messageCount: number }
+export type SesSendResult = { messageCount: number; messageIds?: string[] }
 
 export type SesEventType = 'Send' | 'Delivery' | 'Open' | 'Click' | 'Bounce' | 'Complaint'
 
@@ -18,13 +21,16 @@ export type SesEvent = {
   issueId?: number
   occurredAt: string
   bounceType?: string
+  messageId?: string
+  test?: boolean
+  deliveryId?: number
 }
 
 /**
  * Sending and event-tracking for publication issues, as an alternative to
  * Mailchimp campaigns — see docs/entity-map.md's Email delivery section.
  * Two implementations chosen by env SES_MODE: simulated (writes to the
- * ses-outbox collection) and live (real AWS SES, stubbed for now).
+ * ses-outbox collection) and live (private, personalized SES messages).
  */
 export interface SesClient {
   sendBulk(input: SesSendInput): Promise<SesSendResult>

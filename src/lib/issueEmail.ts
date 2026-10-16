@@ -22,7 +22,10 @@ const FONT_SANS = 'Arial, Helvetica, sans-serif'
 const FONT_SERIF = "Georgia, 'Times New Roman', serif"
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+  )
 }
 
 function excerptUrl(relationTo: string, id: number): string {
@@ -39,7 +42,7 @@ function listItemHtml(url: string, title: string): string {
 
 function renderAdHtml(ad: PublicationAd): string {
   const image = typeof ad.image === 'object' ? ad.image : null
-  const imageUrl = image?.url ? `${SITE_URL}${image.url}` : ''
+  const imageUrl = image?.url ? new URL(image.url, SITE_URL).href : ''
   const alt = image?.alt || 'Advertisement'
   const clickUrl = `${SITE_URL}/api/ads/${ad.id}/click`
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;">
@@ -93,12 +96,19 @@ function renderExcerptListBody(issue: PublicationIssue, ads: PublicationAd[]): s
 }
 
 /** Renders an Issue into the email template for its format. Templates live in code. */
-export function renderIssueEmailHtml(issue: PublicationIssue, publication: Publication, ads: PublicationAd[]): string {
+export function renderIssueEmailHtml(
+  issue: PublicationIssue,
+  publication: Publication,
+  ads: PublicationAd[],
+): string {
   const title = issue.email?.subject || issue.title
+  const preheader = issue.email?.previewText
+    ? `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(issue.email.previewText)}</div>`
+    : ''
 
   if (issue.format === 'custom-html') {
     // Designed outside the CMS by staff; trusted (editor-role+) content, not sanitized further. No header/footer/ads/masthead — fully custom.
-    return `<!doctype html>\n<html>\n<head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head>\n<body style="margin:0;padding:0;">\n${issue.body || ''}\n</body>\n</html>`
+    return `<!doctype html>\n<html>\n<head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head>\n<body style="margin:0;padding:0;">\n${preheader}${issue.body || ''}\n</body>\n</html>`
   }
 
   let bodyHtml = ''
@@ -106,7 +116,10 @@ export function renderIssueEmailHtml(issue: PublicationIssue, publication: Publi
     bodyHtml = renderExcerptListBody(issue, ads)
   } else if (issue.format === 'pdf-report') {
     const summaryHtml = issue.summary ? convertLexicalToHTML({ data: issue.summary }) : ''
-    const fileUrl = issue.file && typeof issue.file === 'object' ? `${SITE_URL}${issue.file.url}` : null
+    const fileUrl =
+      issue.file && typeof issue.file === 'object' && issue.file.url
+        ? new URL(issue.file.url, SITE_URL).href
+        : null
     const adsHtml = ads.map(renderAdHtml).join('\n')
     bodyHtml = summaryHtml + adsHtml + (fileUrl ? downloadButtonHtml(fileUrl) : '')
   }
@@ -126,6 +139,7 @@ export function renderIssueEmailHtml(issue: PublicationIssue, publication: Publi
 <title>${escapeHtml(title)}</title>
 </head>
 <body style="margin:0;padding:0;background:${COLOR.bg};">
+${preheader}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${COLOR.bg};">
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;background:#ffffff;border:1px solid ${COLOR.border};border-radius:10px;overflow:hidden;">

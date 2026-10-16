@@ -22,7 +22,7 @@ The current staff interface lives under `/admin`, including trade reports, datas
 | File storage | S3-compatible bucket via `@payloadcms/storage-s3` (AWS S3 or Cloudflare R2; endpoint is config). Local disk in development |
 | Payments | Stripe (event tickets only) |
 | Account email | AWS SES (through Payload's nodemailer email adapter; same credentials/system as the publication-issue sender below) |
-| Newsletters | Mailchimp Marketing API, behind an interface with a **simulated** implementation (see Mailchimp below) |
+| Newsletters | AWS SES, queued private sends with delivery logs, signed unsubscribe and verified SNS feedback; see `docs/newsletter-delivery.md`. Mailchimp is historical only |
 | Data grids | AG Grid (Community) on the front end |
 | Background work | Payload jobs queue with scheduled tasks |
 
@@ -89,7 +89,9 @@ Build in this order. Each milestone ends with seed data and pages you can click 
 - Stripe Checkout in test mode, with a webhook marking orders paid. Buyers can purchase tickets for colleagues, which invites them by email.
 - Done when: a test purchase of two tickets with a discount code creates an order and two registrations, and the attendees can see the event's replay.
 
-## Mailchimp (simulated for now)
+## Historical Mailchimp prototype
+
+The following describes the completed original prototype. Current publication delivery uses SES; do not implement live Mailchimp sending or configure it as a standing audience mirror. The CMS owns consent and suppression. See `docs/newsletter-delivery.md` for sending, recovery, tests and AWS prerequisites.
 
 There is no Mailchimp test audience yet. Define a `MailchimpClient` interface (`upsertMember`, `createCampaign`, `sendCampaign`, `sendTest`, and webhook parsing) with two implementations, chosen by env `MAILCHIMP_MODE=simulated|live`:
 - `simulated`: writes every call to a `mailchimp-outbox` collection (admin-only). Each entry holds the payload, the target segment, and for campaigns the **full rendered HTML**, viewable in the admin. This is how campaigns get reviewed until a test audience exists.

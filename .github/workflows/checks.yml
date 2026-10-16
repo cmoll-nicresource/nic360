@@ -26,7 +26,9 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm lint
       - run: pnpm test
-      - run: pnpm exec vitest run src/lib/writeDatasetRows.integration.test.ts src/lib/emailFlagSchema.integration.test.ts
+      - run: pnpm exec vitest run src/lib/writeDatasetRows.integration.test.ts src/lib/emailFlagSchema.integration.test.ts src/lib/ses/newsletter.integration.test.ts
         env:
           DATASET_INTEGRATION: '1'
+          NEWSLETTER_INTEGRATION: '1'
+          PAYLOAD_SECRET: 'ci-only-nic360-test-secret-not-a-live-secret'
           DATABASE_URI: postgresql://postgres:postgres@localhost:5432/nic360_test

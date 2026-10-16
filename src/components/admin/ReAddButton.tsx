@@ -18,7 +18,7 @@ export function ReAddButton() {
   async function handleClick() {
     if (
       !window.confirm(
-        'Have you already deleted this contact in Mailchimp by hand? Re-add restores their publication choices and re-syncs.',
+        'Has the reader asked to resume publication emails, and has the delivery problem been resolved? Re-add restores their previous choices. Any SES account-level suppression must also be reviewed in AWS.',
       )
     ) {
       return

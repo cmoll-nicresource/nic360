@@ -93,6 +93,8 @@ export interface Config {
     'trade-import-runs': TradeImportRun;
     'mailchimp-outbox': MailchimpOutbox;
     'ses-outbox': SesOutbox;
+    'newsletter-deliveries': NewsletterDelivery;
+    'ses-events': SesEvent;
     speakers: Speaker;
     sponsors: Sponsor;
     events: Event;
@@ -157,6 +159,8 @@ export interface Config {
     'trade-import-runs': TradeImportRunsSelect<false> | TradeImportRunsSelect<true>;
     'mailchimp-outbox': MailchimpOutboxSelect<false> | MailchimpOutboxSelect<true>;
     'ses-outbox': SesOutboxSelect<false> | SesOutboxSelect<true>;
+    'newsletter-deliveries': NewsletterDeliveriesSelect<false> | NewsletterDeliveriesSelect<true>;
+    'ses-events': SesEventsSelect<false> | SesEventsSelect<true>;
     speakers: SpeakersSelect<false> | SpeakersSelect<true>;
     sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
@@ -192,6 +196,7 @@ export interface Config {
   jobs: {
     tasks: {
       'import-uspto-trademarks': TaskImportUsptoTrademarks;
+      'send-newsletter': TaskSendNewsletter;
       inline: {
         input: unknown;
         output: unknown;
@@ -1321,6 +1326,20 @@ export interface PublicationIssue {
      */
     subject?: string | null;
     previewText?: string | null;
+    sendHtml?: string | null;
+    sendSubject?: string | null;
+    targetCount?: number | null;
+    lastError?: string | null;
+    sendAdIds?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    adsRecorded?: boolean | null;
     /**
      * Which sender actually sent this issue.
      */
@@ -1526,6 +1545,39 @@ export interface SesOutbox {
   createdAt: string;
 }
 /**
+ * SES delivery attempts. Unknown means SES may have accepted the message; it is never resent automatically.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-deliveries".
+ */
+export interface NewsletterDelivery {
+  id: number;
+  deliveryKey: string;
+  issue?: (number | null) | PublicationIssue;
+  user?: (number | null) | User;
+  recipientEmail: string;
+  status: 'queued' | 'sending' | 'sent' | 'failed' | 'unknown' | 'skipped';
+  providerMessageId?: string | null;
+  lastError?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Verified SNS events, processed once. Test events do not change audience preferences or issue statistics.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ses-events".
+ */
+export interface SesEvent {
+  id: number;
+  eventKey: string;
+  kind: string;
+  messageId?: string | null;
+  isTest?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * One row per attendee per ping while their livestream page tab is open — see src/components/LivestreamPresence.tsx. A presence log, not duration: the attendee report matches each attendee's ping timestamps against the session schedule to estimate which panels they were likely watching.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1623,7 +1675,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'import-uspto-trademarks';
+        taskSlug: 'inline' | 'import-uspto-trademarks' | 'send-newsletter';
         taskID: string;
         input?:
           | {
@@ -1656,7 +1708,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'import-uspto-trademarks') | null;
+  taskSlug?: ('inline' | 'import-uspto-trademarks' | 'send-newsletter') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1778,6 +1830,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'ses-outbox';
         value: number | SesOutbox;
+      } | null)
+    | ({
+        relationTo: 'newsletter-deliveries';
+        value: number | NewsletterDelivery;
+      } | null)
+    | ({
+        relationTo: 'ses-events';
+        value: number | SesEvent;
       } | null)
     | ({
         relationTo: 'speakers';
@@ -2333,6 +2393,12 @@ export interface PublicationIssuesSelect<T extends boolean = true> {
     | {
         subject?: T;
         previewText?: T;
+        sendHtml?: T;
+        sendSubject?: T;
+        targetCount?: T;
+        lastError?: T;
+        sendAdIds?: T;
+        adsRecorded?: T;
         provider?: T;
         campaignId?: T;
         status?: T;
@@ -2473,6 +2539,33 @@ export interface SesOutboxSelect<T extends boolean = true> {
   subject?: T;
   recipientCount?: T;
   html?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-deliveries_select".
+ */
+export interface NewsletterDeliveriesSelect<T extends boolean = true> {
+  deliveryKey?: T;
+  issue?: T;
+  user?: T;
+  recipientEmail?: T;
+  status?: T;
+  providerMessageId?: T;
+  lastError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ses-events_select".
+ */
+export interface SesEventsSelect<T extends boolean = true> {
+  eventKey?: T;
+  kind?: T;
+  messageId?: T;
+  isTest?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2832,6 +2925,16 @@ export interface TaskImportUsptoTrademarks {
     issueDate?: string | null;
     skipped?: boolean | null;
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSend-newsletter".
+ */
+export interface TaskSendNewsletter {
+  input: {
+    issueId: number;
+  };
+  output?: unknown;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
