@@ -2,6 +2,7 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import type { Payload } from 'payload'
+import { publicationSelectionRules } from '../../src/lib/publicationSelectionPolicy'
 
 import { lexicalFromText } from '../../src/lib/lexical'
 import { buildSectionsFromRules } from '../../src/lib/publicationRules'
@@ -17,7 +18,12 @@ const PLACEHOLDER_PNG_BASE64 =
 async function placeholderMedia(payload: Payload, alt: string) {
   const tmpPath = path.join(os.tmpdir(), `nic360-${alt.replace(/\W+/g, '-')}.png`)
   fs.writeFileSync(tmpPath, Buffer.from(PLACEHOLDER_PNG_BASE64, 'base64'))
-  const doc = await payload.create({ collection: 'media', data: { alt }, filePath: tmpPath, overrideAccess: true })
+  const doc = await payload.create({
+    collection: 'media',
+    data: { alt },
+    filePath: tmpPath,
+    overrideAccess: true,
+  })
   fs.unlinkSync(tmpPath)
   return doc
 }
@@ -40,6 +46,15 @@ export async function seedMailchimpSettings(payload: Payload) {
 
 export async function seedPublications(payload: Payload) {
   console.log('Seeding publications...')
+  const us = await payload.find({
+    collection: 'locations',
+    where: { and: [{ name: { equals: 'United States' } }, { level: { equals: 'country' } }] },
+    depth: 0,
+    limit: 2,
+    overrideAccess: true,
+  })
+  if (us.docs.length !== 1)
+    throw new Error('Seed the United States country location before publications.')
 
   const { docs: vaporProductDocs } = await payload.find({
     collection: 'products',
@@ -59,19 +74,24 @@ export async function seedPublications(payload: Payload) {
       frequency: 'daily' as const,
       mailchimpInterestId: 'sim_interest_daily_executive_summary',
       mailchimpSegmentId: 'sim_segment_daily_executive_summary',
-      selectionRules: { excerptTypes: ['articles', 'bills'] as ('articles' | 'bills' | 'trademarks')[] },
+      selectionRules: {
+        excerptTypes: ['articles', 'bills'] as ('articles' | 'bills' | 'trademarks')[],
+      },
     },
     {
       title: 'Weekly Executive Summary',
       slug: 'weekly-executive-summary',
-      description: 'A weekly roundup of the top news, legislation and trademark activity across the industry.',
+      description:
+        'A weekly roundup of the top news, legislation and trademark activity across the industry.',
       category: ['news'] as ('news' | 'legislation' | 'trademarks')[],
       format: 'excerpt-list' as const,
       frequency: 'weekly' as const,
       mailchimpInterestId: 'sim_interest_weekly_executive_summary',
       mailchimpSegmentId: 'sim_segment_weekly_executive_summary',
       selectionRules: {
-        excerptTypes: ['articles', 'bills', 'trademarks'] as ('articles' | 'bills' | 'trademarks')[],
+        excerptTypes: ['articles', 'bills', 'trademarks'] as (
+          'articles' | 'bills' | 'trademarks'
+        )[],
       },
       groupingRules: { groupBy: 'sector' as const },
     },
@@ -87,7 +107,8 @@ export async function seedPublications(payload: Payload) {
       selectionRules: {
         excerptTypes: ['articles'] as ('articles' | 'bills' | 'trademarks')[],
       },
-      header: '<table width="100%"><tr><td style="font-size:12px;color:#666;">Nicotine360 — US News Clippings</td></tr></table>',
+      header:
+        '<table width="100%"><tr><td style="font-size:12px;color:#666;">Nicotine360 — US News Clippings</td></tr></table>',
       footer: `<hr><p style="font-size:11px;color:#999;">You are receiving this because your company subscribes to Nicotine360. <a href="${SITE_URL}/account">Manage your preferences</a>.</p>`,
     },
     {
@@ -99,7 +120,9 @@ export async function seedPublications(payload: Payload) {
       frequency: 'weekly' as const,
       mailchimpInterestId: 'sim_interest_global_news_clippings',
       mailchimpSegmentId: 'sim_segment_global_news_clippings',
-      selectionRules: { excerptTypes: ['articles', 'bills'] as ('articles' | 'bills' | 'trademarks')[] },
+      selectionRules: {
+        excerptTypes: ['articles', 'bills'] as ('articles' | 'bills' | 'trademarks')[],
+      },
       groupingRules: { groupBy: 'region' as const, thenGroupBy: 'primarySubject' as const },
     },
     {
@@ -185,7 +208,10 @@ export async function seedPublications(payload: Payload) {
         format: def.format,
         frequency: def.frequency,
         generator: def.generator ?? 'manual',
-        selectionRules: def.selectionRules,
+        selectionRules:
+          def.format === 'excerpt-list'
+            ? publicationSelectionRules(def, us.docs[0].id)
+            : def.selectionRules,
         groupingRules: def.groupingRules,
         header: 'header' in def ? def.header : undefined,
         footer: 'footer' in def ? def.footer : undefined,
@@ -226,7 +252,10 @@ export async function seedPublicationAds(payload: Payload, publications: Record<
 }
 
 /** Demonstrates the full "build from rules, then send" flow using the real code paths. */
-export async function seedIssuesAndSendDemo(payload: Payload, publications: Record<string, number>) {
+export async function seedIssuesAndSendDemo(
+  payload: Payload,
+  publications: Record<string, number>,
+) {
   console.log('Seeding issues (building one from rules, sending one)...')
 
   // 1. An excerpt-list issue, built from its publication's rules — the same
@@ -278,10 +307,14 @@ export async function seedIssuesAndSendDemo(payload: Payload, publications: Reco
   await payload.update({
     collection: 'publication-issues',
     id: builtIssue.id,
-    data: { email: { ...fullIssue.email, campaignId, status: 'sent', sentAt: new Date().toISOString() } },
+    data: {
+      email: { ...fullIssue.email, campaignId, status: 'sent', sentAt: new Date().toISOString() },
+    },
     overrideAccess: true,
   })
-  console.log(`  Sent "${fullIssue.title}" (campaign ${campaignId}) — check the mailchimp-outbox collection.`)
+  console.log(
+    `  Sent "${fullIssue.title}" (campaign ${campaignId}) — check the mailchimp-outbox collection.`,
+  )
 
   // 3. A second, not-yet-sent draft issue so staff have something to try
   // Build from rules / Send on themselves in the admin.
@@ -327,7 +360,10 @@ export async function seedIssuesAndSendDemo(payload: Payload, publications: Reco
  * e.g. the "last 10 Daily Executive Summaries" scenario this was built for.
  * Alternates `email.provider` between mailchimp/ses so both show up too.
  */
-export async function seedPublicationEngagementHistory(payload: Payload, publications: Record<string, number>) {
+export async function seedPublicationEngagementHistory(
+  payload: Payload,
+  publications: Record<string, number>,
+) {
   console.log('Seeding publication engagement history...')
 
   const targets = [
@@ -338,7 +374,11 @@ export async function seedPublicationEngagementHistory(payload: Payload, publica
   for (const target of targets) {
     const publicationId = publications[target.slug]
     if (!publicationId) continue
-    const pub = await payload.findByID({ collection: 'publications', id: publicationId, overrideAccess: true })
+    const pub = await payload.findByID({
+      collection: 'publications',
+      id: publicationId,
+      overrideAccess: true,
+    })
 
     for (let i = 0; i < target.count; i++) {
       const issueDate = new Date(Date.now() - i * target.frequencyDays * 24 * 60 * 60 * 1000)
@@ -361,7 +401,8 @@ export async function seedPublicationEngagementHistory(payload: Payload, publica
           email: {
             subject: pub.title,
             provider,
-            campaignId: provider === 'ses' ? `ses-seed-${target.slug}-${i}` : `sim_seed_${target.slug}_${i}`,
+            campaignId:
+              provider === 'ses' ? `ses-seed-${target.slug}-${i}` : `sim_seed_${target.slug}_${i}`,
             status: 'sent',
             sentAt: issueDate.toISOString(),
           },

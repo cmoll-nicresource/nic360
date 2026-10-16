@@ -4,6 +4,7 @@ Updated October 16, 2026. This is the current work list. The original milestones
 
 ## Completed
 
+- October 16: [excerpt publication selection](./publication-selection.md) corrected: US geography, Global's mixed-location exception, news-only Clippings, published excerpts, issue-date windows and full pagination, with saved-rule repair and regression coverage.
 - October 16: [company usage reports](./company-usage-reports.md) for admins/gatekeepers, with provider/date selection, all current users, activity summaries and CSV export.
 - October 16: role-specific admin workspace: daily editorial actions and drafts for editors; subscriptions, readers, attendees and orders for gatekeepers. Taxonomy management and staff directory are admin only; existing-term selectors and own-account access remain available. See [staff workspace](./staff-workspace.md).
 - Reader design refresh, supplied photography, unified staff workspace under `/admin`, full dataset loading/exports and access checks.

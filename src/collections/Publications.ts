@@ -47,7 +47,7 @@ export const Publications: CollectionConfig = {
       ],
       admin: {
         description:
-          'Which tracking categories this publication draws from — a publication can belong to more than one (e.g. an executive summary covering news and legislation). Groups this publication in the main nav\'s Publications dropdown and on the Publications page.',
+          "Which tracking categories this publication draws from — a publication can belong to more than one (e.g. an executive summary covering news and legislation). Groups this publication in the main nav's Publications dropdown and on the Publications page.",
       },
     },
     {
@@ -74,7 +74,8 @@ export const Publications: CollectionConfig = {
       required: true,
       defaultValue: 'manual',
       admin: {
-        description: 'Manual for every publication except the automated trademark and trade-barometer reports.',
+        description:
+          'Manual for every publication except the automated trademark and trade-barometer reports.',
       },
       options: [
         { label: 'Manual', value: 'manual' },
@@ -89,14 +90,19 @@ export const Publications: CollectionConfig = {
       type: 'group',
       admin: {
         condition: (data) => data?.format === 'excerpt-list',
-        description: 'Defaults for building an issue; editors can still adjust each issue afterward.',
+        description:
+          'Builds use the saved issue date and published excerpts. Clippings are news only; US Clippings covers all products in the US, and Global Clippings requires a non-US location (mixed US/non-US stories qualify). Editors can adjust an issue afterward.',
       },
       fields: [
         {
           name: 'window',
           label: 'Window (days back)',
           type: 'number',
-          admin: { description: 'Defaults from frequency if left blank: 1/7/30.' },
+          min: 1,
+          admin: {
+            description:
+              'Calendar days ending on and including the saved issue date, in Eastern time. Defaults from frequency if blank: 1/7/30.',
+          },
         },
         {
           name: 'excerptTypes',
@@ -123,12 +129,28 @@ export const Publications: CollectionConfig = {
           name: 'groupBy',
           type: 'select',
           defaultValue: 'none',
-          options: ['none', 'region', 'country', 'primarySubject', 'sector', 'product', 'excerptType'],
+          options: [
+            'none',
+            'region',
+            'country',
+            'primarySubject',
+            'sector',
+            'product',
+            'excerptType',
+          ],
         },
         {
           name: 'thenGroupBy',
           type: 'select',
-          options: ['none', 'region', 'country', 'primarySubject', 'sector', 'product', 'excerptType'],
+          options: [
+            'none',
+            'region',
+            'country',
+            'primarySubject',
+            'sector',
+            'product',
+            'excerptType',
+          ],
         },
         {
           name: 'sortBy',
@@ -158,7 +180,8 @@ export const Publications: CollectionConfig = {
       type: 'code',
       admin: {
         language: 'html',
-        description: 'Rendered after the tracking content / PDF download link in every issue (email and web).',
+        description:
+          'Rendered after the tracking content / PDF download link in every issue (email and web).',
       },
     },
     {
@@ -169,7 +192,10 @@ export const Publications: CollectionConfig = {
           name: 'interestId',
           label: 'Interest ID',
           type: 'text',
-          admin: { description: "This publication's checkbox in the audience's Publications interest group." },
+          admin: {
+            description:
+              "This publication's checkbox in the audience's Publications interest group.",
+          },
         },
         {
           name: 'segmentId',

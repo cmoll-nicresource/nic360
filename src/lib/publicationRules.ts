@@ -1,6 +1,8 @@
 import type { Payload, Where } from 'payload'
 
 import type { Article, Bill, Location, Publication, Trademark } from '@/payload-types'
+import { publicationGeography, publicationSelectionRules } from './publicationSelectionPolicy'
+import { publicationDateWindow } from './publicationDateWindow'
 
 type ExcerptType = 'articles' | 'bills' | 'trademarks'
 type ExcerptDoc = (Article | Bill | Trademark) & { collection: ExcerptType }
@@ -24,14 +26,8 @@ function idOf(ref: number | { id: number } | null | undefined): number | undefin
 
 /** Expands a set of location ids to include every descendant, so a rule for
  * "United States" also matches items tagged with "Pennsylvania". */
-async function expandLocationDescendants(payload: Payload, rootIds: number[]): Promise<number[]> {
+function expandLocationDescendants(allLocations: Location[], rootIds: number[]): number[] {
   if (rootIds.length === 0) return []
-  const { docs: allLocations } = await payload.find({
-    collection: 'locations',
-    limit: 1000,
-    depth: 0,
-    overrideAccess: true,
-  })
   const childrenByParent = new Map<number, number[]>()
   for (const loc of allLocations) {
     const parentId = idOf(loc.parent)
@@ -52,12 +48,17 @@ async function expandLocationDescendants(payload: Payload, rootIds: number[]): P
 }
 
 async function buildWhereForType(
-  payload: Payload,
+  allLocations: Location[],
   type: ExcerptType,
   since: string,
+  until: string,
   rules: NonNullable<Publication['selectionRules']>,
+  foreignIds?: number[],
 ): Promise<Where> {
-  const and: Where[] = [{ [DATE_FIELD[type]]: { greater_than_equal: since } }]
+  const and: Where[] = [
+    { _status: { equals: 'published' } },
+    { [DATE_FIELD[type]]: { greater_than_equal: since, less_than: until } },
+  ]
 
   if (type === 'trademarks') return { and } // Trademarks carry no index terms.
 
@@ -73,33 +74,61 @@ async function buildWhereForType(
   const includeIds = (locRule?.include ?? []).map(idOf).filter((v): v is number => v != null)
   const excludeIds = (locRule?.exclude ?? []).map(idOf).filter((v): v is number => v != null)
   if (includeIds.length) {
-    and.push({ locations: { in: await expandLocationDescendants(payload, includeIds) } })
+    and.push({ locations: { in: expandLocationDescendants(allLocations, includeIds) } })
   }
   if (excludeIds.length) {
-    and.push({ locations: { not_in: await expandLocationDescendants(payload, excludeIds) } })
+    // Global Clippings uses a positive non-US match below. A blanket NOT US
+    // would incorrectly reject a story tagged both United States and China.
+    const excluded = expandLocationDescendants(allLocations, excludeIds)
+    const strictExcluded = foreignIds ? excluded.filter((id) => foreignIds.includes(id)) : excluded
+    if (strictExcluded.length) and.push({ locations: { not_in: strictExcluded } })
+  }
+
+  if (foreignIds) {
+    if (!foreignIds.length)
+      throw new Error('No non-US locations are configured for Global News Clippings.')
+    and.push({ locations: { in: foreignIds } })
   }
 
   return { and }
 }
 
-async function fetchSelectedItems(payload: Payload, publication: Publication): Promise<ExcerptDoc[]> {
-  const rules = publication.selectionRules ?? {}
-  const windowDays = rules.window || DEFAULT_WINDOW_DAYS[publication.frequency]
-  const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString()
+async function fetchSelectedItems(
+  payload: Payload,
+  publication: Publication,
+  allLocations: Location[],
+  issueDate: string,
+  foreignIds?: number[],
+): Promise<ExcerptDoc[]> {
+  const us = allLocations.filter(
+    (l) => l.level === 'country' && l.name.trim().toLowerCase() === 'united states',
+  )
+  const rules = publicationSelectionRules(publication, us.length === 1 ? us[0].id : undefined)
+  const windowDays = rules.window ?? DEFAULT_WINDOW_DAYS[publication.frequency]
+  const { since, until } = publicationDateWindow(issueDate, windowDays)
   const types = (rules.excerptTypes?.length ? rules.excerptTypes : ['articles']) as ExcerptType[]
 
   const results: ExcerptDoc[] = []
   for (const type of types) {
-    const where = await buildWhereForType(payload, type, since, rules)
-    const { docs } = await payload.find({
-      collection: type,
-      where,
-      depth: 1,
-      limit: 500,
-      overrideAccess: true,
-    })
-    for (const doc of docs) {
-      results.push({ ...doc, collection: type } as ExcerptDoc)
+    const where = await buildWhereForType(allLocations, type, since, until, rules, foreignIds)
+    let page = 1,
+      more = true
+    while (more) {
+      const result = await payload.find({
+        collection: type,
+        where,
+        depth: 1,
+        limit: 500,
+        page,
+        sort: 'id',
+        draft: false,
+        overrideAccess: true,
+      })
+      for (const doc of result.docs) {
+        results.push({ ...doc, collection: type } as ExcerptDoc)
+      }
+      more = result.hasNextPage
+      page++
     }
   }
   return results
@@ -169,7 +198,10 @@ async function groupKeyFor(
   }
 }
 
-function sortItems(items: ExcerptDoc[], sortBy: NonNullable<Publication['groupingRules']>['sortBy']) {
+function sortItems(
+  items: ExcerptDoc[],
+  sortBy: NonNullable<Publication['groupingRules']>['sortBy'],
+) {
   const sorted = [...items]
   if (sortBy === 'title') {
     sorted.sort((a, b) => a.title.localeCompare(b.title))
@@ -183,21 +215,59 @@ function sortItems(items: ExcerptDoc[], sortBy: NonNullable<Publication['groupin
   return sorted
 }
 
-export type BuiltSection = { heading: string; items: Array<{ relationTo: ExcerptType; value: number }> }
+export type BuiltSection = {
+  heading: string
+  items: Array<{ relationTo: ExcerptType; value: number }>
+}
 
 /** The "Build from rules" step: runs a publication's selection rules over the
  * date window, groups and sorts the results, and returns `sections` ready to
  * assign onto an Issue. Editors can then remove, add or reorder items. */
-export async function buildSectionsFromRules(payload: Payload, publication: Publication): Promise<BuiltSection[]> {
-  const items = await fetchSelectedItems(payload, publication)
+export async function buildSectionsFromRules(
+  payload: Payload,
+  publication: Publication,
+  issueDate = new Date().toISOString(),
+): Promise<BuiltSection[]> {
   const grouping = publication.groupingRules ?? { groupBy: 'none', sortBy: 'sourceDateDesc' }
 
-  const { docs: allLocations } = await payload.find({
-    collection: 'locations',
-    limit: 1000,
-    depth: 0,
-    overrideAccess: true,
-  })
+  const allLocations: Location[] = []
+  let page = 1,
+    more = true
+  while (more) {
+    const result = await payload.find({
+      collection: 'locations',
+      limit: 500,
+      page,
+      sort: 'id',
+      depth: 0,
+      overrideAccess: true,
+    })
+    allLocations.push(...result.docs)
+    more = result.hasNextPage
+    page++
+  }
+  let foreignIds: number[] | undefined
+  if (publicationGeography(publication) === 'non-us') {
+    const us = allLocations.filter(
+      (l) => l.level === 'country' && l.name.trim().toLowerCase() === 'united states',
+    )
+    if (us.length !== 1)
+      throw new Error(
+        'A unique United States country location is required to build Global News Clippings.',
+      )
+    const domestic = new Set(expandLocationDescendants(allLocations, [us[0].id]))
+    foreignIds = allLocations.filter((l) => !domestic.has(l.id)).map((l) => l.id)
+  }
+  const items = await fetchSelectedItems(payload, publication, allLocations, issueDate, foreignIds)
+  // For mixed US/non-US stories, group by the non-US location in Global.
+  if (foreignIds)
+    for (const item of items)
+      if (item.collection !== 'trademarks') {
+        const excerpt = item as Article | Bill
+        excerpt.locations = (excerpt.locations ?? []).filter((ref) =>
+          foreignIds!.includes(idOf(ref)!),
+        )
+      }
   const locationsById = new Map(allLocations.map((l) => [l.id, l]))
 
   const groups = new Map<string, ExcerptDoc[]>()
@@ -216,6 +286,9 @@ export async function buildSectionsFromRules(payload: Payload, publication: Publ
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([heading, groupItems]) => ({
       heading,
-      items: sortItems(groupItems, sortBy).map((item) => ({ relationTo: item.collection, value: item.id })),
+      items: sortItems(groupItems, sortBy).map((item) => ({
+        relationTo: item.collection,
+        value: item.id,
+      })),
     }))
 }

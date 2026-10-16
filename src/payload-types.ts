@@ -461,11 +461,11 @@ export interface Publication {
    */
   generator: 'manual' | 'weekly-trademark-report' | 'monthly-trademark-activity' | 'monthly-trade-barometer';
   /**
-   * Defaults for building an issue; editors can still adjust each issue afterward.
+   * Builds use the saved issue date and published excerpts. Clippings are news only; US Clippings covers all products in the US, and Global Clippings requires a non-US location (mixed US/non-US stories qualify). Editors can adjust an issue afterward.
    */
   selectionRules?: {
     /**
-     * Defaults from frequency if left blank: 1/7/30.
+     * Calendar days ending on and including the saved issue date, in Eastern time. Defaults from frequency if blank: 1/7/30.
      */
     window?: number | null;
     excerptTypes?: ('articles' | 'bills' | 'trademarks')[] | null;
