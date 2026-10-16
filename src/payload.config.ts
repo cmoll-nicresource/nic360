@@ -3,6 +3,7 @@ import { NewsletterDeliveries } from './collections/NewsletterDeliveries'
 import { SesEvents } from './collections/SesEvents'
 import { newsletterSendTask } from './jobs/newsletterSendTask'
 import { operationsMonitorTask } from './jobs/operationsMonitorTask'
+import { eventInvitationsTask } from './jobs/eventInvitationsTask'
 import { OperationalAlerts } from './collections/OperationalAlerts'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
@@ -196,7 +197,7 @@ export default buildConfig({
   globals: [MailchimpSettings],
   plugins,
   jobs: {
-    tasks: [tmogImportTask, newsletterSendTask, operationsMonitorTask],
+    tasks: [tmogImportTask, newsletterSendTask, operationsMonitorTask, eventInvitationsTask],
     // Ticks the 'tmog-import' queue every Friday at 12:00 UTC: picks up
     // whatever's queued (including the job the task's own `schedule` just
     // auto-queued for this tick) and runs it. Not used on serverless hosts,
@@ -206,6 +207,7 @@ export default buildConfig({
       { cron: '0 12 * * 5', queue: 'tmog-import', limit: 1 },
       { cron: '* * * * *', queue: 'newsletters', limit: 1 },
       { cron: '*/5 * * * *', queue: 'operations', limit: 1 },
+      { cron: '* * * * *', queue: 'event-invitations', limit: 1 },
     ],
   },
   editor: lexicalEditor(),

@@ -8,6 +8,31 @@ export async function collectOperationalConditions(
   now: Date,
 ): Promise<AlertCondition[]> {
   const conditions: AlertCondition[] = []
+  let orderPage = 1
+  for (;;) {
+    const orders = await payload.find({
+      collection: 'orders',
+      where: {
+        and: [
+          { updatedAt: { greater_than_equal: since.toISOString() } },
+          { fulfillmentError: { exists: true } },
+        ],
+      },
+      depth: 0,
+      limit: 100,
+      page: orderPage,
+      overrideAccess: true,
+    })
+    for (const order of orders.docs)
+      conditions.push({
+        key: `event-order:${order.id}`,
+        title: 'Event checkout or invitation needs attention',
+        message: order.fulfillmentError || 'Review this order and its invitation job.',
+        path: `/admin/collections/orders/${order.id}`,
+      })
+    if (!orders.hasNextPage) break
+    orderPage++
+  }
   let page = 1
   for (;;) {
     const result = await payload.find({

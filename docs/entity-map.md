@@ -370,7 +370,8 @@ One ticket for one attendee.
 | `attendance` | select: in person · virtual | ✓ |
 | `priceBasis` | select: standard · subscriber | which price applied |
 | `amountPaid` | number | after discount |
-| `status` | select: active · cancelled | |
+| `status` | select: pending · active · cancelled | Checkout tickets become active only after verified payment/free fulfillment |
+| `inviteRequired`, `inviteSentAt` | checkbox/date, read-only | New-colleague invitation work and accepted-mail timestamp |
 
 - **Buying for colleagues:** the buyer enters each attendee's name and email. If the email already has an account, the ticket attaches to it; otherwise the attendee gets an invite, and the ticket attaches when they register.
 - **Subscriber price** is judged on the buyer's company, which in practice is the attendees' company too.
@@ -804,6 +805,8 @@ All read-only. Verified SES events populate current delivery statistics; importe
 **`/admin/analytics`'s Publications tab** (`src/lib/publicationAnalytics.ts`): search sent issues by publication, date range and/or a title keyword; see each matched issue's recipients/opens/clicks/bounces/complaints and computed open/click rate, plus totals and averages across the whole matched set. The average rate is the mean of each issue's *own* rate (issues with zero recipients excluded, not counted as 0%) — summed opens over summed recipients would let one huge issue dominate the average, which isn't what "average click rate across these issues" should mean.
 
 ## Services
+
+Event checkout's current payment/reservation/invitation behavior and verification status are documented in [event-checkout.md](./event-checkout.md). It supersedes the prototype checkout shortcuts: pending tickets grant no access, fulfillment is transactional/idempotent, cents match exactly, and colleague invitations use a persistent retryable queue. Beta test-key provisioning and actual card/webhook tests remain pending until recorded in that runbook.
 
 | Need | Service |
 |---|---|

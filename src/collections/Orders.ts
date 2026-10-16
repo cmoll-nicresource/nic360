@@ -29,7 +29,12 @@ export const Orders: CollectionConfig = {
     { name: 'buyer', type: 'relationship', relationTo: 'users', required: true },
     { name: 'event', type: 'relationship', relationTo: 'events', required: true },
     { name: 'registrations', type: 'join', collection: 'event-registrations', on: 'order' },
-    { name: 'discountCode', label: 'Discount code', type: 'relationship', relationTo: 'discount-codes' },
+    {
+      name: 'discountCode',
+      label: 'Discount code',
+      type: 'relationship',
+      relationTo: 'discount-codes',
+    },
     {
       type: 'row',
       fields: [
@@ -47,5 +52,8 @@ export const Orders: CollectionConfig = {
     },
     { name: 'paidAt', type: 'date' },
     { name: 'paymentRef', label: 'Payment reference', type: 'text' },
+    { name: 'stripeSessionId', type: 'text', index: true, admin: { readOnly: true } },
+    { name: 'checkoutExpiresAt', type: 'date', admin: { readOnly: true } },
+    { name: 'fulfillmentError', type: 'textarea', admin: { readOnly: true } },
   ],
 }

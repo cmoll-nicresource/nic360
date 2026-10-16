@@ -37,3 +37,8 @@ jobs:
           OPERATIONS_INTEGRATION: '1'
           PAYLOAD_SECRET: 'ci-only-nic360-test-secret-not-a-live-secret'
           DATABASE_URI: postgresql://postgres:postgres@localhost:5432/nic360_test
+      - run: pnpm exec vitest run src/lib/checkout.integration.test.ts
+        env:
+          CHECKOUT_INTEGRATION: '1'
+          PAYLOAD_SECRET: 'ci-only-nic360-test-secret-not-a-live-secret'
+          DATABASE_URI: postgresql://postgres:postgres@localhost:5432/nic360_test

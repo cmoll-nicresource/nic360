@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { Payload, PayloadRequest, Where } from 'payload'
 
 import type { DiscountCode, Event } from '@/payload-types'
 
@@ -29,12 +29,14 @@ export async function validateDiscountCode(
   event: Event,
   ticketTypeName: string,
   quantity: number,
+  req?: PayloadRequest,
 ): Promise<DiscountValidation> {
   const { docs } = await payload.find({
     collection: 'discount-codes',
     where: { code: { equals: code } },
     limit: 1,
     overrideAccess: true,
+    req,
   })
   const discount = docs[0]
   if (!discount) return { error: 'Invalid discount code.' }
@@ -46,15 +48,19 @@ export async function validateDiscountCode(
     return { error: 'This code has expired.' }
   }
 
-  if (discount.ticketTypes?.length && !discount.ticketTypes.some((t) => t.name === ticketTypeName)) {
+  if (
+    discount.ticketTypes?.length &&
+    !discount.ticketTypes.some((t) => t.name === ticketTypeName)
+  ) {
     return { error: 'This code does not apply to the selected ticket type.' }
   }
 
   const { totalDocs: usesSoFar } = await payload.find({
     collection: 'event-registrations',
-    where: { and: [{ discountCode: { equals: discount.id } }, { status: { equals: 'active' } }] },
+    where: { and: [{ discountCode: { equals: discount.id } }, reservedTicketWhere()] },
     limit: 0,
     overrideAccess: true,
+    req,
   })
   if (usesSoFar + quantity > discount.maxUses) {
     return { error: `This code only has ${Math.max(discount.maxUses - usesSoFar, 0)} use(s) left.` }
@@ -64,6 +70,32 @@ export async function validateDiscountCode(
 }
 
 export type PricedAttendee = { name: string; email: string; unitPrice: number }
+
+export function reservedTicketWhere(): Where {
+  return {
+    or: [
+      { and: [{ status: { equals: 'active' } }, { 'order.status': { equals: 'paid' } }] },
+      {
+        and: [
+          { status: { equals: 'pending' as const } },
+          { 'order.status': { equals: 'pending' } },
+          { 'order.checkoutExpiresAt': { greater_than: new Date().toISOString() } },
+        ],
+      },
+    ],
+  }
+}
+
+/** Distribute cents without charging a rounded per-ticket price times quantity. */
+export function allocateTicketCents(total: number, count: number): number[] {
+  const cents = Math.round(total * 100)
+  if (!Number.isSafeInteger(cents) || cents < 0 || !Number.isSafeInteger(count) || count < 1)
+    throw new Error('Invalid ticket pricing.')
+  return Array.from(
+    { length: count },
+    (_, index) => Math.floor(cents / count) + (index < cents % count ? 1 : 0),
+  )
+}
 
 export type OrderPricing = {
   unitPrice: number
@@ -83,8 +115,15 @@ export function priceOrder({
   discount: DiscountCode | null
   priceBasis: 'standard' | 'subscriber'
 }): Omit<OrderPricing, 'priceBasis'> {
-  const subtotal = unitPrice * attendeeCount
-  const discountAmount = discount ? Math.round(subtotal * (discount.percentOff / 100) * 100) / 100 : 0
-  const total = Math.max(subtotal - discountAmount, 0)
-  return { unitPrice, subtotal, discountAmount, total }
+  const unitCents = Math.round(unitPrice * 100)
+  const subtotalCents = unitCents * attendeeCount
+  if (!Number.isSafeInteger(subtotalCents) || unitCents < 0 || attendeeCount < 1)
+    throw new Error('Invalid ticket pricing.')
+  const discountCents = discount ? Math.round((subtotalCents * discount.percentOff) / 100) : 0
+  return {
+    unitPrice: unitCents / 100,
+    subtotal: subtotalCents / 100,
+    discountAmount: discountCents / 100,
+    total: Math.max(subtotalCents - discountCents, 0) / 100,
+  }
 }

@@ -7,7 +7,10 @@ import { ADMIN_GROUPS } from '@/config/adminGroups'
 const readOwnOrManaged: Access = ({ req }) => {
   if (staffHasRole(req.user, 'gatekeeper')) return true
   if (req.user?.collection === 'users') {
-    const or: Where[] = [{ attendee: { equals: req.user.id } }, { 'order.buyer': { equals: req.user.id } }]
+    const or: Where[] = [
+      { attendee: { equals: req.user.id } },
+      { 'order.buyer': { equals: req.user.id } },
+    ]
     return { or }
   }
   return false
@@ -74,7 +77,9 @@ export const EventRegistrations: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'active',
-      options: ['active', 'cancelled'],
+      options: ['pending', 'active', 'cancelled'],
     },
+    { name: 'inviteRequired', type: 'checkbox', defaultValue: false, admin: { readOnly: true } },
+    { name: 'inviteSentAt', type: 'date', admin: { readOnly: true } },
   ],
 }

@@ -8,17 +8,31 @@ import type { Payload } from 'payload'
 // session schedule after the fact.
 export const PING_INTERVAL_MINUTES = 2
 
-export type SessionTimeInfo = { id: number; title: string; day: string; startTime?: string | null; endTime?: string | null }
+export type SessionTimeInfo = {
+  id: number
+  title: string
+  day: string
+  startTime?: string | null
+  endTime?: string | null
+}
 
 /** Combines a Session's `day` (date part) with `startTime`/`endTime` (time-of-day part, stored as a full timestamp on an otherwise-irrelevant date by Payload's time-only picker) into one absolute instant. Null if either half is missing/invalid. */
-export function combineDayAndTime(day: string | Date, time: string | Date | null | undefined): Date | null {
+export function combineDayAndTime(
+  day: string | Date,
+  time: string | Date | null | undefined,
+): Date | null {
   if (!time) return null
   const dayDate = new Date(day)
   const timeDate = new Date(time)
   if (Number.isNaN(dayDate.getTime()) || Number.isNaN(timeDate.getTime())) return null
 
   const combined = new Date(dayDate)
-  combined.setUTCHours(timeDate.getUTCHours(), timeDate.getUTCMinutes(), timeDate.getUTCSeconds(), 0)
+  combined.setUTCHours(
+    timeDate.getUTCHours(),
+    timeDate.getUTCMinutes(),
+    timeDate.getUTCSeconds(),
+    0,
+  )
   return combined
 }
 
@@ -44,7 +58,10 @@ export type SessionAttendance = {
  * one — e.g. breaks). A ping can match more than one session if their
  * windows overlap.
  */
-export function matchPingsToSessions(pingTimestamps: Date[], sessions: SessionTimeInfo[]): SessionAttendance[] {
+export function matchPingsToSessions(
+  pingTimestamps: Date[],
+  sessions: SessionTimeInfo[],
+): SessionAttendance[] {
   const bySession = new Map<number, { title: string; count: number }>()
 
   for (const session of sessions) {
@@ -69,7 +86,7 @@ export type AttendeeReportRow = {
   attendeeEmail: string
   ticketType: string
   attendance: 'in-person' | 'virtual'
-  status: 'active' | 'cancelled'
+  status: 'pending' | 'active' | 'cancelled'
   amountPaid: number
   discountCode: string | null
   sessionsAttended: SessionAttendance[]
@@ -84,7 +101,10 @@ export type AttendeeReportRow = {
  * account yet (no `attendee` relationship set) simply get no pings — they
  * can't have any, since the livestream page requires sign-in.
  */
-export async function getAttendeeReport(payload: Payload, eventId: number): Promise<AttendeeReportRow[]> {
+export async function getAttendeeReport(
+  payload: Payload,
+  eventId: number,
+): Promise<AttendeeReportRow[]> {
   const [{ docs: registrations }, { docs: sessions }, { docs: pings }] = await Promise.all([
     payload.find({
       collection: 'event-registrations',
@@ -138,7 +158,8 @@ export async function getAttendeeReport(payload: Payload, eventId: number): Prom
       attendance: r.attendance,
       status: r.status,
       amountPaid: r.amountPaid,
-      discountCode: typeof r.discountCode === 'object' && r.discountCode ? r.discountCode.code : null,
+      discountCode:
+        typeof r.discountCode === 'object' && r.discountCode ? r.discountCode.code : null,
       sessionsAttended,
       totalPings: userPings.length,
       estimatedTotalMinutes: userPings.length * PING_INTERVAL_MINUTES,
@@ -189,7 +210,11 @@ export function getSessionPopularity(rows: AttendeeReportRow[]): SessionPopulari
 
   for (const row of rows) {
     for (const s of row.sessionsAttended) {
-      const entry = bySession.get(s.sessionId) ?? { title: s.sessionTitle, attendees: 0, minutes: 0 }
+      const entry = bySession.get(s.sessionId) ?? {
+        title: s.sessionTitle,
+        attendees: 0,
+        minutes: 0,
+      }
       entry.attendees += 1
       entry.minutes += s.estimatedMinutes
       bySession.set(s.sessionId, entry)

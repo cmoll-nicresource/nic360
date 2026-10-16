@@ -200,6 +200,7 @@ export interface Config {
       'import-uspto-trademarks': TaskImportUsptoTrademarks;
       'send-newsletter': TaskSendNewsletter;
       'monitor-operations': TaskMonitorOperations;
+      'invite-event-attendees': TaskInviteEventAttendees;
       inline: {
         input: unknown;
         output: unknown;
@@ -600,7 +601,9 @@ export interface EventRegistration {
   priceBasis: 'standard' | 'subscriber';
   amountPaid: number;
   discountCode?: (number | null) | DiscountCode;
-  status: 'active' | 'cancelled';
+  status: 'pending' | 'active' | 'cancelled';
+  inviteRequired?: boolean | null;
+  inviteSentAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -626,6 +629,9 @@ export interface Order {
   status: 'pending' | 'paid' | 'cancelled' | 'refunded';
   paidAt?: string | null;
   paymentRef?: string | null;
+  stripeSessionId?: string | null;
+  checkoutExpiresAt?: string | null;
+  fulfillmentError?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1698,7 +1704,8 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'import-uspto-trademarks' | 'send-newsletter' | 'monitor-operations';
+        taskSlug:
+          'inline' | 'import-uspto-trademarks' | 'send-newsletter' | 'monitor-operations' | 'invite-event-attendees';
         taskID: string;
         input?:
           | {
@@ -1731,7 +1738,8 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'import-uspto-trademarks' | 'send-newsletter' | 'monitor-operations') | null;
+  taskSlug?:
+    ('inline' | 'import-uspto-trademarks' | 'send-newsletter' | 'monitor-operations' | 'invite-event-attendees') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -2779,6 +2787,9 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   paidAt?: T;
   paymentRef?: T;
+  stripeSessionId?: T;
+  checkoutExpiresAt?: T;
+  fulfillmentError?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2798,6 +2809,8 @@ export interface EventRegistrationsSelect<T extends boolean = true> {
   amountPaid?: T;
   discountCode?: T;
   status?: T;
+  inviteRequired?: T;
+  inviteSentAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2986,6 +2999,16 @@ export interface TaskSendNewsletter {
  */
 export interface TaskMonitorOperations {
   input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskInvite-event-attendees".
+ */
+export interface TaskInviteEventAttendees {
+  input: {
+    orderId: number;
+  };
   output?: unknown;
 }
 /**

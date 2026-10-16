@@ -29,7 +29,12 @@ export async function hasActiveRegistration(
   const { totalDocs } = await payload.find({
     collection: 'event-registrations',
     where: {
-      and: [{ event: { equals: eventId } }, { attendee: { equals: user.id } }, { status: { equals: 'active' } }],
+      and: [
+        { event: { equals: eventId } },
+        { attendee: { equals: user.id } },
+        { status: { equals: 'active' } },
+        { 'order.status': { equals: 'paid' } },
+      ],
     },
     limit: 0,
     overrideAccess: true,
@@ -44,7 +49,9 @@ export const canReadReplay: FieldAccess = async ({ req, siblingData, data }) => 
   const eventId = idOf(siblingData?.event ?? data?.event)
   if (!eventId) return false
 
-  const event = await req.payload.findByID({ collection: 'events', id: eventId, depth: 0, overrideAccess: true }).catch(() => null)
+  const event = await req.payload
+    .findByID({ collection: 'events', id: eventId, depth: 0, overrideAccess: true })
+    .catch(() => null)
   if (!event?.hasReplay) return false
 
   return hasActiveRegistration(req.payload, req.user, eventId)

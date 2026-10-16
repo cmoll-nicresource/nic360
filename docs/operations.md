@@ -4,6 +4,8 @@ The persistent Payload app checks operations every five minutes using the `opera
 
 ## Checks
 
+- Event order checkout/activation errors and failed queued colleague invitations link to the affected order for staff review.
+
 - Failed newsletter issues; sends older than ten minutes only when the sending worker's advisory lock is free. Large sends with an active worker are not falsely considered stalled.
 - Failed trade/trademark import runs and imports running longer than two hours. A newer run for the same Gazette/upload supersedes older attempts.
 - Successful imports with a recorded report-generation error, including monthly trademark reports blocked by missing coverage.

@@ -4,7 +4,7 @@ import type Stripe from 'stripe'
 
 import config from '@/payload.config'
 import { getStripeClient } from '@/lib/stripe'
-import { markOrderPaid } from '@/lib/orderFulfillment'
+import { handleStripeSession } from '@/lib/stripeFulfillment'
 import { allowLocalWebhookSimulation } from '@/lib/localSafety'
 
 export async function POST(request: Request) {
@@ -34,17 +34,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (
+    [
+      'checkout.session.completed',
+      'checkout.session.async_payment_succeeded',
+      'checkout.session.expired',
+    ].includes(event.type)
+  ) {
     const session = event.data.object as Stripe.Checkout.Session
-    const orderId = session.metadata?.orderId
-    if (orderId) {
-      const payloadConfig = await config
-      const payload = await getPayload({ config: payloadConfig })
-      const paymentRef =
-        typeof session.payment_intent === 'string'
-          ? session.payment_intent
-          : (session.payment_intent?.id ?? session.id)
-      await markOrderPaid(payload, Number(orderId), paymentRef)
+    if (session.id) {
+      if (event.livemode !== (process.env.STRIPE_MODE === 'live'))
+        return NextResponse.json({ error: 'Stripe event mode mismatch.' }, { status: 400 })
+      try {
+        const payloadConfig = await config
+        const payload = await getPayload({ config: payloadConfig })
+        await handleStripeSession(payload, session.id)
+      } catch (error) {
+        console.error('Stripe fulfillment failed', error)
+        return NextResponse.json(
+          { error: 'Fulfillment did not complete; retry this event.' },
+          { status: 500 },
+        )
+      }
     }
   }
 

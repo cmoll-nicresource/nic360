@@ -22,13 +22,17 @@ export const Users: CollectionConfig = {
   auth: {
     verify: true,
     forgotPassword: {
+      generateEmailSubject: ({ req } = {}) =>
+        req?.context.eventInvitation
+          ? 'Your Nicotine360 event invitation'
+          : 'Reset your Nicotine360 password',
       // Payload's default reset-password link always points at /admin/reset,
       // which only works for the admin.user collection (staff). Readers get
       // their own front-end page instead.
-      generateEmailHTML: ({ token } = {}) =>
-        `<p>You are receiving this because you (or someone else) requested a password reset.</p>
+      generateEmailHTML: ({ token, req } = {}) =>
+        `<p>${req?.context.eventInvitation ? 'A colleague has registered you for an event on Nicotine360. Set your password to access your ticket and event.' : 'You are receiving this because you (or someone else) requested a password reset.'}</p>
 <p><a href="${SITE_URL}/reset-password/${token}">${SITE_URL}/reset-password/${token}</a></p>
-<p>If you did not request this, you can ignore this email.</p>`,
+<p>${req?.context.eventInvitation ? 'If this was unexpected, contact Nicotine360 staff.' : 'If you did not request this, you can ignore this email.'}</p>`,
     },
   },
   access: {
@@ -82,7 +86,10 @@ export const Users: CollectionConfig = {
         description: 'Sign-up profile field, separate from the Sectors taxonomy used on excerpts.',
       },
       options: [
-        { label: 'Manufacturer/Exporter: Tobacco and Vapor Products/Services', value: 'manufacturer-exporter' },
+        {
+          label: 'Manufacturer/Exporter: Tobacco and Vapor Products/Services',
+          value: 'manufacturer-exporter',
+        },
         { label: 'Retail & Distribution', value: 'retail-distribution' },
         { label: 'Public Health', value: 'public-health' },
         { label: 'Academia', value: 'academia' },
@@ -148,7 +155,7 @@ export const Users: CollectionConfig = {
       relationTo: 'access-providers',
       admin: {
         description:
-          'Set automatically when a verified email matches a provider\'s allowed domains. Empty for event-only attendees.',
+          "Set automatically when a verified email matches a provider's allowed domains. Empty for event-only attendees.",
       },
       access: {
         // Readers can see their own provider but not reassign themselves to another.
@@ -173,7 +180,8 @@ export const Users: CollectionConfig = {
       collection: 'event-registrations',
       on: 'attendee',
       admin: {
-        description: 'Event registrations where this user is the attendee. Old product orders are not migrated.',
+        description:
+          'Event registrations where this user is the attendee. Old product orders are not migrated.',
       },
     },
     {
@@ -193,7 +201,10 @@ export const Users: CollectionConfig = {
         {
           name: 'completedAt',
           type: 'date',
-          admin: { readOnly: true, description: 'Set once the reader finishes sign-up (password + profile).' },
+          admin: {
+            readOnly: true,
+            description: 'Set once the reader finishes sign-up (password + profile).',
+          },
         },
       ],
     },

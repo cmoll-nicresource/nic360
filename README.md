@@ -28,7 +28,7 @@ Dataset transactions, PDF permissions, webhook verification, and the guarded loc
 
 `pnpm trade:check` checks trade prerequisites without initializing Payload or changing the database. `pnpm trade:render 2026 8` generates a local PDF preview under `tmp/` from a read-only snapshot. Setup, verification, and the guarded production restore plan are in [docs/ttb-trade-report.md](./docs/ttb-trade-report.md).
 
-Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verification, password reset, event invites) print to the console instead of sending — fine for local dev. In any environment where they are set, real migrated user data means every outgoing account email is still redirected to a safe address by default (`EMAIL_SAFE_MODE`, on unless explicitly set to `off`) — see `src/lib/emailSafeMode.ts`. Without `STRIPE_SECRET_KEY`, event ticket checkout fails at the point of creating a Stripe session (everything up to and including 100%-off/free tickets still works, since those skip Stripe entirely).
+Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verification, password reset, event invites) print to the console instead of sending — fine for local dev. In any environment where they are set, real migrated user data means every outgoing account email is still redirected to a safe address by default (`EMAIL_SAFE_MODE`, on unless explicitly set to `off`) — see `src/lib/emailSafeMode.ts`. Without `STRIPE_SECRET_KEY`, event ticket checkout fails closed before creating a paid order (everything up to and including 100%-off/free tickets still works, since those skip Stripe entirely).
 
 ## Status
 
