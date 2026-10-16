@@ -218,9 +218,11 @@ export async function EventsWorkspaceView(props: AdminViewServerProps) {
         eyebrow="OPERATIONS"
         description="One place for each event’s program, speakers, sponsors, tickets, and attendees."
         actions={
-          <Link className="nic-workspace__button" href="/admin/collections/events/create">
-            Create event →
-          </Link>
+          !(req.user?.collection === 'staff' && req.user.role === 'gatekeeper') && (
+            <Link className="nic-workspace__button" href="/admin/collections/events/create">
+              Create event →
+            </Link>
+          )
         }
       >
         <div className="nic-workspace__task-grid">
@@ -345,6 +347,7 @@ export async function ManageEventView(props: AdminViewServerProps) {
           registrations={registrations.docs}
           accessProviders={providers.docs.map((p) => ({ id: p.id, name: p.name }))}
           canManageRegistrations={canManageRegistrations}
+          operationsOnly={req.user?.collection === 'staff' && req.user.role === 'gatekeeper'}
           adminEditUrl={`/admin/collections/events/${event.id}`}
           attendeeReport={attendeeReport}
           attendeeReportTotals={summarizeAttendeeReport(attendeeReport)}

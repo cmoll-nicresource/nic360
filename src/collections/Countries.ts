@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { staffCanWrite } from '@/access/excerptAccess'
+import { staffHasMinRole } from '@/access/staffRoles'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Countries: CollectionConfig = {
@@ -13,9 +13,9 @@ export const Countries: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: staffCanWrite,
-    update: staffCanWrite,
-    delete: staffCanWrite,
+    create: staffHasMinRole('admin'),
+    update: staffHasMinRole('admin'),
+    delete: staffHasMinRole('admin'),
   },
   fields: [
     {
@@ -41,7 +41,8 @@ export const Countries: CollectionConfig = {
       name: 'aliases',
       type: 'array',
       admin: {
-        description: 'Alternate names matched against spreadsheet values on import, e.g. USA, United States of America.',
+        description:
+          'Alternate names matched against spreadsheet values on import, e.g. USA, United States of America.',
       },
       fields: [{ name: 'alias', type: 'text', required: true }],
     },

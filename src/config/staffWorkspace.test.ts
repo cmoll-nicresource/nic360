@@ -24,11 +24,20 @@ describe('staff workspace navigation', () => {
     const editor = staffTasksFor(staff('editor')).map((task) => task.href)
     expect(editor).toContain('/admin/trade-reports')
     expect(editor).toContain('/admin/datasets')
-    expect(editor).toContain('/admin/events')
+    expect(editor).toContain('/admin/collections/events')
     expect(editor).not.toContain('/admin/analytics')
     expect(editor).not.toContain('/admin/trademark-reports')
     expect(editor).not.toContain('/admin/access-check')
-    expect(staffTasksFor(staff('gatekeeper'))).toHaveLength(STAFF_TASKS.length)
+    const gatekeeper = staffTasksFor(staff('gatekeeper'))
+    expect(gatekeeper.every((task) => task.audience === 'members')).toBe(true)
+    expect(gatekeeper.filter((task) => task.daily).map((task) => task.label)).toEqual([
+      'Manage subscriptions',
+      'Register a user',
+      'Register an attendee',
+      'Review orders',
+    ])
+    expect(gatekeeper.map((task) => task.href)).not.toContain('/admin/trade-reports')
+    expect(editor).toContain('/admin/collections/publication-issues/create')
     expect(staffTasksFor(staff('admin'))).toHaveLength(STAFF_TASKS.length)
   })
   it('resolves numeric tool IDs only in the expected route position', () => {

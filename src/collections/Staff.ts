@@ -10,14 +10,16 @@ export const Staff: CollectionConfig = {
     plural: 'Staff',
   },
   admin: {
-    group: ADMIN_GROUPS.accounts,
+    group: ADMIN_GROUPS.administration,
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'role'],
     description: 'The Nic360 employees who can log in to this admin panel.',
   },
   auth: true,
   access: {
-    read: staffHasMinRole('editor'),
+    read: ({ req }) =>
+      staffHasRole(req.user, 'admin') ||
+      (req.user?.collection === 'staff' ? { id: { equals: req.user.id } } : false),
     create: staffHasMinRole('admin'),
     update: ({ req, id }) => {
       if (staffHasRole(req.user, 'admin')) return true

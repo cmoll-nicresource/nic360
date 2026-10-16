@@ -1,7 +1,11 @@
 import Link from 'next/link'
-import type { AdminViewServerProps } from 'payload'
-import { staffHasRole } from '@/access/staffRoles'
+import type { AdminViewServerProps, Where } from 'payload'
 import { staffTasksFor } from '@/config/staffWorkspace'
+import {
+  canSeeEditorialWorkspace,
+  canSeeMemberWorkspace,
+  workspaceRole,
+} from '@/config/workspaceVisibility'
 import { requireWorkspaceRole, TaskIcon, WorkspacePage } from './WorkspaceShell'
 
 const date = (value: string) =>
@@ -12,140 +16,286 @@ const date = (value: string) =>
   }).format(new Date(value))
 
 export async function WorkspaceDashboard(props: AdminViewServerProps) {
-  const req = requireWorkspaceRole(props)
-  const payload = req.payload
-  const tasks = staffTasksFor(req.user)
-  const [drafts, runs, events, flags, alerts] = await Promise.all([
-    payload.find({
-      collection: 'publication-issues',
-      where: { _status: { equals: 'draft' } },
-      sort: '-updatedAt',
-      limit: 5,
-      depth: 0,
-      draft: true,
-      req,
-      overrideAccess: false,
-    }),
-    payload.find({
-      collection: 'trade-import-runs',
-      sort: '-createdAt',
-      limit: 4,
-      depth: 0,
-      req,
-      overrideAccess: false,
-    }),
-    payload.find({
-      collection: 'events',
-      sort: 'startsAt',
-      where: { endDate: { greater_than_equal: new Date().toISOString() } },
-      limit: 4,
-      depth: 0,
-      req,
-      overrideAccess: false,
-    }),
-    staffHasRole(req.user, 'gatekeeper')
+  const req = requireWorkspaceRole(props),
+    payload = req.payload,
+    role = workspaceRole(req.user)
+  const editorial = canSeeEditorialWorkspace(req.user),
+    members = canSeeMemberWorkspace(req.user)
+  const options = { depth: 0, req, overrideAccess: false as const }
+  const attention: Where = {
+    or: [
+      { status: { equals: 'pending' } },
+      { and: [{ fulfillmentError: { exists: true } }, { fulfillmentError: { not_equals: '' } }] },
+    ],
+  }
+  const [drafts, news, bills, readers, orders, flags, alerts] = await Promise.all([
+    editorial
+      ? payload.find({
+          collection: 'publication-issues',
+          where: { _status: { equals: 'draft' } },
+          sort: '-updatedAt',
+          limit: 5,
+          draft: true,
+          ...options,
+        })
+      : null,
+    editorial
+      ? payload.find({
+          collection: 'articles',
+          limit: 0,
+          where: { _status: { equals: 'draft' } },
+          draft: true,
+          ...options,
+        })
+      : null,
+    editorial
+      ? payload.find({
+          collection: 'bills',
+          limit: 0,
+          where: { _status: { equals: 'draft' } },
+          draft: true,
+          ...options,
+        })
+      : null,
+    members
+      ? payload.find({ collection: 'users', sort: '-createdAt', limit: 5, ...options })
+      : null,
+    members
+      ? payload.find({
+          collection: 'orders',
+          where: attention,
+          sort: '-createdAt',
+          limit: 5,
+          ...options,
+        })
+      : null,
+    members
       ? payload.count({
           collection: 'email-flags',
           where: { status: { not_equals: 'resolved' } },
-          req,
-          overrideAccess: false,
+          ...options,
         })
-      : Promise.resolve(null),
-    payload.count({
-      collection: 'operational-alerts',
-      where: { resolved: { equals: false } },
-      req,
-      overrideAccess: false,
-    }),
+      : null,
+    editorial
+      ? payload.count({
+          collection: 'operational-alerts',
+          where: { resolved: { equals: false } },
+          ...options,
+        })
+      : null,
   ])
+  const tasks = staffTasksFor(req.user)
+  const title =
+    role === 'admin'
+      ? 'Administration workspace'
+      : role === 'gatekeeper'
+        ? 'Membership & events'
+        : 'Editorial desk'
   return (
     <WorkspacePage
-      title="Your staff workspace"
-      eyebrow="NICOTINE360 · EDITORIAL & OPERATIONS"
-      description="Everything you need to publish, maintain your data, and look after your members."
+      title={title}
+      eyebrow={`NICOTINE360 · ${role === 'admin' ? 'ADMIN' : role === 'gatekeeper' ? 'MEMBER OPERATIONS' : 'EDITORIAL'}`}
+      description={
+        role === 'gatekeeper'
+          ? 'Look after reader access, registrations and orders.'
+          : role === 'admin'
+            ? 'Daily publishing and member operations, with administration in one place.'
+            : 'Enter today’s excerpts, continue your drafts and prepare the next edition.'
+      }
       actions={
         <Link className="nic-workspace__button nic-workspace__button--secondary" href="/">
           View public site ↗
         </Link>
       }
     >
-      {alerts.totalDocs > 0 && (
+      {alerts && alerts.totalDocs > 0 && (
         <div className="nic-workspace__panel" role="status">
-          <strong>
-            {alerts.totalDocs} operational alert{alerts.totalDocs === 1 ? '' : 's'} need attention.
-          </strong>{' '}
+          <strong>{alerts.totalDocs} operational alerts need attention.</strong>{' '}
           <Link href="/admin/collections/operational-alerts?where[resolved][equals]=false">
             Review failed sends and imports →
           </Link>
         </div>
       )}
-      <section className="nic-workspace__hero">
-        <div>
-          <span className="nic-workspace__eyebrow">MONTHLY WORKFLOW</span>
-          <h2>
-            From Census files
-            <br />
-            to a finished trade report.
-          </h2>
-          <p>
-            Import the latest data, refresh the datasets, and prepare the Trade Barometer for review
-            and sending.
-          </p>
-          <Link className="nic-workspace__button" href="/admin/trade-reports">
-            Open Trade Barometer <span aria-hidden="true">→</span>
-          </Link>
-        </div>
-        <div className="nic-workspace__hero-aside">
-          <span>
-            01 <strong>Upload & preview</strong>
-          </span>
-          <span>
-            02 <strong>Generate report</strong>
-          </span>
-          <span>
-            03 <strong>Review & send</strong>
-          </span>
-          <small>US trade and CBP quota figures are fetched automatically.</small>
-        </div>
-      </section>
-      <div className="nic-workspace__stats">
-        <Link href="/admin/collections/publication-issues?where[_status][equals]=draft">
-          <span>Draft publication issues</span>
-          <strong>{drafts.totalDocs.toLocaleString()}</strong>
-          <small>Ready for your review →</small>
-        </Link>
-        <Link href="/admin/events">
-          <span>Upcoming events</span>
-          <strong>{events.totalDocs.toLocaleString()}</strong>
-          <small>Programs & attendees →</small>
-        </Link>
-        <Link
-          href={flags ? '/admin/collections/email-flags' : '/admin/collections/trade-import-runs'}
+      <TaskSections tasks={tasks} daily />
+      {editorial && (
+        <section className="nic-workspace__section">
+          <div className="nic-workspace__section-heading">
+            <h2>Editorial work in progress</h2>
+            <span>Drafts across the desk</span>
+          </div>
+          <div className="nic-workspace__stats">
+            {[
+              ['News drafts', news?.totalDocs, 'articles'],
+              ['Legislation drafts', bills?.totalDocs, 'bills'],
+              ['Publication drafts', drafts?.totalDocs, 'publication-issues'],
+            ].map(([label, count, slug]) => (
+              <Link
+                key={String(slug)}
+                href={`/admin/collections/${slug}?where[_status][equals]=draft`}
+              >
+                <span>{label}</span>
+                <strong>{Number(count || 0).toLocaleString()}</strong>
+                <small>Continue editing →</small>
+              </Link>
+            ))}
+          </div>
+          <section className="nic-workspace__panel">
+            <div className="nic-workspace__section-heading">
+              <h2>Recent publication drafts</h2>
+              <Link href="/admin/collections/publication-issues">All issues →</Link>
+            </div>
+            {drafts?.docs.length ? (
+              drafts.docs.map((issue) => (
+                <Link
+                  className="nic-workspace__list-row"
+                  href={`/admin/collections/publication-issues/${issue.id}`}
+                  key={issue.id}
+                >
+                  <div>
+                    <strong>{issue.title}</strong>
+                    <small>Updated {date(issue.updatedAt)}</small>
+                  </div>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              ))
+            ) : (
+              <p className="nic-workspace__empty">
+                No draft issues. Create an issue when you’re ready for the next edition.
+              </p>
+            )}
+          </section>
+        </section>
+      )}
+      {members && (
+        <section className="nic-workspace__section">
+          <div className="nic-workspace__section-heading">
+            <h2>Member follow-up</h2>
+            <span>Accounts, delivery and payments</span>
+          </div>
+          <div className="nic-workspace__stats">
+            <Link href="/admin/collections/users">
+              <span>Reader accounts</span>
+              <strong>{readers?.totalDocs.toLocaleString()}</strong>
+              <small>Find or update a reader →</small>
+            </Link>
+            <Link href="/admin/collections/orders">
+              <span>Orders to review</span>
+              <strong>{orders?.totalDocs.toLocaleString()}</strong>
+              <small>Pending payments or fulfillment errors</small>
+            </Link>
+            <Link href="/admin/collections/email-flags">
+              <span>Email flags to resolve</span>
+              <strong>{flags?.totalDocs.toLocaleString()}</strong>
+              <small>Review delivery follow-up →</small>
+            </Link>
+          </div>
+          <div className="nic-workspace__columns">
+            <section className="nic-workspace__panel">
+              <div className="nic-workspace__section-heading">
+                <h2>Orders needing attention</h2>
+                <Link href="/admin/collections/orders">All orders →</Link>
+              </div>
+              {orders?.docs.length ? (
+                orders.docs.map((order) => (
+                  <Link
+                    href={`/admin/collections/orders/${order.id}`}
+                    className="nic-workspace__list-row"
+                    key={order.id}
+                  >
+                    <div>
+                      <strong>
+                        Order #{order.id} ·{' '}
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                        }).format(order.total)}
+                      </strong>
+                      <small>
+                        {order.fulfillmentError
+                          ? 'Fulfillment needs review'
+                          : `Created ${date(order.createdAt)}`}
+                      </small>
+                    </div>
+                    <span className="nic-workspace__status">{order.status}</span>
+                  </Link>
+                ))
+              ) : (
+                <p className="nic-workspace__empty">No pending orders or fulfillment errors.</p>
+              )}
+            </section>
+            <section className="nic-workspace__panel">
+              <div className="nic-workspace__section-heading">
+                <h2>Recently registered readers</h2>
+                <Link href="/admin/collections/users">All readers →</Link>
+              </div>
+              {readers?.docs.length ? (
+                readers.docs.map((reader) => (
+                  <Link
+                    href={`/admin/collections/users/${reader.id}`}
+                    className="nic-workspace__list-row"
+                    key={reader.id}
+                  >
+                    <div>
+                      <strong>{reader.email}</strong>
+                      <small>
+                        {[reader.firstName, reader.lastName].filter(Boolean).join(' ') ||
+                          `Registered ${date(reader.createdAt)}`}
+                      </small>
+                    </div>
+                    <span className="nic-workspace__status">{reader.status}</span>
+                  </Link>
+                ))
+              ) : (
+                <p className="nic-workspace__empty">New reader accounts will appear here.</p>
+              )}
+            </section>
+          </div>
+        </section>
+      )}
+      <TaskSections tasks={tasks} daily={false} />
+    </WorkspacePage>
+  )
+}
+
+function TaskSections({
+  tasks,
+  daily,
+}: {
+  tasks: ReturnType<typeof staffTasksFor>
+  daily: boolean
+}) {
+  const visible = tasks.filter((task) => Boolean(task.daily) === daily),
+    categories = [...new Set(visible.map((task) => task.category))]
+  return (
+    <>
+      {categories.map((category) => (
+        <section
+          className={`nic-workspace__section ${daily ? 'nic-workspace__section--daily' : ''}`}
+          key={category}
         >
-          <span>{flags ? 'Email flags to resolve' : 'Latest trade import'}</span>
-          <strong>
-            {flags ? flags.totalDocs.toLocaleString() : (runs.docs[0]?.status ?? 'No runs yet')}
-          </strong>
-          <small>{flags ? 'Membership follow-up →' : 'View import history →'}</small>
-        </Link>
-      </div>
-      {['Imports & reports', 'Publishing', 'Operations'].map((category) => (
-        <section className="nic-workspace__section" key={category}>
           <div className="nic-workspace__section-heading">
             <h2>{category}</h2>
             <span>
-              {category === 'Publishing'
-                ? 'Prepare, review, publish'
-                : category === 'Operations'
-                  ? 'People, events & insights'
-                  : 'Keep your information current'}
+              {daily
+                ? 'Your most-used actions'
+                : category === 'Periodic reports & imports'
+                  ? 'Weekly, monthly and as needed'
+                  : category === 'Administration'
+                    ? 'Admin only'
+                    : 'Browse and maintain'}
             </span>
           </div>
-          <div className="nic-workspace__task-grid">
-            {tasks
+          <div
+            className={`nic-workspace__task-grid ${daily ? 'nic-workspace__task-grid--daily' : ''}`}
+          >
+            {visible
               .filter((task) => task.category === category)
               .map((task) => (
-                <Link href={task.href} className="nic-workspace__task" key={task.href}>
+                <Link
+                  href={task.href}
+                  className={`nic-workspace__task ${daily ? 'nic-workspace__task--daily' : ''}`}
+                  key={task.href}
+                >
                   <span className="nic-workspace__task-icon">
                     <TaskIcon name={task.icon} />
                   </span>
@@ -159,60 +309,6 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
           </div>
         </section>
       ))}
-      <div className="nic-workspace__columns">
-        <section className="nic-workspace__panel">
-          <div className="nic-workspace__section-heading">
-            <h2>Recent trade imports</h2>
-            <Link href="/admin/collections/trade-import-runs">All runs →</Link>
-          </div>
-          {runs.docs.length ? (
-            runs.docs.map((run) => (
-              <Link
-                className="nic-workspace__list-row"
-                href={`/admin/collections/trade-import-runs/${run.id}`}
-                key={run.id}
-              >
-                <div>
-                  <strong>{run.files?.import || run.files?.export || `Import #${run.id}`}</strong>
-                  <small>{date(run.createdAt)}</small>
-                </div>
-                <span className={`nic-workspace__status nic-workspace__status--${run.status}`}>
-                  {run.status}
-                </span>
-              </Link>
-            ))
-          ) : (
-            <p className="nic-workspace__empty">
-              No trade imports yet. Upload your first Census files to get started.
-            </p>
-          )}
-        </section>
-        <section className="nic-workspace__panel">
-          <div className="nic-workspace__section-heading">
-            <h2>Drafts awaiting review</h2>
-            <Link href="/admin/collections/publication-issues">All issues →</Link>
-          </div>
-          {drafts.docs.length ? (
-            drafts.docs.map((issue) => (
-              <Link
-                className="nic-workspace__list-row"
-                href={`/admin/collections/publication-issues/${issue.id}`}
-                key={issue.id}
-              >
-                <div>
-                  <strong>{issue.title}</strong>
-                  <small>Updated {date(issue.updatedAt)}</small>
-                </div>
-                <span aria-hidden="true">→</span>
-              </Link>
-            ))
-          ) : (
-            <p className="nic-workspace__empty">
-              You’re up to date. New report drafts will appear here.
-            </p>
-          )}
-        </section>
-      </div>
-    </WorkspacePage>
+    </>
   )
 }

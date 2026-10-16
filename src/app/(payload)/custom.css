@@ -65,6 +65,9 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
 .nic-workspace__section-heading h2 { color: var(--nic-ink); font-size: 18px; letter-spacing: -.015em; font-weight: 600; margin: 0; }
 .nic-workspace__section-heading > span, .nic-workspace__section-heading > a { color: var(--nic-muted); font-size: 11px; }
 .nic-workspace__task-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.nic-workspace__task-grid--daily { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.nic-workspace__section--daily { padding: 24px; background: var(--nic-tint); border-radius: 12px; margin-bottom: 28px; }
+.nic-workspace__task--daily { border-color: transparent; }
 .nic-workspace__task { display: block; position: relative; padding: 24px; background: var(--nic-surface); border: 1px solid var(--nic-line); border-radius: 10px; text-decoration: none; color: var(--theme-text); transition: border-color .15s, box-shadow .15s; }
 .nic-workspace__task:hover { border-color: var(--nic-accent); box-shadow: 0 5px 18px #16354e0a; }
 .nic-workspace__task-icon { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 9px; background: var(--nic-tint); color: var(--nic-accent); margin-bottom: 20px; }

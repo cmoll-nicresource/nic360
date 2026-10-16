@@ -4,6 +4,7 @@ Updated October 16, 2026. This is the current work list. The original milestones
 
 ## Completed
 
+- October 16: role-specific admin workspace: daily editorial actions and drafts for editors; subscriptions, readers, attendees and orders for gatekeepers. Taxonomy management and staff directory are admin only; existing-term selectors and own-account access remain available. See [staff workspace](./staff-workspace.md).
 - Reader design refresh, supplied photography, unified staff workspace under `/admin`, full dataset loading/exports and access checks.
 - October 16: article excerpt migration repaired locally and on beta: 8,513 article excerpts/search fields and latest CMS versions restored from the original dump. 823 already matched usable source text; 94 have no distinct original excerpt and are listed for follow-up. See [excerpt recovery](./article-excerpt-recovery.md).
 - Trade history restored to beta; report pagination/headers, Nicotine360 branding, linked contents, automatic US trade narrative and CBP TRQ inputs. Yellow editorial placeholders removed. Staff has reported successful report generation. The first-time restore must not be repeated.

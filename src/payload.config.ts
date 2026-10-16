@@ -10,6 +10,7 @@ import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { s3Storage } from '@payloadcms/storage-s3'
 import path from 'path'
 import { buildConfig } from 'payload'
+import { withWorkspaceVisibility } from './config/workspaceVisibility'
 import type { Plugin } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
@@ -193,7 +194,7 @@ export default buildConfig({
     Orders,
     EventRegistrations,
     PageViews,
-  ],
+  ].map(withWorkspaceVisibility),
   globals: [MailchimpSettings],
   plugins,
   jobs: {

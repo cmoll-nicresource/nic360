@@ -19,11 +19,9 @@ export function WorkspaceNav({ user }: { user?: PayloadRequest['user'] }) {
       <Link className="nic-workspace-nav__home" href="/admin">
         Workspace overview <span aria-hidden="true">↗</span>
       </Link>
-      <p className="nic-workspace-nav__label">Daily tools</p>
+      <p className="nic-workspace-nav__label">Daily actions</p>
       {tasks
-        .filter((task) =>
-          ['trade', 'trademark', 'data', 'event', 'analytics', 'access'].includes(task.icon),
-        )
+        .filter((task) => task.daily)
         .map((task) => (
           <Link key={task.href} href={task.href} className="nic-workspace-nav__link">
             {task.label}
@@ -32,7 +30,11 @@ export function WorkspaceNav({ user }: { user?: PayloadRequest['user'] }) {
       <Link href="/" className="nic-workspace-nav__site">
         View public site <span aria-hidden="true">↗</span>
       </Link>
-      <p className="nic-workspace-nav__label">Content & administration</p>
+      <p className="nic-workspace-nav__label">
+        {user?.collection === 'staff' && user.role === 'gatekeeper'
+          ? 'Membership & events'
+          : 'Collections'}
+      </p>
     </div>
   )
 }

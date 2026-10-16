@@ -5,6 +5,7 @@
  */
 export const ADMIN_GROUPS = {
   accounts: 'Audience & access',
+  administration: 'Administration',
   taxonomy: 'Reference library',
   tracking: 'News & tracking',
   publishing: 'Publishing',

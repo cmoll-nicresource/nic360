@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { staffCanWrite } from '@/access/excerptAccess'
+import { staffHasMinRole } from '@/access/staffRoles'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Subjects: CollectionConfig = {
@@ -9,13 +9,14 @@ export const Subjects: CollectionConfig = {
     group: ADMIN_GROUPS.taxonomy,
     useAsTitle: 'name',
     defaultColumns: ['name', 'parent'],
-    description: 'Hierarchical index terms, e.g. RETAIL, DISTRIBUTION, & SALES > Licensing (sales).',
+    description:
+      'Hierarchical index terms, e.g. RETAIL, DISTRIBUTION, & SALES > Licensing (sales).',
   },
   access: {
     read: () => true,
-    create: staffCanWrite,
-    update: staffCanWrite,
-    delete: staffCanWrite,
+    create: staffHasMinRole('admin'),
+    update: staffHasMinRole('admin'),
+    delete: staffHasMinRole('admin'),
   },
   fields: [
     {
@@ -37,7 +38,7 @@ export const Subjects: CollectionConfig = {
       index: true,
       admin: {
         position: 'sidebar',
-        description: 'Old site\'s taxonomies.id, for matching excerpt_indices during migration.',
+        description: "Old site's taxonomies.id, for matching excerpt_indices during migration.",
       },
     },
   ],

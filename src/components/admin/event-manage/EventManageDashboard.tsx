@@ -26,6 +26,7 @@ export function EventManageDashboard({
   registrations,
   accessProviders,
   canManageRegistrations,
+  operationsOnly = false,
   adminEditUrl,
   attendeeReport,
   attendeeReportTotals,
@@ -41,26 +42,42 @@ export function EventManageDashboard({
             {new Date(event.endDate).toLocaleDateString()}
           </p>
         </div>
-        <a href={adminEditUrl} className="btn-secondary btn" target="_blank" rel="noreferrer">
-          Edit full event details →
-        </a>
+        {!operationsOnly && (
+          <a href={adminEditUrl} className="btn-secondary btn" target="_blank" rel="noreferrer">
+            Edit full event details →
+          </a>
+        )}
       </div>
 
-      <SponsorsSection event={event} allSponsors={allSponsors} />
-      <SpeakersSection event={event} allSpeakers={allSpeakers} />
-      <SessionsSection event={event} sessions={sessions} />
-      <TicketTypesSection event={event} />
+      {!operationsOnly && (
+        <>
+          <SponsorsSection event={event} allSponsors={allSponsors} />
+          <SpeakersSection event={event} allSpeakers={allSpeakers} />
+          <SessionsSection event={event} sessions={sessions} />
+        </>
+      )}
+      {!operationsOnly && <TicketTypesSection event={event} />}
 
       {canManageRegistrations ? (
         <>
-          <DiscountCodesSection event={event} discountCodes={discountCodes} accessProviders={accessProviders} />
-          <AttendeesSection event={event} registrations={registrations} allUsers={allUsers} />
+          {operationsOnly && (
+            <AttendeesSection event={event} registrations={registrations} allUsers={allUsers} />
+          )}
+          <DiscountCodesSection
+            event={event}
+            discountCodes={discountCodes}
+            accessProviders={accessProviders}
+          />
+          {!operationsOnly && (
+            <AttendeesSection event={event} registrations={registrations} allUsers={allUsers} />
+          )}
           <AttendeeReportSection
             event={event}
             rows={attendeeReport}
             totals={attendeeReportTotals}
             sessionPopularity={sessionPopularity}
           />
+          {operationsOnly && <TicketTypesSection event={event} />}
         </>
       ) : (
         <div className="card">

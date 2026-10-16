@@ -8,6 +8,7 @@ export const MailchimpSettings: GlobalConfig = {
   label: 'Mailchimp settings',
   admin: {
     group: ADMIN_GROUPS.system,
+    hidden: ({ user }) => user?.collection !== 'staff' || user.role !== 'admin',
   },
   access: {
     read: staffHasMinRole('editor'),

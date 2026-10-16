@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { staffCanWrite } from '@/access/excerptAccess'
+import { staffHasMinRole } from '@/access/staffRoles'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Products: CollectionConfig = {
@@ -12,9 +12,9 @@ export const Products: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: staffCanWrite,
-    update: staffCanWrite,
-    delete: staffCanWrite,
+    create: staffHasMinRole('admin'),
+    update: staffHasMinRole('admin'),
+    delete: staffHasMinRole('admin'),
   },
   fields: [
     {
