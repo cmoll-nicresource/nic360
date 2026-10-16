@@ -1,6 +1,6 @@
 # Event checkout and Stripe verification
 
-October 16, 2026. Checkout hardening is deployed and the free/comped/invitation path is verified on beta; **real Stripe test-mode card delivery is still pending a test API key**. Neither local nor beta had `STRIPE_SECRET_KEY` or `STRIPE_WEBHOOK_SECRET` configured at preflight. Do not treat mocked Stripe responses or signed offline fixtures as proof of an actual Stripe payment.
+October 16, 2026. Checkout hardening is deployed and **real hosted Stripe sandbox payment, signed webhook delivery, colleague invitations, discounts, declines, cancellation, expiration and concurrent duplicate handling are verified on beta**. The dedicated Nic360 Beta sandbox and beta-only credentials do not change the existing site's live Stripe integration. `STRIPE_MODE=test` and `EMAIL_SAFE_MODE=on` remain enabled.
 
 ## Behavior
 
@@ -39,7 +39,24 @@ Official references: [Stripe fulfillment and duplicate/concurrent calls](https:/
 
 ## Regression verification
 
+### Hosted Stripe sandbox verification — October 16
+
+The beta app was configured with the user-provided sandbox secret key and a new test-only snapshot webhook. Its signing secret was transferred directly into Railway without printing it or saving a local copy. The configuration deployment `368b0866-d1cc-42b5-8e49-36789648a8f2` succeeded.
+
+- A real hosted Checkout used Stripe's documented test Visa card for three $1.01 tickets with a 25% discount. Stripe charged **227 test cents**, with line items of two 76-cent tickets and one 75-cent ticket. The order subtotal was $3.03, discount $0.76, and total $2.27. No real funds moved.
+- Before payment, all three tickets were pending with zero paid amounts, the new colleague account did not exist, and event access was denied. Stripe's actual signed `checkout.session.completed` request returned HTTP 200 at `2026-10-16T13:28:26Z`; the browser returned to the branded paid confirmation page. Only the webhook route performs Stripe session fulfillment.
+- Payment activated exactly three registrations, retained the existing colleague account and created exactly one new colleague. The new colleague gained event access. The automatic invitation worker recorded transport acceptance at `2026-10-16T13:29:00.292Z`, redirected to `cmoll@nicotineresource.org`; existing accounts received no set-password invitations. This verifies transport acceptance, not human inbox inspection.
+- The actual completion event was retrieved from Stripe and replayed three times concurrently with freshly generated valid webhook signatures. All returned 200. Paid timestamp, payment reference, registration IDs, colleague ID/count and invitation timestamp stayed unchanged. These duplicate requests came from the test harness; the original completion and expiration deliveries came from Stripe.
+- The documented decline card was rejected by hosted Checkout. A separate hosted cancellation returned to beta with `cancelled=1`. Both orders/tickets remained pending with zero paid amounts. Expiring both sessions through Stripe produced actual signed expiration deliveries, both HTTP 200 at `2026-10-16T13:30:42Z`; both unpaid orders/tickets became cancelled and the paid order remained unchanged. Reserved inventory fell from five tickets to the three paid tickets, and the three-use paid discount correctly had zero uses left.
+- Unsigned Stripe requests now return 400 rather than the previous missing-configuration 503. The completed and two expiration events had zero pending webhook deliveries. Remaining fixture sessions were expired; fixture accounts, event, codes, orders, tickets, jobs and temporary SSH credentials were removed. Stripe retains its normal sandbox payment/event history. No migrated reader or live Stripe resource was used.
+
+Minimal sandbox evidence: completed event `evt_1URBBNJ3jc98lPFM4Fh5McNp`; expiration events `evt_1URBDZJ3jc98lPFMI1UxpxrV` and `evt_1URBDaJ3jc98lPFM3yXgGdfz`. These identifiers are not API credentials. The beta test webhook remains configured for future sandbox testing.
+
+### Earlier free/comped verification
+
 Controlled beta browser/API verification used one temporary verified buyer, one new colleague, an internal test event and temporary discount codes. Verified reader authorization, missing Stripe setup rejecting paid checkout before creating an order, invalid/expired/ticket-restricted/exhausted codes, duplicate-attendee rejection, comped and zero-price fulfillment, the paid success page and colleague event access. The automatic queue accepted one actual **Your Nicotine360 event invitation** at `2026-10-16T13:12:00.445Z`, redirected to `cmoll@nicotineresource.org` by safe mode. Repeating fulfillment and the invitation worker preserved the sent timestamp and did not send another invitation. Fixtures and temporary SSH access were removed. No real card or migrated reader was used.
+
+### Automated regression coverage
 
 Offline tests cover real Stripe HMAC validation, invalid signatures, retryable fulfillment failure and test/live isolation. Disposable PostgreSQL integration tests cover pending access, exact cent allocation, concurrent seat/code reservation, subscriber pricing, code restrictions, duplicate fulfillment, new/existing colleagues, partial invitation retry, free/comped fulfillment, session mismatch/unpaid refusal, expiration and late-payment capacity protection. Email and Stripe requests are mocked in integration tests; no automated regression sends email or charges a card.
 

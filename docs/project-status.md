@@ -1,6 +1,6 @@
 # Current project checklist
 
-Updated October 15, 2026. This is the current work list. The original milestones and dated changelog in CLAUDE.md/entity-map.md are history, not an outstanding-task list.
+Updated October 16, 2026. This is the current work list. The original milestones and dated changelog in CLAUDE.md/entity-map.md are history, not an outstanding-task list.
 
 ## Completed
 
@@ -13,15 +13,15 @@ Updated October 15, 2026. This is the current work list. The original milestones
 - Operations monitoring: admin alert history, staff email digests, failed/stalled newsletters/imports and missing scheduled trademark imports/reports. See [operations](./operations.md).
 - Source committed/pushed to GitHub with automated checks. Earlier notes saying the report work is uncommitted are historical.
 - October 16: recurring database/upload backups enabled and isolated recovery verified; see [backup and recovery](./backup-recovery.md). Ninety stable tables and all 950 existing upload objects matched. Ten pre-existing missing prototype/sample file entries are documented there.
+- October 16: beta event checkout verified with real hosted Stripe sandbox payment and signed completion/expiration deliveries. Exact-cent discounts, pending access, new/existing colleagues, queued invitation acceptance, declines, cancellation, expiration and concurrent signed replays passed. Temporary fixtures removed; beta remains in Stripe test mode and email safe mode. See [event checkout](./event-checkout.md).
 
 ## Next work, in priority order
 
 1. **Human inbox review:** inspect the already-delivered `[TEST] Nicotine360 newsletter delivery verification` email at `cmoll@nicotineresource.org`; review real publication samples in Outlook/Gmail and on mobile. The complaint/bounce simulator notifications are separate messages.
 2. **Small staff newsletter pilot:** add an explicit internal recipient selection, preview eligible/excluded audience counts, then deliver to that reviewed staff group. Current global beta safe mode stays on; no migrated audience send is authorized.
 3. **Backup operations follow-up:** inspect the next automatic database/upload run, add independent missing-backup notifications, and repeat the recovery drill after significant schema/storage changes. The initial rehearsal and recurring schedules are completed; details and limits are in the backup runbook.
-4. **Stripe test workflow (in progress):** checkout/payment/invitation hardening and disposable-database regressions are implemented. Real Stripe test-mode card/webhook verification still needs the beta test API key and endpoint signing secret. See [event checkout](./event-checkout.md); do not count offline signatures or mocked sessions as an actual payment test.
-5. **Reader/staff acceptance pass:** walk through signup, verification, reset, membership tiers, report review/publish and event management on beta. Earlier local checks cover much of this; distinguish those from external-user acceptance.
-6. **Launch decisions:** domain/cutover, member communications, whether/how to retain old redirects, consent/audience review and the deliberate decision to enable reader email. Do not turn off safe mode as part of routine testing.
+4. **Reader/staff acceptance pass:** walk through signup, verification, reset, membership tiers, report review/publish and event management on beta. Earlier local checks cover much of this; distinguish those from external-user acceptance.
+5. **Launch decisions:** domain/cutover, member communications, whether/how to retain old redirects, consent/audience review and deliberate activation of live Stripe credentials/webhooks and reader email. Beta's completed sandbox tests do not enable real payments. Do not turn off safe mode as part of routine testing.
 
 ## Operational limits to keep visible
 
