@@ -1,0 +1,31 @@
+# Current project checklist
+
+Updated October 15, 2026. This is the current work list. The original milestones and dated changelog in CLAUDE.md/entity-map.md are history, not an outstanding-task list.
+
+## Completed
+
+- Reader design refresh, supplied photography, unified staff workspace under `/admin`, full dataset loading/exports and access checks.
+- Trade history restored to beta; report pagination/headers, Nicotine360 branding, linked contents, automatic US trade narrative and CBP TRQ inputs. Yellow editorial placeholders removed. Staff has reported successful report generation. The first-time restore must not be repeated.
+- Weekly/monthly trademark PDFs, publication download URLs, published marks in monthly reports and a hard stop for missing weekly Gazette coverage.
+- Company/member migration exception decisions applied locally and on beta, with the EmailFlag deletion/retained-suppression repair.
+- Queued SES publication delivery, signed unsubscribe, verified/deduplicated SNS feedback, durable per-recipient acceptance, safe retries, metric/version synchronization and controlled beta delivery verification. Mailchimp remains historical only.
+- Issue-editor preview of current unsaved content, desktop/mobile widths and protected attached PDF viewing. Refresh after editing; this is a browser approximation of email rendering, not an Outlook/Gmail emulator.
+- Operations monitoring: admin alert history, staff email digests, failed/stalled newsletters/imports and missing scheduled trademark imports/reports. See [operations](./operations.md).
+- Source committed/pushed to GitHub with automated checks. Earlier notes saying the report work is uncommitted are historical.
+
+## Next work, in priority order
+
+1. **Human inbox review:** inspect the already-delivered `[TEST] Nicotine360 newsletter delivery verification` email at `cmoll@nicotineresource.org`; review real publication samples in Outlook/Gmail and on mobile. The complaint/bounce simulator notifications are separate messages.
+2. **Small staff newsletter pilot:** add an explicit internal recipient selection, preview eligible/excluded audience counts, then deliver to that reviewed staff group. Current global beta safe mode stays on; no migrated audience send is authorized.
+3. **Backup/recovery rehearsal:** verify scheduled database and uploaded-file backups and restore to an isolated environment. The verified one-time pre-trade backup is evidence of that restore, not proof of a recurring backup policy.
+4. **Stripe test workflow:** configure the beta test webhook secret, then exercise paid/free/discounted checkout, colleague invitations, duplicate notifications and appropriate failed-payment behavior. Hosted requests currently fail closed without configuration.
+5. **Reader/staff acceptance pass:** walk through signup, verification, reset, membership tiers, report review/publish and event management on beta. Earlier local checks cover much of this; distinguish those from external-user acceptance.
+6. **Launch decisions:** domain/cutover, member communications, whether/how to retain old redirects, consent/audience review and the deliberate decision to enable reader email. Do not turn off safe mode as part of routine testing.
+
+## Operational limits to keep visible
+
+- Monitoring runs within the persistent app. It cannot email when the entire app/database/email service is down; independent uptime monitoring remains a separate follow-up.
+- Trade generation is upload/manual-triggered, with no agreed monthly deadline. It does not have a fictitious missing-schedule alarm.
+- Missing-report checks cover the automatic weekly trademark workflow and blocked monthly generation recorded in import history. They do not automatically publish or send anything.
+- Archived historical placeholder PDFs must be regenerated individually if needed; newer rendering code does not rewrite stored bytes.
+- No live Mailchimp sender or report-polling integration is needed.

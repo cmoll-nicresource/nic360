@@ -550,7 +550,7 @@ Known guides, listed in the main nav's Guides dropdown: US Tax Guide, Int'l Tax 
 
 ## Publications
 
-Source: Papa's notes and Mailchimp screenshots (2026-10-08). Newsletters are readable by Base/Premium subscribers. Sending uses `EMAIL_PROVIDER` (SES or Mailchimp; the code falls back to Mailchimp when unset). A **Publication** is the newsletter; an **Issue** is one edition. Live bulk SES sending remains stubbed, separate from the real account-email transport.
+Source: Papa's notes and Mailchimp screenshots (2026-10-08), updated for live SES on October 15. Newsletters are readable by Base/Premium subscribers. SES is the default sender; Mailchimp is historical only. A **Publication** is the newsletter; an **Issue** is one edition. Live SES delivery uses the Payload queue, signed unsubscribe and verified SNS feedback, separately from account email. See [newsletter delivery](./newsletter-delivery.md) and [the current checklist](./project-status.md).
 
 Known publications: Daily Executive Summary, Weekly Executive Summary, Global News Clippings (by region and subject), US News Clippings, Vapor News Clippings, Monthly Research Digest, Daily US Legislative Snapshot, Weekly US Legislative Report, Weekly US Trademark Report, Monthly US Trademark Activity, and US Tobacco Trade Barometer. The broader old *Economics* section and *FDA Watch* were excluded from the prototype; the Trade Barometer was subsequently added as its own publication.
 
@@ -721,7 +721,9 @@ A log of each monthly upload, mirroring TrademarkImportRun's shape. Access is ga
 | `issuesCreated` | relationship → Publication Issues, hasMany | |
 | `error` | textarea | |
 
-### Email preferences and Mailchimp sync
+### Email preferences and historical Mailchimp sync
+
+Current delivery uses the CMS preferences directly through SES, with an eligibility/suppression check immediately before each message. The following Mailchimp audience design is retained only as prototype history; no live mirror, nightly reconciliation or Mailchimp webhook is required for SES. The old expiry/reconciliation description below was a design, not implemented automation. Current unsubscribe and recovery behavior is in [newsletter delivery](./newsletter-delivery.md).
 
 Our site is the **source of truth**; Mailchimp only mirrors it. This section describes the `EMAIL_PROVIDER=mailchimp` path specifically — the standing, continuously-synced audience state it depends on. The `ses` path doesn't need any of this: it computes who should receive an issue fresh from our own data at send time (see "Sending an issue" above), so there's no persisted audience to keep correct and no sync hook to fire.
 
@@ -741,7 +743,7 @@ Our site is the **source of truth**; Mailchimp only mirrors it. This section des
 
 A staff queue of unsubscribes and delivery problems to follow up on.
 
-The user link becomes null when a reader is deleted; `recipientEmail` retains the delivery address and unresolved flags still suppress it. New flags require a reader. Deleted-reader flags remain editable for follow-up, but cannot use Re-add. See [migration exception review](./migration-exceptions.md) for the schema repair, membership audit, and outstanding company decisions.
+The user link becomes null when a reader is deleted; `recipientEmail` retains the delivery address and unresolved flags still suppress it. New flags require a reader. Deleted-reader flags remain editable for follow-up, but cannot use Re-add. See [migration exception review](./migration-exceptions.md) for the completed schema repair, membership audit and approved company decisions.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -756,7 +758,7 @@ The user link becomes null when a reader is deleted; `recipientEmail` retains th
 
 ### Sending an issue
 
-The CMS sends the issue when a staff member presses **Send** on a published issue (with a confirmation dialog). Which sender actually ships it is chosen by env `EMAIL_PROVIDER` (`mailchimp`, the default, or `ses`) — see the next section for why a second provider exists and what it needs.
+The CMS queues delivery when a staff member presses **Send** on a published issue (with confirmation). SES is the default; `EMAIL_PROVIDER=mailchimp` explicitly selects the legacy prototype, whose live sender is not implemented or needed. Beta safe mode blocks audience sends. **Preview issue** in the creation/edit form renders unsaved data without writing, sending or recording ad metrics; desktop/mobile email and an attached PDF are available. **Send test** uses the saved issue, so save edits before emailing a test.
 
 | Issue field | Type | Notes |
 |---|---|---|
@@ -785,7 +787,7 @@ Added when the question "what's the click rate on the last 10 Daily Executive Su
 
 These are issue-level metrics, not independent editable-version data. `preserveIssueStats` locks and carries the authoritative issue counters into every version save; atomic webhook increments and recipient-count updates also synchronize the latest version. Queueing, finalizing a send and editing an issue cannot overwrite counters from concurrent events.
 
-All read-only, filled in by whichever provider sent the issue: Mailchimp's Reports API (`GET /reports/{campaign_id}`, not yet wired up — a polling job would pull this periodically) or the SES event webhook below (built).
+All read-only. Verified SES events populate current delivery statistics; imported historical statistics are retained. A Mailchimp Reports API poller is not required.
 
 **SES client** (`src/lib/ses/`, mirrors `src/lib/mailchimp/`'s simulated/live split, chosen by env `SES_MODE`):
 
@@ -809,7 +811,7 @@ All read-only, filled in by whichever provider sent the issue: Mailchimp's Repor
 | File storage | S3-compatible bucket (existing AWS S3, or Cloudflare R2 if cheaper) via Payload's storage adapter |
 | Payments (event tickets) | Stripe (already in use) |
 | Account email (verification, password reset, invites) | AWS SES (same credentials/system as the publication-issue sender below) |
-| Newsletters | Sender selected by `EMAIL_PROVIDER`: SES when set to `ses`, otherwise Mailchimp. Live bulk SES remains stubbed; simulated delivery is available. Account-email SES is a separate implementation. |
+| Newsletters | Live queued SES by default, with signed unsubscribe and SNS feedback; simulations remain available. Account email uses a separate transport. Mailchimp is historical only. |
 
 ## Search
 

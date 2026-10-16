@@ -19,7 +19,7 @@ File reads now inherit permissions from a **published** parent. Staff can review
 - The legacy Mailchimp mutation endpoint is disabled (410) while SES is the sender. If explicitly using live Mailchimp, it requires `MAILCHIMP_WEBHOOK_SECRET` in the webhook URL's `secret` query parameter. Do not log/share that URL.
 - Unsigned fixtures require `ALLOW_UNSAFE_LOCAL_WEBHOOKS=true`, development/test mode, and loopback request, site, and database URLs. Hosted environments cannot enable this shortcut merely by selecting a simulated sender.
 
-These controls do not implement the outstanding live publication bulk sender. Configure and test the actual Stripe signing secret and SNS topic when enabling those live integrations; do not enable unsigned shortcuts as a workaround.
+Live publication delivery and signed SNS feedback are now implemented and verified on beta; see [newsletter delivery](./newsletter-delivery.md). Stripe test webhook configuration/checkout verification remains on [the current checklist](./project-status.md). Do not enable unsigned shortcuts as a workaround.
 
 ## Demo seed reset
 

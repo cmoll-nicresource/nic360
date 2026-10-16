@@ -2,6 +2,8 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { NewsletterDeliveries } from './collections/NewsletterDeliveries'
 import { SesEvents } from './collections/SesEvents'
 import { newsletterSendTask } from './jobs/newsletterSendTask'
+import { operationsMonitorTask } from './jobs/operationsMonitorTask'
+import { OperationalAlerts } from './collections/OperationalAlerts'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -180,6 +182,7 @@ export default buildConfig({
     SesOutbox,
     NewsletterDeliveries,
     SesEvents,
+    OperationalAlerts,
     Speakers,
     Sponsors,
     Events,
@@ -193,7 +196,7 @@ export default buildConfig({
   globals: [MailchimpSettings],
   plugins,
   jobs: {
-    tasks: [tmogImportTask, newsletterSendTask],
+    tasks: [tmogImportTask, newsletterSendTask, operationsMonitorTask],
     // Ticks the 'tmog-import' queue every Friday at 12:00 UTC: picks up
     // whatever's queued (including the job the task's own `schedule` just
     // auto-queued for this tick) and runs it. Not used on serverless hosts,
@@ -202,6 +205,7 @@ export default buildConfig({
     autoRun: [
       { cron: '0 12 * * 5', queue: 'tmog-import', limit: 1 },
       { cron: '* * * * *', queue: 'newsletters', limit: 1 },
+      { cron: '*/5 * * * *', queue: 'operations', limit: 1 },
     ],
   },
   editor: lexicalEditor(),

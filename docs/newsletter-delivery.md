@@ -4,6 +4,8 @@ Publication delivery uses AWS SES. Mailchimp is retained as a historical migrati
 
 ## Sending an issue
 
+The creation/edit form's **Preview issue** renders the current unsaved contents without sending or saving. Refresh after changes; choose desktop/mobile or the attached PDF. It uses the send renderer and disables live ad tracking links inside a sandboxed email frame. Browser preview cannot reproduce every mail client's rendering. **Send test** still uses the saved issue, so save before emailing your final proof.
+
 - **Send test** can preview a draft. In live mode it sends one private message; safe mode redirects it to `EMAIL_SAFE_MODE_REDIRECT_TO` (default `cmoll@nicotineresource.org`). The response reports the actual destination and SES message IDs. Test tags exclude its events from reader preference changes and issue statistics. Its unsubscribe links are explicitly inert test links.
 - **Send** requires a published issue. Simulated mode records an SES outbox preview and leaves the issue unsent. Live mode requires complete configuration and `EMAIL_SAFE_MODE=off`; safe mode blocks audience sends rather than redirecting the entire audience to one mailbox.
 - Live sends atomically claim the issue, save the exact subject/HTML/ad selection, record eligible recipients and queue a Payload job. Jobs run on the `newsletters` queue each minute on the persistent Railway app. One session-level Postgres advisory lock per issue also protects against overlapping workers across instances.

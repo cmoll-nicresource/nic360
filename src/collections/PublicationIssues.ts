@@ -74,6 +74,11 @@ export const PublicationIssues: CollectionConfig = {
   },
   fields: [
     {
+      name: 'issuePreview',
+      type: 'ui',
+      admin: { components: { Field: './components/admin/IssuePreview#IssuePreview' } },
+    },
+    {
       type: 'row',
       fields: [
         { name: 'publication', type: 'relationship', relationTo: 'publications', required: true },
@@ -226,7 +231,7 @@ export const PublicationIssues: CollectionConfig = {
       type: 'group',
       admin: {
         description:
-          "Engagement counts, filled in by whichever provider sent this issue (Mailchimp's reporting API, or the SES event webhook). See /admin/analytics for aggregate reporting.",
+          'Engagement counts from verified SES events. Historical imported statistics are retained. See /admin/analytics for aggregate reporting.',
       },
       fields: [
         {

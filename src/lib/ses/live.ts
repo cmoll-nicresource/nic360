@@ -2,6 +2,7 @@ import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import nodemailer from 'nodemailer'
 import { emailSafeModeRedirectAddress, isEmailSafeModeEnabled } from '@/lib/emailSafeMode'
 import { unsubscribeUrl } from './unsubscribe'
+import { newsletterMessageHtml } from './messageHtml'
 import { newsletterPlainText } from './plainText'
 import type { SesClient, SesSendInput, SesSendResult } from './types'
 
@@ -60,10 +61,12 @@ export function createLiveSesClient(): SesClient {
             ? emailSafeModeRedirectAddress()
             : recipient.email
           const url = unsubscribeUrl(recipient.userId || 0, recipient.email, !!input.test)
-          const footer = `<div style="padding:24px;text-align:center;font:12px Arial;color:#526174">${input.test ? 'Test message; unsubscribe does not change reader preferences. ' : ''}<a href="${url}">Unsubscribe from publication emails</a> · <a href="${process.env.SITE_URL}/account">Manage preferences</a></div>`
-          const html = /<\/body>/i.test(input.html)
-            ? input.html.replace(/<\/body>/i, `${footer}</body>`)
-            : input.html + footer
+          const html = newsletterMessageHtml(
+            input.html,
+            url,
+            `${process.env.SITE_URL}/account`,
+            !!input.test,
+          )
           const mail = await composer.sendMail({
             from: config.from,
             to: destination,

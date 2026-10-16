@@ -15,7 +15,7 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
   const req = requireWorkspaceRole(props)
   const payload = req.payload
   const tasks = staffTasksFor(req.user)
-  const [drafts, runs, events, flags] = await Promise.all([
+  const [drafts, runs, events, flags, alerts] = await Promise.all([
     payload.find({
       collection: 'publication-issues',
       where: { _status: { equals: 'draft' } },
@@ -51,6 +51,12 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
           overrideAccess: false,
         })
       : Promise.resolve(null),
+    payload.count({
+      collection: 'operational-alerts',
+      where: { resolved: { equals: false } },
+      req,
+      overrideAccess: false,
+    }),
   ])
   return (
     <WorkspacePage
@@ -63,6 +69,16 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
         </Link>
       }
     >
+      {alerts.totalDocs > 0 && (
+        <div className="nic-workspace__panel" role="status">
+          <strong>
+            {alerts.totalDocs} operational alert{alerts.totalDocs === 1 ? '' : 's'} need attention.
+          </strong>{' '}
+          <Link href="/admin/collections/operational-alerts?where[resolved][equals]=false">
+            Review failed sends and imports →
+          </Link>
+        </div>
+      )}
       <section className="nic-workspace__hero">
         <div>
           <span className="nic-workspace__eyebrow">MONTHLY WORKFLOW</span>

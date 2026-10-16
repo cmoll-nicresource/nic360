@@ -37,3 +37,6 @@ When reviewing styles, wait for `.template-default--nav-hydrated` and the sideba
 ## Beta release
 
 Deployed October 15, 2026: Railway deployment `663944d0-03eb-4972-8047-4e45072b0fe9` reached `SUCCESS`. Live browser checks confirmed staff-login navigation for the dashboard and all six tool roots. HTTP checks confirmed redirects for all five legacy route patterns. Next.js may stream the admin login redirect in a 200 response; check the final browser URL rather than requiring an HTTP 3xx for custom admin views. Authenticated tool and role checks were completed locally; no beta accounts or data were created for this release.
+# Current additions
+
+Issue creation/edit forms include **Preview issue**, using unsaved form contents, desktop/mobile widths and an attached PDF view. Refresh after edits; sending a test still uses saved data. **Operational alerts** is linked under Operations, with staff-only records and deduplicated staff email notifications; see [operations](./operations.md). Current work status is maintained in [project-status.md](./project-status.md).

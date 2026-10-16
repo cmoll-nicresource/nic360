@@ -95,6 +95,7 @@ export interface Config {
     'ses-outbox': SesOutbox;
     'newsletter-deliveries': NewsletterDelivery;
     'ses-events': SesEvent;
+    'operational-alerts': OperationalAlert;
     speakers: Speaker;
     sponsors: Sponsor;
     events: Event;
@@ -161,6 +162,7 @@ export interface Config {
     'ses-outbox': SesOutboxSelect<false> | SesOutboxSelect<true>;
     'newsletter-deliveries': NewsletterDeliveriesSelect<false> | NewsletterDeliveriesSelect<true>;
     'ses-events': SesEventsSelect<false> | SesEventsSelect<true>;
+    'operational-alerts': OperationalAlertsSelect<false> | OperationalAlertsSelect<true>;
     speakers: SpeakersSelect<false> | SpeakersSelect<true>;
     sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
@@ -197,6 +199,7 @@ export interface Config {
     tasks: {
       'import-uspto-trademarks': TaskImportUsptoTrademarks;
       'send-newsletter': TaskSendNewsletter;
+      'monitor-operations': TaskMonitorOperations;
       inline: {
         input: unknown;
         output: unknown;
@@ -1357,7 +1360,7 @@ export interface PublicationIssue {
    */
   legacyId?: string | null;
   /**
-   * Engagement counts, filled in by whichever provider sent this issue (Mailchimp's reporting API, or the SES event webhook). See /admin/analytics for aggregate reporting.
+   * Engagement counts from verified SES events. Historical imported statistics are retained. See /admin/analytics for aggregate reporting.
    */
   stats?: {
     recipientCount?: number | null;
@@ -1578,6 +1581,26 @@ export interface SesEvent {
   createdAt: string;
 }
 /**
+ * Automatic checks every five minutes. Alerts clear when the underlying condition is fixed. Email notifications are deduplicated.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "operational-alerts".
+ */
+export interface OperationalAlert {
+  id: number;
+  alertKey: string;
+  title: string;
+  message: string;
+  sourcePath: string;
+  resolved?: boolean | null;
+  lastSeenAt: string;
+  notifiedAt?: string | null;
+  notificationAttemptedAt?: string | null;
+  notificationError?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * One row per attendee per ping while their livestream page tab is open — see src/components/LivestreamPresence.tsx. A presence log, not duration: the attendee report matches each attendee's ping timestamps against the session schedule to estimate which panels they were likely watching.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1675,7 +1698,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'import-uspto-trademarks' | 'send-newsletter';
+        taskSlug: 'inline' | 'import-uspto-trademarks' | 'send-newsletter' | 'monitor-operations';
         taskID: string;
         input?:
           | {
@@ -1708,7 +1731,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'import-uspto-trademarks' | 'send-newsletter') | null;
+  taskSlug?: ('inline' | 'import-uspto-trademarks' | 'send-newsletter' | 'monitor-operations') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1838,6 +1861,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'ses-events';
         value: number | SesEvent;
+      } | null)
+    | ({
+        relationTo: 'operational-alerts';
+        value: number | OperationalAlert;
       } | null)
     | ({
         relationTo: 'speakers';
@@ -2571,6 +2598,23 @@ export interface SesEventsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "operational-alerts_select".
+ */
+export interface OperationalAlertsSelect<T extends boolean = true> {
+  alertKey?: T;
+  title?: T;
+  message?: T;
+  sourcePath?: T;
+  resolved?: T;
+  lastSeenAt?: T;
+  notifiedAt?: T;
+  notificationAttemptedAt?: T;
+  notificationError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "speakers_select".
  */
 export interface SpeakersSelect<T extends boolean = true> {
@@ -2934,6 +2978,14 @@ export interface TaskSendNewsletter {
   input: {
     issueId: number;
   };
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskMonitor-operations".
+ */
+export interface TaskMonitorOperations {
+  input?: unknown;
   output?: unknown;
 }
 /**

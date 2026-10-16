@@ -3,6 +3,14 @@ import type { PayloadRequest } from 'payload'
 
 export const STAFF_TASKS = [
   {
+    href: '/admin/collections/operational-alerts?where[resolved][equals]=false',
+    label: 'Operational alerts',
+    description: 'Review failed sends, stalled imports and missing scheduled reports.',
+    category: 'Operations',
+    role: 'editor',
+    icon: 'analytics',
+  },
+  {
     href: '/admin/trade-reports',
     label: 'Trade Barometer',
     description: 'Upload Census files and prepare the monthly trade report.',

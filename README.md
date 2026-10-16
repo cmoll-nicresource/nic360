@@ -1,5 +1,7 @@
 # Nic360
 
+Current completed work and next steps: [project checklist](docs/project-status.md). Operational monitoring: [alerts runbook](docs/operations.md). Older milestone descriptions below are project history.
+
 Payload CMS 3 + Next.js rebuild of Nicotine360. See [CLAUDE.md](./CLAUDE.md) for the project brief and [docs/entity-map.md](./docs/entity-map.md) for field-level detail. Build order and "done when" criteria for each milestone are in CLAUDE.md.
 
 ## Setup
@@ -53,7 +55,7 @@ Without `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` set, account emails (verific
 - `/datasets` (cards) → `/datasets/[slug]` (AG Grid, Premium-gated, CSV download) via `/api/datasets/[id]/rows` and `/api/datasets/[id]/export`. `/guides` → `/guides/[slug]` uses per-guide plan checks.
 - `pnpm seed` imports two real sample spreadsheets (`docs/sample-data/*.csv`) into two datasets, and publishes two guides.
 
-### Milestone 4: publications and Mailchimp
+### Milestone 4: publications (original Mailchimp prototype; current sender is SES)
 
 - `publications` (selection/grouping rules, Mailchimp ids, `generator`), `publication-issues` (three formats: excerpt list, PDF report, custom HTML — conditional fields per `format`), `email-flags`, `trademark-import-runs`, the `mailchimp-outbox` collection, and the `mailchimp-settings` global.
 - `src/lib/mailchimp/` defines the `MailchimpClient` interface (`upsertMember`, `createCampaign`, `sendCampaign`, `sendTest`, `parseUnsubscribeWebhook`) with a `simulated` implementation (writes every call, including the full rendered campaign HTML and target segment, to `mailchimp-outbox`) and a stubbed `live` one, chosen by `MAILCHIMP_MODE`.

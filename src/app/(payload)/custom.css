@@ -320,3 +320,9 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
   font-size: 11px;
   letter-spacing: 0.02em;
 }
+.nic-issue-preview { margin: 0 0 24px; padding: 18px; border: 1px solid var(--theme-elevation-200); border-radius: 8px; }
+.nic-issue-preview__toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.nic-issue-preview button { padding: 8px 14px; border: 1px solid var(--theme-elevation-300); border-radius: 4px; background: var(--theme-elevation-50); color: var(--theme-text); cursor: pointer; }
+.nic-issue-preview button[aria-pressed="true"] { border-color: var(--theme-text); font-weight: bold; }
+.nic-issue-preview__canvas { width: 100%; margin: 12px auto 0; background: white; }
+.nic-issue-preview iframe { display: block; width: 100%; height: 680px; border: 0; }

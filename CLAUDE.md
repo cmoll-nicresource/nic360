@@ -6,7 +6,7 @@ Read this first. Field-level detail for every entity lives in `docs/entity-map.m
 
 A rebuild of Nicotine360 (nicotine360.org), a subscription news and intelligence site for the nicotine and tobacco industry, run by a 501(c)(6) trade organization with five staff. Readers get access through their employer's company-wide subscription (mostly via membership dues) or by buying a ticket to an event.
 
-**Original goal: a working skeleton prototype.** The five milestones below are complete. The project now also includes migration tooling, search, analytics, and monthly trade reporting; real migrated data exists in non-local environments. Treat this milestone list as project history, `docs/entity-map.md` as the current feature map, and `docs/ttb-trade-report.md` as the trade operational handoff. Railway beta trade database setup is complete; the report fixes are deployed to beta; signed-in staff-flow verification remains open.
+**Original goal: a working skeleton prototype.** The five milestones below are complete. The project now includes migrated data, refreshed reader/staff interfaces, trade/trademark PDFs and live queued SES newsletters. Use [docs/project-status.md](docs/project-status.md) for current completed work and next steps, `docs/entity-map.md` for the feature map, and individual runbooks for operations. Beta trade setup and report fixes are complete; the user reported successful generation. Broader acceptance checks remain separate from that successful workflow.
 
 ## Stack
 
@@ -101,7 +101,7 @@ Our site is the source of truth for who receives what. Mailchimp only mirrors it
 
 ## US Tobacco Trade Barometer
 
-A monthly, upload-triggered report (not scheduled): any editor uploads the two files Census emails each month at `/admin/trade-reports`, which loads them into a `ref`/`trade`/`report` Postgres schema set (same database, namespaced away from Payload's own tables), refreshes the US Imports/US Exports Datasets, and drafts the Trade Barometer as a PDF Publication Issue. See `docs/ttb-trade-report.md` for the numeric-conversion repair, tests, and verification. **Railway beta trade database prerequisites were restored and verified October 14, 2026. Report fixes are deployed to beta; signed-in staff-flow verification remains open. Never run the prototype's destructive schema.sql against an existing trade database.**
+A monthly, upload-triggered report (not scheduled): any editor uploads the two files Census emails each month at `/admin/trade-reports`, which loads them into a `ref`/`trade`/`report` Postgres schema set (same database, namespaced away from Payload's own tables), refreshes the US Imports/US Exports Datasets, and drafts the Trade Barometer as a PDF Publication Issue. See `docs/ttb-trade-report.md` for the numeric-conversion repair, tests, and verification. **Railway beta trade database prerequisites were restored and verified October 14, 2026. Report fixes are deployed to beta, and the user has reported successful generation; remaining acceptance work is tracked in docs/project-status.md. Never run the prototype's destructive schema.sql against an existing trade database.**
 
 ## Conventions
 
@@ -115,10 +115,12 @@ Missing TRQ inputs are also fetched automatically from the latest weekly CBP Com
 - Seed scripts: never reset the working or hosted database. The demo reset requires a dedicated loopback `nic360_*_demo`/`nic360_*_test` database, `ALLOW_DESTRUCTIVE_LOCAL_SEED=true`, and `pnpm seed --reset-local-demo`; see `docs/import-and-access-safety.md`.
 - Tests: `pnpm test` (Vitest, `src/**/*.test.ts`) covers pure logic — no DB or network. Add a test alongside any new pure function with real edge cases (parsing, pricing, classification, access rules), not just UI/collection code.
 - Secrets come only from env: `DATABASE_URI`, `PAYLOAD_SECRET`, `S3_*`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SES_*`, `MAILCHIMP_API_KEY`, `MAILCHIMP_MODE`. Keep `.env.example` up to date.
-- Email safety: real migrated user data lives in non-local environments, so every outgoing account email is redirected to a safe address by default (`EMAIL_SAFE_MODE`, `src/lib/emailSafeMode.ts`) — requires an explicit `EMAIL_SAFE_MODE=off` to deliver to a real recipient. Keep the SES account in sandbox mode as a second, infrastructure-level backstop until real sending is actually wanted.
+- Email safety: real migrated readers exist on beta. Account/operations email redirects to the safe mailbox by default; newsletter audience sends are blocked while safe mode is on. SES has production sending access; its sandbox is not a backstop. Keep `EMAIL_SAFE_MODE=on` until a deliberately approved rollout. See `docs/newsletter-delivery.md`.
 - Keep it simple: this is a prototype for a five-person team. Prefer Payload built-ins over custom infrastructure.
 
-## Out of scope for now
+## Historical prototype exclusions
+
+The list below describes the original prototype only. Migration and the visual refresh were subsequently completed. Use [docs/project-status.md](docs/project-status.md) for current next steps. Mailchimp live sending remains excluded; SES is the implemented sender.
 
 - Migrating data, users or passwords from the old site.
 - Redirects (only a couple of pages are crawlable).
