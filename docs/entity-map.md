@@ -63,6 +63,8 @@ Current reader layouts and data-explorer behavior are documented in [frontend-ex
 
 News found across the internet; we take the title and a preview and apply index terms.
 
+Migration correction (October 16): the old curated news excerpt is `short_abstract`, not `full_text`. The initial importer silently substituted headlines. The corrected importer decodes COPY fields and prefers the curated excerpt; a separate backed-up repair restored 8,513 base/latest-version excerpts locally and on beta, with 823 already-correct records and 94 original-source gaps. See [article excerpt recovery](./article-excerpt-recovery.md). Earlier dated migration notes describing the `full_text` mapping are superseded by this correction.
+
 | UI label | Field | Payload type | Req. |
 |---|---|---|---|
 | Article Title | `title` | text | ✓ |

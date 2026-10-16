@@ -2,10 +2,11 @@
  * Migrates published Articles from the old site. Field mapping, confirmed
  * against the real data rather than guessed:
  *
- * - `full_text` (EditorJS blocks, averaging ~358 chars — a preview, not a
- *   full article body) -> `excerpt`, via editorJsToParagraphs(). Falls back
- *   to `raw_content` (a plain-text teaser) when full_text has no usable
- *   paragraphs — 954 rows have a null full_text, 8 have empty blocks.
+ * - Curated `short_abstract` -> `excerpt`. Decode PostgreSQL COPY escapes
+ *   before parsing EditorJS JSON. Fall back through full_text, content and
+ *   raw_content only when the preferred field has no distinct excerpt.
+ *   The original full_text-only mapping lost the excerpts; existing records
+ *   are repaired separately by repairArticleExcerpts.ts, not by rerunning this import.
  * - `source_title` -> a Source doc (upserted by name) -> `source`. The old
  *   relational `sources` table is empty (0 rows) and `source` itself is a
  *   dead field (always the literal string of an empty Ruby hash), so
@@ -32,7 +33,7 @@ import zlib from 'zlib'
 import { getPayload } from 'payload'
 
 import config from '../src/payload.config'
-import { editorJsToParagraphs } from '../src/lib/editorJsImport'
+import { legacyArticleExcerpt } from '../src/lib/legacyArticleExcerpt'
 import { lexicalFromParagraphs, lexicalFromText } from '../src/lib/lexical'
 
 const DUMP_PATH = path.join(process.cwd(), 'old-db', 'truecms.sql.gz')
@@ -72,6 +73,8 @@ type Article = {
   title: string
   status: string
   content: string
+  fullText: string
+  shortAbstract: string
   publicationDate: string
   link: string
   source: string
@@ -105,9 +108,21 @@ async function main() {
   // Column order per the dump's own COPY header — indexed explicitly rather
   // than by positional destructuring (36 columns, easy to miscount blanks).
   const ARTICLE_COL = {
-    id: 0, title: 3, status: 4, content: 5, publicationDate: 6, link: 7,
-    source: 10, sourceDate: 11, createdAt: 12, rawContent: 15, sourceTitle: 16,
-    fullText: 24, sourceLink: 27, primarySubjectId: 32,
+    id: 0,
+    title: 3,
+    status: 4,
+    content: 5,
+    publicationDate: 6,
+    link: 7,
+    source: 10,
+    sourceDate: 11,
+    createdAt: 12,
+    rawContent: 15,
+    sourceTitle: 16,
+    shortAbstract: 23,
+    fullText: 24,
+    sourceLink: 27,
+    primarySubjectId: 32,
   }
   const articles: Article[] = []
   await streamTable('articles', (f) => {
@@ -116,7 +131,9 @@ async function main() {
       id: f[ARTICLE_COL.id],
       title: f[ARTICLE_COL.title],
       status: f[ARTICLE_COL.status],
-      content: f[ARTICLE_COL.fullText],
+      content: f[ARTICLE_COL.content],
+      fullText: f[ARTICLE_COL.fullText],
+      shortAbstract: f[ARTICLE_COL.shortAbstract],
       publicationDate: f[ARTICLE_COL.publicationDate],
       link: f[ARTICLE_COL.link],
       source: f[ARTICLE_COL.source],
@@ -134,15 +151,21 @@ async function main() {
 
   console.log('Loading Sectors/Products/Subjects into memory...')
   const sectorIdByName = new Map<string, string | number>()
-  for (const { docs } of [await payload.find({ collection: 'sectors', limit: 1000, overrideAccess: true })]) {
+  for (const { docs } of [
+    await payload.find({ collection: 'sectors', limit: 1000, overrideAccess: true }),
+  ]) {
     for (const d of docs) sectorIdByName.set(d.name, d.id)
   }
   const productIdByName = new Map<string, string | number>()
-  for (const d of (await payload.find({ collection: 'products', limit: 1000, overrideAccess: true })).docs) {
+  for (const d of (
+    await payload.find({ collection: 'products', limit: 1000, overrideAccess: true })
+  ).docs) {
     productIdByName.set(d.name, d.id)
   }
   const subjectIdByLegacyId = new Map<string, string | number>()
-  for (const d of (await payload.find({ collection: 'subjects', limit: 2000, overrideAccess: true })).docs) {
+  for (const d of (
+    await payload.find({ collection: 'subjects', limit: 2000, overrideAccess: true })
+  ).docs) {
     if (d.legacyId) subjectIdByLegacyId.set(d.legacyId, d.id)
   }
   // oldTaxonomyId -> its real name, for resolving Sector/Product tags by name.
@@ -177,12 +200,16 @@ async function main() {
   console.log('Resolving Sources (upsert by name)...')
   const sourceIdByName = new Map<string, string | number>()
   const usedDomains = new Set<string>()
-  for (const d of (await payload.find({ collection: 'sources', limit: 2000, overrideAccess: true })).docs) {
+  for (const d of (await payload.find({ collection: 'sources', limit: 2000, overrideAccess: true }))
+    .docs) {
     sourceIdByName.set(d.name, d.id)
     if (d.domain) usedDomains.add(d.domain)
   }
 
-  async function resolveSource(name: string | undefined, link: string | undefined): Promise<string | number | undefined> {
+  async function resolveSource(
+    name: string | undefined,
+    link: string | undefined,
+  ): Promise<string | number | undefined> {
     if (!name) return undefined
     const existing = sourceIdByName.get(name)
     if (existing) return existing
@@ -193,7 +220,11 @@ async function main() {
     } catch {
       // malformed link — leave domain unset
     }
-    const doc = await payload.create({ collection: 'sources', data: { name, domain }, overrideAccess: true })
+    const doc = await payload.create({
+      collection: 'sources',
+      data: { name, domain },
+      overrideAccess: true,
+    })
     sourceIdByName.set(name, doc.id)
     if (domain) usedDomains.add(domain)
     return doc.id
@@ -205,7 +236,12 @@ async function main() {
   for (const a of articles) {
     const existing = await payload.find({
       collection: 'articles',
-      where: { and: [{ 'ingestion.source': { equals: 'migration' } }, { 'ingestion.externalId': { equals: a.id } }] },
+      where: {
+        and: [
+          { 'ingestion.source': { equals: 'migration' } },
+          { 'ingestion.externalId': { equals: a.id } },
+        ],
+      },
       limit: 1,
       overrideAccess: true,
     })
@@ -214,21 +250,22 @@ async function main() {
       continue
     }
 
-    let content: unknown
-    try {
-      content = JSON.parse(a.content)
-    } catch {
-      content = null
-    }
-    const paragraphs = editorJsToParagraphs(content)
-    const excerpt =
-      paragraphs.length > 0
-        ? lexicalFromParagraphs(paragraphs)
-        : lexicalFromText(clean(a.rawContent) ?? a.title)
+    const recovered = legacyArticleExcerpt({
+      title: a.title,
+      shortAbstract: a.shortAbstract,
+      fullText: a.fullText,
+      content: a.content,
+      rawContent: a.rawContent,
+    })
+    const excerpt = recovered
+      ? lexicalFromParagraphs(recovered.paragraphs)
+      : lexicalFromText(clean(a.rawContent) ?? a.title)
 
     const oldTagIds = tagsByArticleId.get(a.id) ?? []
     const { sectors, products, subjects } = resolveTags(oldTagIds)
-    const primarySubject = clean(a.primarySubjectId) ? subjectIdByLegacyId.get(a.primarySubjectId) : undefined
+    const primarySubject = clean(a.primarySubjectId)
+      ? subjectIdByLegacyId.get(a.primarySubjectId)
+      : undefined
 
     const sourceId = await resolveSource(clean(a.sourceTitle), clean(a.link) ?? clean(a.sourceLink))
 
@@ -238,7 +275,9 @@ async function main() {
         title: a.title || `Untitled (legacy #${a.id})`,
         source: sourceId,
         sourceDate:
-          toISO(clean(a.sourceDate)) ?? toISO(clean(a.publicationDate)) ?? toISO(clean(a.createdAt)) ??
+          toISO(clean(a.sourceDate)) ??
+          toISO(clean(a.publicationDate)) ??
+          toISO(clean(a.createdAt)) ??
           new Date().toISOString(),
         sourceUrl: clean(a.link) ?? clean(a.sourceLink),
         excerpt,
@@ -256,7 +295,9 @@ async function main() {
     if (created % 500 === 0) console.log(`  ...${created} created`)
   }
 
-  console.log(`\nDone. ${created} created, ${skippedExisting} already existed, ${sourceIdByName.size} total Sources.`)
+  console.log(
+    `\nDone. ${created} created, ${skippedExisting} already existed, ${sourceIdByName.size} total Sources.`,
+  )
   process.exit(0)
 }
 

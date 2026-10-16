@@ -5,6 +5,7 @@ Updated October 16, 2026. This is the current work list. The original milestones
 ## Completed
 
 - Reader design refresh, supplied photography, unified staff workspace under `/admin`, full dataset loading/exports and access checks.
+- October 16: article excerpt migration repaired locally and on beta: 8,513 article excerpts/search fields and latest CMS versions restored from the original dump. 823 already matched usable source text; 94 have no distinct original excerpt and are listed for follow-up. See [excerpt recovery](./article-excerpt-recovery.md).
 - Trade history restored to beta; report pagination/headers, Nicotine360 branding, linked contents, automatic US trade narrative and CBP TRQ inputs. Yellow editorial placeholders removed. Staff has reported successful report generation. The first-time restore must not be repeated.
 - Weekly/monthly trademark PDFs, publication download URLs, published marks in monthly reports and a hard stop for missing weekly Gazette coverage.
 - Company/member migration exception decisions applied locally and on beta, with the EmailFlag deletion/retained-suppression repair.
@@ -17,6 +18,8 @@ Updated October 16, 2026. This is the current work list. The original milestones
 - October 16: beta event checkout verified with real hosted Stripe sandbox payment and signed completion/expiration deliveries. Exact-cent discounts, pending access, new/existing colleagues, queued invitation acceptance, declines, cancellation, expiration and concurrent signed replays passed. Temporary fixtures removed; beta remains in Stripe test mode and email safe mode. See [event checkout](./event-checkout.md).
 
 ## Next work, in priority order
+
+Content follow-up: review the [94 original excerpt gaps](./article-excerpt-source-gaps.json). The bulk migration repair is complete; these need original/source material or editorial decisions.
 
 1. **Human inbox review:** inspect the already-delivered `[TEST] Nicotine360 newsletter delivery verification` email at `cmoll@nicotineresource.org`; review real publication samples in Outlook/Gmail and on mobile. The complaint/bounce simulator notifications are separate messages.
 2. **Small staff newsletter pilot:** add an explicit internal recipient selection, preview eligible/excluded audience counts, then deliver to that reviewed staff group. Current global beta safe mode stays on; no migrated audience send is authorized.
