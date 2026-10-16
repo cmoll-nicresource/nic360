@@ -39,6 +39,7 @@ import { EventsWorkspaceView as EventsWorkspaceView_63ff882a65d91f75560ed44e3e74
 import { ManageEventView as ManageEventView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { AccessCheckView as AccessCheckView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { WorkspaceAnalyticsView as WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
+import { CompanyReportsView as CompanyReportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -84,5 +85,6 @@ export const importMap = {
   "./components/admin/workspace/StaffTools#ManageEventView": ManageEventView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#AccessCheckView": AccessCheckView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#WorkspaceAnalyticsView": WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40,
+  "./components/admin/workspace/StaffTools#CompanyReportsView": CompanyReportsView_63ff882a65d91f75560ed44e3e743a40,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

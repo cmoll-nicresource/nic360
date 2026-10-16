@@ -149,6 +149,12 @@ export default buildConfig({
           path: '/analytics',
           meta: { title: 'Analytics' },
         },
+        companyReports: {
+          Component: './components/admin/workspace/StaffTools#CompanyReportsView',
+          path: '/company-reports',
+          exact: true,
+          meta: { title: 'Company usage reports' },
+        },
       },
     },
     meta: {

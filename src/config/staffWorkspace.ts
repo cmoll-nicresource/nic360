@@ -173,6 +173,15 @@ export const STAFF_TASKS: readonly Task[] = [
     audience: 'members',
   },
   {
+    href: '/admin/company-reports',
+    label: 'Company usage reports',
+    description: 'Review each provider’s users and activity for a date range.',
+    category: 'Membership & events',
+    role: 'gatekeeper',
+    icon: 'analytics',
+    audience: 'members',
+  },
+  {
     href: '/admin/collections/email-flags',
     label: 'Email follow-up',
     description: 'Resolve delivery flags and retained suppressions.',

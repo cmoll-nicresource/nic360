@@ -26,7 +26,7 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm lint
       - run: pnpm test
-      - run: pnpm exec vitest run src/lib/writeDatasetRows.integration.test.ts src/lib/emailFlagSchema.integration.test.ts src/lib/ses/newsletter.integration.test.ts src/lib/repairLegacyArticleExcerpts.integration.test.ts
+      - run: pnpm exec vitest run src/lib/writeDatasetRows.integration.test.ts src/lib/emailFlagSchema.integration.test.ts src/lib/ses/newsletter.integration.test.ts src/lib/repairLegacyArticleExcerpts.integration.test.ts src/lib/companyUsage.integration.test.ts
         env:
           DATASET_INTEGRATION: '1'
           NEWSLETTER_INTEGRATION: '1'

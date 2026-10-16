@@ -329,3 +329,12 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
 .nic-issue-preview button[aria-pressed="true"] { border-color: var(--theme-text); font-weight: bold; }
 .nic-issue-preview__canvas { width: 100%; margin: 12px auto 0; background: white; }
 .nic-issue-preview iframe { display: block; width: 100%; height: 680px; border: 0; }
+.nic-company-report__filters { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; padding: 24px; background: var(--nic-tint); border-radius: 12px; }
+.nic-company-report__filters label { display: grid; gap: 8px; min-width: 160px; max-width: 100%; }
+.nic-company-report__filters label:first-child { flex: 1; min-width: min(280px, 100%); }
+.nic-company-report__filters select, .nic-company-report__filters input { padding: 10px; width: 100%; min-width: 0; border: 1px solid var(--theme-elevation-200); border-radius: 6px; background: var(--theme-input-bg); color: var(--theme-text); }
+.nic-company-report__table { overflow-x: auto; }
+.nic-company-report__table table { min-width: 900px; }
+.nic-company-report__table td { vertical-align: top; }
+.nic-company-report__table small { display: block; margin-top: 6px; }
+.nic-company-report__table details { margin-top: 8px; }

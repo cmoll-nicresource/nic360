@@ -10,6 +10,7 @@ import { RunTrademarkReportButton } from '@/components/RunTrademarkReportButton'
 import { GenerateTrademarkReport } from '@/components/GenerateTrademarkReport'
 import { EventManageDashboard } from '@/components/admin/event-manage/EventManageDashboard'
 import { AnalyticsView } from '@/components/admin/analytics/AnalyticsView'
+import { CompanyUsageView } from '@/components/admin/analytics/CompanyUsageView'
 import {
   getAttendeeReport,
   getSessionPopularity,
@@ -435,6 +436,21 @@ export function WorkspaceAnalyticsView(props: AdminViewServerProps) {
   return (
     <WorkspaceShell props={props}>
       <AnalyticsView payload={req.payload} user={req.user} searchParams={props.searchParams} />
+    </WorkspaceShell>
+  )
+}
+
+export function CompanyReportsView(props: AdminViewServerProps) {
+  const req = requireWorkspaceRole(props, 'gatekeeper')
+  return (
+    <WorkspaceShell props={props}>
+      <WorkspacePage
+        title="Company usage reports"
+        eyebrow="MEMBER OPERATIONS"
+        description="Review each company's users and their website activity over a date range."
+      >
+        <CompanyUsageView payload={req.payload} user={req.user} searchParams={props.searchParams} />
+      </WorkspacePage>
     </WorkspaceShell>
   )
 }
