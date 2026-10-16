@@ -23,6 +23,8 @@ The October 16 design refresh uses a Nicotine360 logo masthead, issue date, publ
 
 Email uses tables, inline styles and web-safe fonts, with an Outlook width wrapper and optional mobile enhancements. All five supplied reference editions were rendered using their sample excerpts and checked at 320px, 390px and desktop width, plus an inline-only fallback. These browser checks are not an Outlook/Gmail rendering certification. Human inbox review remains part of the controlled newsletter pilot. No publication was emailed as part of the design refresh.
 
+Beta verification used one temporary draft referencing an existing published article and bill, plus a temporary editor. The deployed editor preview resolved both content types and their metadata, preserved the date/web-edition link and final unsubscribe footer, and displayed desktop/mobile views. The staff web edition rendered both entries without phone overflow. The issue remained draft and unsent; fixtures and temporary SSH access were removed. GitHub checks passed, including the existing disposable-database suites. Local verification comprised 412 offline tests and 35 email/web layout checks.
+
 ## Unsubscribe, bounces and complaints
 
 Every live message has a footer link to `/api/newsletters/unsubscribe?token=…`. GET only shows a confirmation page, so link scanners do not unsubscribe readers. A signed RFC8058 one-click POST or the confirmation form clears publication preferences and records an EmailFlag in one database transaction. It never changes site access or account email. Tokens bind the reader ID, address and test scope; an old link cannot affect an account that changed email. Tokens do not expire; rotating the dedicated signing secret (or fallback Payload secret) invalidates existing links.

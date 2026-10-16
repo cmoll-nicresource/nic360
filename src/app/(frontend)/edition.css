@@ -1946,7 +1946,7 @@ nav.topnav .nav-right .btn {
   font-size: 16px;
   line-height: 1.65;
 }
-.edition-issue-reading .publication-web-content {
+.edition-issue-reading .card.publication-web-content {
   border-top: 0;
   padding: 32px 40px;
 }
@@ -1956,7 +1956,7 @@ nav.topnav .nav-right .btn {
 .publication-web-content td { border-bottom: 0; }
 .publication-web-content tbody tr:hover { background: transparent; }
 @media (max-width: 600px) {
-  .edition-issue-reading .publication-web-content { padding: 20px; }
+  .edition-issue-reading .card.publication-web-content { padding: 20px; }
   .publication-web-content .pub-meta-cell { display: block; width: auto; }
 }
 .edition-issue-reading > h1 {
