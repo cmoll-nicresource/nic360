@@ -1930,6 +1930,35 @@ nav.topnav .nav-right .btn {
 .edition-issue-reading {
   max-width: 900px;
 }
+.publication-web-masthead {
+  margin: 20px 0 28px;
+  padding: 12px 0 24px;
+  border-bottom: 3px solid #337b89;
+}
+.publication-web-masthead h1 {
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.15;
+  max-width: 720px;
+}
+.publication-deck {
+  max-width: 600px;
+  color: var(--nrc-muted);
+  font-size: 16px;
+  line-height: 1.65;
+}
+.edition-issue-reading .publication-web-content {
+  border-top: 0;
+  padding: 32px 40px;
+}
+.publication-web-content [id] {
+  scroll-margin-top: 90px;
+}
+.publication-web-content td { border-bottom: 0; }
+.publication-web-content tbody tr:hover { background: transparent; }
+@media (max-width: 600px) {
+  .edition-issue-reading .publication-web-content { padding: 20px; }
+  .publication-web-content .pub-meta-cell { display: block; width: auto; }
+}
 .edition-issue-reading > h1 {
   font-size: clamp(30px, 3.5vw, 44px);
   line-height: 1.2;

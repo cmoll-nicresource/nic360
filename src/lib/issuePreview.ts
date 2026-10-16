@@ -20,6 +20,8 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
     depth: 0,
   })
   const issue = {
+    id: data.id,
+    issueDate: data.issueDate,
     title: data.title || 'Untitled issue',
     format: data.format,
     intro: data.intro,
@@ -41,7 +43,7 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
         const value = await payload.findByID({
           collection: item.relationTo,
           id: idOf(item.value),
-          depth: 0,
+          depth: 1,
           draft: true,
         })
         items.push({ relationTo: item.relationTo, value })

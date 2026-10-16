@@ -29,6 +29,8 @@ beforeEach(() => {
 })
 it('renders unsaved content and resolves IDs without saving or sending', async () => {
   const result = await previewIssue(payload, {
+    id: 31,
+    issueDate: '2026-10-09T00:00:00Z',
     publication: 7,
     title: 'Unsaved headline',
     format: 'excerpt-list',
@@ -36,6 +38,10 @@ it('renders unsaved content and resolves IDs without saving or sending', async (
   })
   expect(result.subject).toBe('Unsaved headline')
   expect(result.html).toContain('Resolved article title')
+  expect(result.html).toContain('Oct 9, 2026')
+  expect(findByID).toHaveBeenCalledWith(
+    expect.objectContaining({ collection: 'articles', id: 12, depth: 1, draft: true }),
+  )
   expect(result.html).toContain('Publication header')
   expect(result.html).toContain('Unsubscribe from publication emails')
   expect(result.html).toContain('Content-Security-Policy')

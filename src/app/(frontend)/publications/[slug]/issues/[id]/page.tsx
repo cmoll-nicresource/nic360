@@ -10,17 +10,12 @@ import { PublicationCover } from '@/components/frontend/Editorial'
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
-import { adSlotCount, getActiveAdsForPublication, isAdSlotBeforeIndex } from '@/lib/publicationAds'
+import { adSlotCount, getActiveAdsForPublication } from '@/lib/publicationAds'
+import { renderExcerptListBody } from '@/lib/issueEmail'
 import { formatDate } from '@/lib/formatDate'
 import type { PublicationAd } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
-
-const EXCERPT_PATH: Record<string, string> = {
-  articles: 'articles',
-  bills: 'bills',
-  trademarks: 'trademarks',
-}
 
 export default async function IssueDetailPage({
   params,
@@ -79,61 +74,6 @@ function AdCard({ ad }: { ad: PublicationAd }) {
   )
 }
 
-/**
- * Renders sections as a flat sequence of headings/lists/ads, flattening the
- * item count across the whole issue (not restarted per section) — same
- * placement rule as the email renderer in src/lib/issueEmail.ts.
- */
-function renderSectionsWithAds(
-  sections: { heading: string; items?: { relationTo: string; value: unknown }[] | null }[],
-  ads: PublicationAd[],
-): React.ReactNode[] {
-  let itemIndex = 0
-  let adIndex = 0
-  let listKey = 0
-  let currentList: React.ReactNode[] = []
-  const output: React.ReactNode[] = []
-
-  const flushList = (key: string) => {
-    if (currentList.length > 0) {
-      output.push(<ul key={`ul-${key}`}>{currentList}</ul>)
-      currentList = []
-    }
-  }
-
-  sections.forEach((section, si) => {
-    output.push(<h3 key={`h-${si}`}>{section.heading}</h3>)
-
-    ;(section.items ?? []).forEach((item, ii) => {
-      if (isAdSlotBeforeIndex(itemIndex) && adIndex < ads.length) {
-        flushList(`${si}-${listKey++}`)
-        output.push(<AdCard key={`ad-${adIndex}`} ad={ads[adIndex]} />)
-        adIndex++
-      }
-
-      if (
-        typeof item.value === 'object' &&
-        item.value &&
-        'id' in item.value &&
-        'title' in item.value
-      ) {
-        const value = item.value as { id: number; title: string }
-        const href = `/${EXCERPT_PATH[item.relationTo]}/${value.id}`
-        currentList.push(
-          <li key={`item-${si}-${ii}`}>
-            <Link href={href}>{value.title}</Link>
-          </li>,
-        )
-      }
-      itemIndex++
-    })
-
-    flushList(`${si}-${listKey++}`)
-  })
-
-  return output
-}
-
 async function IssueDetail({
   payload,
   id,
@@ -146,7 +86,7 @@ async function IssueDetail({
   slug: string
 }) {
   const issue = await payload
-    .findByID({ collection: 'publication-issues', id, depth: 1, overrideAccess: true })
+    .findByID({ collection: 'publication-issues', id, depth: 2, overrideAccess: true })
     .catch(() => null)
   if (!issue) notFound()
   if (issue._status !== 'published' && !isStaff) notFound()
@@ -175,18 +115,30 @@ async function IssueDetail({
 
       {publication?.header && <div dangerouslySetInnerHTML={{ __html: publication.header }} />}
 
-      <h1>{issue.title}</h1>
-      <p className="excerpt-meta">
-        {formatDate(issue.issueDate)}
-        {isStaff ? <span className="dot">·</span> : null}
-        {isStaff ? (issue.email?.status ?? 'not sent') : null}
-      </p>
+      <header className={issue.format === 'excerpt-list' ? 'publication-web-masthead' : undefined}>
+        {issue.format === 'excerpt-list' && (
+          <p className="edition-eyebrow">
+            {publication?.category?.includes('legislation')
+              ? 'Legislative intelligence'
+              : 'Industry intelligence'}
+          </p>
+        )}
+        <h1>{issue.title}</h1>
+        {issue.format === 'excerpt-list' && publication?.description && (
+          <p className="publication-deck">{publication.description}</p>
+        )}
+        <p className="excerpt-meta">
+          {formatDate(issue.issueDate)}
+          {isStaff ? <span className="dot">·</span> : null}
+          {isStaff ? (issue.email?.status ?? 'not sent') : null}
+        </p>
+      </header>
 
       {issue.format === 'excerpt-list' && (
-        <div className="card">
-          {issue.intro && <RichText data={issue.intro} />}
-          {renderSectionsWithAds(issue.sections ?? [], ads)}
-        </div>
+        <div
+          className="card publication-web-content"
+          dangerouslySetInnerHTML={{ __html: renderExcerptListBody(issue, publication!, ads) }}
+        />
       )}
 
       {issue.format === 'pdf-report' && (

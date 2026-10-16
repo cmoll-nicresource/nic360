@@ -54,7 +54,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const isTest = Boolean(body.test)
 
     const issue = (await payload
-      .findByID({ collection: 'publication-issues', id, depth: 1, overrideAccess: true })
+      .findByID({ collection: 'publication-issues', id, depth: 2, overrideAccess: true })
       .catch(() => null)) as PublicationIssue | null
     if (!issue) return NextResponse.json({ error: 'Issue not found.' }, { status: 404 })
     if (!isTest && issue._status !== 'published')

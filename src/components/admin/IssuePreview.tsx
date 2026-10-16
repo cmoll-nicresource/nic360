@@ -1,12 +1,13 @@
 'use client'
 
-import { useForm } from '@payloadcms/ui'
+import { useDocumentInfo, useForm } from '@payloadcms/ui'
 import { useState } from 'react'
 
 type Preview = { html: string; subject: string; previewText: string; pdfUrl: string | null }
 
 export function IssuePreview() {
   const { getData } = useForm()
+  const { id } = useDocumentInfo()
   const [preview, setPreview] = useState<Preview | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -19,7 +20,7 @@ export function IssuePreview() {
       const response = await fetch('/api/publication-issues/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(getData()),
+        body: JSON.stringify({ ...getData(), ...(id ? { id: Number(id) } : {}) }),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Preview failed.')
