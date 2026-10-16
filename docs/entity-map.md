@@ -783,6 +783,8 @@ Added when the question "what's the click rate on the last 10 Daily Executive Su
 | `recipientCount` | number | set at send time |
 | `delivered`, `opens`, `clicks`, `bounces`, `complaints` | number | distinct notification events; SNS retries are deduplicated, multiple opens/clicks still count |
 
+These are issue-level metrics, not independent editable-version data. `preserveIssueStats` locks and carries the authoritative issue counters into every version save; atomic webhook increments and recipient-count updates also synchronize the latest version. Queueing, finalizing a send and editing an issue cannot overwrite counters from concurrent events.
+
 All read-only, filled in by whichever provider sent the issue: Mailchimp's Reports API (`GET /reports/{campaign_id}`, not yet wired up — a polling job would pull this periodically) or the SES event webhook below (built).
 
 **SES client** (`src/lib/ses/`, mirrors `src/lib/mailchimp/`'s simulated/live split, chosen by env `SES_MODE`):

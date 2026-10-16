@@ -3,6 +3,7 @@ import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 import { staffHasMinRole } from '@/access/staffRoles'
+import { preserveIssueStats } from '@/hooks/preserveIssueStats'
 
 const defaultFormatFromPublication: CollectionBeforeChangeHook = async ({
   data,
@@ -69,7 +70,7 @@ export const PublicationIssues: CollectionConfig = {
     delete: staffCanWrite,
   },
   hooks: {
-    beforeChange: [defaultFormatFromPublication, protectNewsletterState],
+    beforeChange: [defaultFormatFromPublication, protectNewsletterState, preserveIssueStats],
   },
   fields: [
     {

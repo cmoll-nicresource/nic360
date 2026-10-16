@@ -263,7 +263,8 @@ export async function runNewsletterSend(payload: Payload, issueId: number) {
         req,
       })
       await tx.execute(
-        sql`UPDATE publication_issues SET stats_recipient_count=${totals.accepted} WHERE id=${issueId}`,
+        sql`WITH counts AS (UPDATE publication_issues SET stats_recipient_count=${totals.accepted} WHERE id=${issueId} RETURNING id,stats_recipient_count)
+          UPDATE _publication_issues_v v SET version_stats_recipient_count=counts.stats_recipient_count FROM counts WHERE v.parent_id=counts.id AND v.latest=true`,
       )
     })
   } catch (error) {

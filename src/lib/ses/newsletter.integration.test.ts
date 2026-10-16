@@ -202,6 +202,15 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       ).toBe(1)
       await runNewsletterSend(payload, edition.id)
       expect(sendBulk.mock.calls.some((c) => c[0].recipients[0].email === user.email)).toBe(false)
+      expect(
+        (
+          await payload.findByID({
+            collection: 'publication-issues',
+            id: edition.id,
+            overrideAccess: true,
+          })
+        ).stats?.bounces,
+      ).toBe(1)
     }, 30000)
     it('records test events without changing audience preferences or campaign statistics', async () => {
       const user = await reader()
@@ -433,6 +442,74 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
         ).stats?.delivered,
       ).toBe(1)
     })
+    it('preserves authoritative metrics across queueing, concurrent version saves, worker finalization and editorial saves', async () => {
+      const user = await reader(),
+        edition = await issue()
+      const event = {
+        type: 'Delivery' as const,
+        emails: [user.email],
+        issueId: edition.id,
+        messageId: 'metric-fixture',
+        occurredAt: new Date().toISOString(),
+      }
+      const keys = [
+        marker + '-metrics-delivery',
+        marker + '-metrics-open-1',
+        marker + '-metrics-open-2',
+      ]
+      await processSesEvent(payload, event, keys[0])
+      await queue(edition.id)
+      expect(
+        (
+          await payload.findByID({
+            collection: 'publication-issues',
+            id: edition.id,
+            overrideAccess: true,
+          })
+        ).stats?.delivered,
+      ).toBe(1)
+      await Promise.all([
+        processSesEvent(payload, { ...event, type: 'Open' }, keys[1]),
+        processSesEvent(payload, { ...event, type: 'Open' }, keys[2]),
+        payload.update({
+          collection: 'publication-issues',
+          id: edition.id,
+          context: { newsletterSystem: true },
+          data: { email: { lastError: 'Concurrent metadata save' } },
+          overrideAccess: true,
+        }),
+      ])
+      for (const key of keys) {
+        const events = await payload.find({
+          collection: 'ses-events',
+          where: { eventKey: { equals: key } },
+          overrideAccess: true,
+        })
+        records.push({ collection: 'ses-events', id: events.docs[0].id })
+      }
+      await runNewsletterSend(payload, edition.id)
+      const saved = await payload.update({
+        collection: 'publication-issues',
+        id: edition.id,
+        data: { title: marker + ' edited', stats: { delivered: 999, opens: 999 } },
+        overrideAccess: true,
+      })
+      expect(saved.stats).toMatchObject({ delivered: 1, opens: 2 })
+      const draft = await payload.findByID({
+        collection: 'publication-issues',
+        id: edition.id,
+        draft: true,
+        overrideAccess: true,
+      })
+      const published = await payload.findByID({
+        collection: 'publication-issues',
+        id: edition.id,
+        draft: false,
+        overrideAccess: true,
+      })
+      expect(draft.stats).toEqual(published.stats)
+      expect(draft.stats?.recipientCount).toBeGreaterThan(0)
+    }, 30000)
     it('never retries an ambiguous timeout, but can retry a definitive SES rejection without resending successes', async () => {
       const user = await reader()
       const edition = await issue()

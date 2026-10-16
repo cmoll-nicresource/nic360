@@ -28,15 +28,21 @@ export async function incrementPublicationIssueStat(
   req?: PayloadRequest,
 ): Promise<void> {
   if (!ALLOWED_COLUMNS.has(column)) throw new Error(`Unknown stat column: ${column}`)
+  if (!Number.isSafeInteger(by) || by < 0)
+    throw new Error('Issue statistic increments must be nonnegative safe integers')
+  const statement = sql`WITH counters AS (
+    UPDATE publication_issues SET ${sql.raw(`"${column}"`)}=coalesce(${sql.raw(`"${column}"`)},0)+${by}
+    WHERE id=${issueId} RETURNING id,${sql.raw(`"${column}"`)}
+  ) UPDATE _publication_issues_v v SET ${sql.raw(`"version_${column}"`)}=counters.${sql.raw(`"${column}"`)}
+    FROM counters WHERE v.parent_id=counters.id AND v.latest=true`
   if (req?.transactionID) {
     const transactionID = await req.transactionID
-    await transactionDb(payload, transactionID).execute(
-      sql`UPDATE publication_issues SET ${sql.raw(`"${column}"`)}=coalesce(${sql.raw(`"${column}"`)},0)+${by} WHERE id=${issueId}`,
-    )
+    await transactionDb(payload, transactionID).execute(statement)
     return
   }
   await payload.db.pool.query(
-    `update "publication_issues" set "${column}" = coalesce("${column}", 0) + $1 where id = $2`,
+    `WITH counters AS (UPDATE publication_issues SET "${column}"=coalesce("${column}",0)+$1 WHERE id=$2 RETURNING id,"${column}")
+     UPDATE _publication_issues_v v SET "version_${column}"=counters."${column}" FROM counters WHERE v.parent_id=counters.id AND v.latest=true`,
     [by, issueId],
   )
 }
