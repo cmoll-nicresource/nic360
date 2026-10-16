@@ -117,7 +117,7 @@ export async function CompanyUsageView({
           <p>
             {from} through {to} · Eastern time
           </p>
-          <div className="nic-workspace__stats">
+          <div className="nic-workspace__stats nic-company-report__stats">
             {[
               ['Users', report.totals.users],
               ['Active users', report.totals.active],

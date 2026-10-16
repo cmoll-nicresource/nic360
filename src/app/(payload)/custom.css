@@ -338,3 +338,4 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
 .nic-company-report__table td { vertical-align: top; }
 .nic-company-report__table small { display: block; margin-top: 6px; }
 .nic-company-report__table details { margin-top: 8px; }
+.nic-company-report__stats .nic-analytics__card { display: flex; flex-direction: column; border-radius: 10px; margin-top: 12px; }
