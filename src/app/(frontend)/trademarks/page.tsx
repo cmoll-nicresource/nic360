@@ -1,6 +1,7 @@
 import { headers as getHeaders } from 'next/headers.js'
 import Link from 'next/link'
 import { getPayload } from 'payload'
+import type { TypedUser } from 'payload'
 import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { StampIcon } from '@/components/brandIcons'
@@ -51,6 +52,7 @@ export default async function TrademarksPage({
   const canRead = isStaff || planSatisfies(plan, 'base')
   const { totalDocs: totalTrademarks } = await payload.count({
     collection: 'trademarks',
+    where: { _status: { equals: 'published' } },
     overrideAccess: true,
   })
 
@@ -89,7 +91,7 @@ export default async function TrademarksPage({
             <Link href="/account">Sign in</Link>
           </div>
         ) : (
-          <TrademarkTable payload={payload} filters={filters} page={page} />
+          <TrademarkTable payload={payload} filters={filters} page={page} user={user} />
         )}
       </div>
     </>
@@ -100,10 +102,12 @@ async function TrademarkTable({
   payload,
   filters,
   page,
+  user,
 }: {
   payload: Awaited<ReturnType<typeof getPayload>>
   filters: ReturnType<typeof parseTrademarkFilters>
   page: number
+  user: TypedUser | null
 }) {
   const baseWhere = trademarkWhere(filters)
   let trademarks: Trademark[] = []
@@ -123,7 +127,8 @@ async function TrademarkTable({
         where: { and: [baseWhere, { id: { in: rankedIds } }].filter((w) => Object.keys(w).length) },
         depth: 1,
         limit: 100,
-        overrideAccess: true,
+        user,
+        overrideAccess: false,
       })
       trademarks = sortByIdOrder(docs, rankedIds)
       totalDocs = trademarks.length
@@ -136,7 +141,8 @@ async function TrademarkTable({
       sort: '-publishedDate',
       limit: PAGE_SIZE,
       page,
-      overrideAccess: true,
+      user,
+      overrideAccess: false,
     })
     trademarks = result.docs
     totalDocs = result.totalDocs

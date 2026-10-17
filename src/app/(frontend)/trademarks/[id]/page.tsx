@@ -2,6 +2,7 @@ import { headers as getHeaders } from 'next/headers.js'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
+import type { TypedUser } from 'payload'
 import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 
@@ -37,7 +38,7 @@ export default async function TrademarkDetailPage({ params }: { params: Promise<
             <Link href="/account">Sign in</Link>
           </div>
         ) : (
-          <TrademarkDetail payload={payload} id={id} />
+          <TrademarkDetail payload={payload} id={id} user={user} />
         )}
       </div>
     </>
@@ -57,12 +58,14 @@ function Fact({ label, value }: { label: string; value: React.ReactNode }) {
 async function TrademarkDetail({
   payload,
   id,
+  user,
 }: {
   payload: Awaited<ReturnType<typeof getPayload>>
   id: string
+  user: TypedUser | null
 }) {
   const trademark = await payload
-    .findByID({ collection: 'trademarks', id, depth: 1, overrideAccess: true })
+    .findByID({ collection: 'trademarks', id, depth: 1, user, overrideAccess: false })
     .catch(() => null)
   if (!trademark) notFound()
 

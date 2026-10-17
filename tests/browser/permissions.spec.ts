@@ -1,5 +1,19 @@
 import { test, expect } from '@playwright/test'
-import { fixtures as f, roleContext } from '../support/fixtures'
+import { fixtures as f, roleContext, signIn } from '../support/fixtures'
+
+const marks: Record<string, number> = {}
+test.beforeAll(async ({ request }) => {
+  await signIn(request, 'editor')
+  for (const status of ['published', 'draft']) {
+    const response = await request.post('/api/trademarks', { data: { title: 'Permission fixture ' + status + ' mark', _status: status } })
+    expect(response.status()).toBe(201)
+    marks[status] = (await response.json()).doc.id
+  }
+})
+test.afterAll(async ({ request }) => {
+  await signIn(request, 'editor')
+  for (const id of Object.values(marks)) await request.delete('/api/trademarks/' + id)
+})
 
 for (const role of [
   'anonymous',
@@ -26,6 +40,18 @@ for (const role of [
       expect(
         (await api.get('/api/articles/' + f.articles.draft + '?draft=true')).status() === 200,
       ).toBe(staff)
+      const rendered = await api.get('/articles/' + f.articles.us)
+      expect(rendered.status()).toBe(200)
+      expect((await rendered.text()).includes('Synthetic full excerpt for us.')).toBe(staff || member)
+      expect(await (await api.get('/articles/' + f.articles.draft)).text()).not.toContain('Fixture draft')
+      for (const status of ['published', 'draft']) {
+        const allowed = staff || (member && status === 'published')
+        expect((await api.get('/api/trademarks/' + marks[status] + '?draft=true')).status() === 200).toBe(allowed)
+        const html = await (await api.get('/trademarks/' + marks[status])).text()
+        expect(html.includes('Permission fixture ' + status + ' mark')).toBe(allowed)
+      }
+      const listing = await (await api.get('/trademarks?keyword=Permission%20fixture')).text()
+      expect(listing.includes('Permission fixture draft mark')).toBe(staff)
       for (const path of [
         '/api/datasets/' + f.refs.dataset + '/rows',
         '/api/datasets/' + f.refs.dataset + '/export?format=csv',
