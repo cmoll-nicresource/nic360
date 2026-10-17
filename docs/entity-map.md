@@ -621,9 +621,10 @@ A location rule matches the place and everything inside it (*United States* matc
 | `intro` | richText, optional | |
 | `sections` | array, sortable | one group each; continent > primary subject is stored as *Europe: Regulation* and rendered as a continent heading followed by subject subheadings in email, preview and web editions. US News Clippings uses subject headings only. |
 
-Rule builds include each excerpt record once. Migrated articles with different IDs are also selected once when the normalized title, HTTP(S) source URL and full rich-text excerpt agree. A changed excerpt or different source URL remains a separate selection; missing URLs/excerpts are not inferred to be duplicates. This operates after geographic eligibility and does not delete or merge CMS records. Beta inspection on October 17 confirmed the reported drought story had two records and the vape-shop story four, with identical excerpts and source URLs in each set.
 | `sections.heading` | text | |
 | `sections.items` | relationship → Articles, Bills, Trademarks (polymorphic), hasMany, ordered | |
+
+Rule builds include each excerpt record once. Migrated articles with different IDs are also selected once when the normalized title, HTTP(S) source URL and full rich-text excerpt agree. A changed excerpt or different source URL remains a separate selection; missing URLs/excerpts are not inferred to be duplicates. This operates after geographic eligibility and does not delete or merge CMS records. Beta inspection on October 17 confirmed the reported drought story had two records and the vape-shop story four, with identical excerpts and source URLs in each set. Draft issue 3254 was backed up and repaired from 44 selections to 17, preserving section order and all underlying articles. A read-only check of the deployed builder returned the same 17 selections on two consecutive builds.
 
 **PDF report**: `summary` (richText), `file` (upload → protected PDF collection, same approach as GuideFiles).
 
