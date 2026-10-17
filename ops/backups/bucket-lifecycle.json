@@ -1,20 +1,68 @@
 {
   "Rules": [
     {
+      "Expiration": {
+        "Days": 45
+      },
       "ID": "ExpireUploadSnapshotsAfter45Days",
+      "Filter": {
+        "Prefix": "uploads/"
+      },
       "Status": "Enabled",
-      "Filter": {"Prefix": "uploads/"},
-      "Expiration": {"Days": 45},
-      "NoncurrentVersionExpiration": {"NoncurrentDays": 7},
-      "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1}
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 7
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
     },
     {
+      "Expiration": {
+        "Days": 90
+      },
       "ID": "ExpireRecoveryRehearsalArchivesAfter90Days",
+      "Filter": {
+        "Prefix": "database-rehearsals/"
+      },
       "Status": "Enabled",
-      "Filter": {"Prefix": "database-rehearsals/"},
-      "Expiration": {"Days": 90},
-      "NoncurrentVersionExpiration": {"NoncurrentDays": 7},
-      "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1}
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 7
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
+    },
+    {
+      "ID": "Expire-database-daily",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "database-daily/"
+      },
+      "Expiration": {
+        "Days": 45
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 7
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
+    },
+    {
+      "ID": "Expire-verification",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "verification/"
+      },
+      "Expiration": {
+        "Days": 90
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 7
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
     }
   ]
 }

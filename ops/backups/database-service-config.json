@@ -1,0 +1,11 @@
+{
+  "projectId": "25c268df-a654-427e-96c1-e40abcafadd8",
+  "environmentId": "64cc889c-d636-4d79-83b7-3a33c7d890de",
+  "serviceId": "e9402351-d110-4e0c-9abf-8c2535f63ce9",
+  "name": "database-backups",
+  "databaseRole": "nic360_backup",
+  "iamUser": "nic360-database-backup-writer",
+  "cronSchedule": "0 7 * * *",
+  "dockerfile": "ops/backups/Dockerfile",
+  "backupPrefix": "database-daily/"
+}

@@ -1,7 +1,6 @@
 {
   "Version":"2012-10-17",
   "Statement":[
-    {"Sid":"AccountAdministration","Effect":"Allow","Principal":{"AWS":"arn:aws:iam::226541720866:root"},"Action":"SNS:*","Resource":"arn:aws:sns:us-east-1:226541720866:nic360-backup-alerts"},
     {"Sid":"OnlyBackupAlarm","Effect":"Allow","Principal":{"Service":"cloudwatch.amazonaws.com"},"Action":"sns:Publish","Resource":"arn:aws:sns:us-east-1:226541720866:nic360-backup-alerts","Condition":{"StringEquals":{"aws:SourceAccount":"226541720866"},"ArnEquals":{"aws:SourceArn":"arn:aws:cloudwatch:us-east-1:226541720866:alarm:nic360-backup-worker-health"}}}
   ]
 }

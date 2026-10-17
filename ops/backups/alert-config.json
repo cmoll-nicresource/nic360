@@ -1,0 +1,7 @@
+{
+  "keyArn": "arn:aws:kms:us-east-1:226541720866:key/b3a78edb-7841-43fc-8fc8-b36c91f8f462",
+  "topicArn": "arn:aws:sns:us-east-1:226541720866:nic360-backup-alerts",
+  "alarmName": "nic360-backup-worker-health",
+  "recipient": "cmoll@nicotineresource.org",
+  "subscription": "pending email confirmation"
+}

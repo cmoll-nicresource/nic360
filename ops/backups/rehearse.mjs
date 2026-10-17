@@ -77,7 +77,10 @@ try {
   for (const ref of parse(references)) {
     if (!paths.has(ref.filename)) missing.push({ collection: ref.collection, id: ref.id, filename: ref.filename })
   }
-  if (missing.length) throw new Error('Restored CMS attachments are missing from the upload snapshot: ' + JSON.stringify(missing))
+  if (missing.length) {
+    console.log(JSON.stringify({ databaseRestored: true, stableTablesMatched: actual.length, uploadedObjectsVerified: files.objects, missingAttachmentReferences: missing.length }))
+    throw new Error('Restored CMS attachments are missing from the upload snapshot: ' + JSON.stringify(missing))
+  }
   const summary = { database: database.snapshot, uploads: uploads.snapshot, tables: actual.length, objects: files.objects, bytes: files.bytes, durationSeconds: Math.round((Date.now() - start) / 1000), network: 'none' }
   if (!local) await recordRecovery(summary)
   console.log(JSON.stringify({ recovered: true, ...summary }))
