@@ -600,7 +600,7 @@ A location rule matches the place and everything inside it (*United States* matc
 
 | Field | Type | Example |
 |---|---|---|
-| `groupBy` | select: none · region · country · primary subject · sector · product · excerpt type | Global News Clippings: region |
+| `groupBy` | select: none · region · country · primary subject · sector · product · excerpt type | Excerpt lists: continent (stored as region); US News Clippings: primary subject |
 | `thenGroupBy` | same options, optional | Global News Clippings: primary subject |
 | `sortBy` | select: source date (newest first) · source date (oldest first) · title | |
 
@@ -619,7 +619,7 @@ A location rule matches the place and everything inside it (*United States* matc
 | Field | Type | Notes |
 |---|---|---|
 | `intro` | richText, optional | |
-| `sections` | array, sortable | one group each; nested groups (region > subject) become headings like *Europe: Regulation* or a `subheading` field |
+| `sections` | array, sortable | one group each; continent > primary subject is stored as *Europe: Regulation* and rendered as a continent heading followed by subject subheadings in email, preview and web editions. US News Clippings uses subject headings only. |
 | `sections.heading` | text | |
 | `sections.items` | relationship → Articles, Bills, Trademarks (polymorphic), hasMany, ordered | |
 

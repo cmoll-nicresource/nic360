@@ -3,6 +3,7 @@ import type { Payload, Where } from 'payload'
 import type { Article, Bill, Location, Publication, Trademark } from '@/payload-types'
 import { publicationGeography, publicationSelectionRules } from './publicationSelectionPolicy'
 import { publicationDateWindow } from './publicationDateWindow'
+import { publicationGroupingRules } from './publicationGrouping'
 
 type ExcerptType = 'articles' | 'bills' | 'trademarks'
 type ExcerptDoc = (Article | Bill | Trademark) & { collection: ExcerptType }
@@ -167,9 +168,15 @@ async function groupKeyFor(
     case 'country': {
       if (item.collection === 'trademarks') return 'Other'
       const locs = (item as Article | Bill).locations ?? []
-      for (const locRef of locs) {
-        const loc = typeof locRef === 'object' ? locRef : locationsById.get(locRef)
-        if (!loc) continue
+      // Migrated excerpts often include both a continent and its country. Prefer
+      // the most specific tagged place so a mixed US/China Global story cannot
+      // accidentally use its leftover North America tag instead of China.
+      const rank = { city: 0, state: 1, country: 2, region: 3 }
+      const resolved = locs
+        .map((ref) => locationsById.get(idOf(ref)!) ?? (typeof ref === 'object' ? ref : undefined))
+        .filter((loc): loc is Location => !!loc)
+        .sort((a, b) => rank[a.level] - rank[b.level])
+      for (const loc of resolved) {
         const ancestor = findAncestorAtLevel(loc, groupBy, locationsById)
         if (ancestor) return ancestor.name
       }
@@ -228,7 +235,7 @@ export async function buildSectionsFromRules(
   publication: Publication,
   issueDate = new Date().toISOString(),
 ): Promise<BuiltSection[]> {
-  const grouping = publication.groupingRules ?? { groupBy: 'none', sortBy: 'sourceDateDesc' }
+  const grouping = publicationGroupingRules(publication)
 
   const allLocations: Location[] = []
   let page = 1,
@@ -258,7 +265,22 @@ export async function buildSectionsFromRules(
     const domestic = new Set(expandLocationDescendants(allLocations, [us[0].id]))
     foreignIds = allLocations.filter((l) => !domestic.has(l.id)).map((l) => l.id)
   }
-  const items = await fetchSelectedItems(payload, publication, allLocations, issueDate, foreignIds)
+  let items = await fetchSelectedItems(payload, publication, allLocations, issueDate, foreignIds)
+  const locationsById = new Map(allLocations.map((l) => [l.id, l]))
+  if (foreignIds) {
+    const foreign = new Set(foreignIds)
+    // Region tags accompany country tags in migrated content. North America
+    // alone is international, but North America + US is still a US-only story.
+    items = items.filter((item) => {
+      if (item.collection === 'trademarks') return true
+      const refs = (item as Article | Bill).locations ?? []
+      const specific = refs.filter((ref) => {
+        const loc = locationsById.get(idOf(ref)!)
+        return loc && loc.level !== 'region'
+      })
+      return !specific.length || specific.some((ref) => foreign.has(idOf(ref)!))
+    })
+  }
   // For mixed US/non-US stories, group by the non-US location in Global.
   if (foreignIds)
     for (const item of items)
@@ -268,7 +290,6 @@ export async function buildSectionsFromRules(
           foreignIds!.includes(idOf(ref)!),
         )
       }
-  const locationsById = new Map(allLocations.map((l) => [l.id, l]))
 
   const groups = new Map<string, ExcerptDoc[]>()
   for (const item of items) {

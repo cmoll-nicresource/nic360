@@ -8,6 +8,7 @@ import {
 } from '../../src/lib/publicationSelectionPolicy'
 
 import { lexicalFromText } from '../../src/lib/lexical'
+import { publicationGroupingRules } from '../../src/lib/publicationGrouping'
 import { buildSectionsFromRules } from '../../src/lib/publicationRules'
 import { renderIssueEmailHtml } from '../../src/lib/issueEmail'
 import { getMailchimpClient } from '../../src/lib/mailchimp'
@@ -215,7 +216,7 @@ export async function seedPublications(payload: Payload) {
           def.format === 'excerpt-list'
             ? publicationSelectionRules(def, us.docs[0].id)
             : def.selectionRules,
-        groupingRules: def.groupingRules,
+        groupingRules: publicationGroupingRules(def),
         header: 'header' in def ? def.header : undefined,
         footer: 'footer' in def ? def.footer : undefined,
         mailchimp: { interestId: def.mailchimpInterestId, segmentId: def.mailchimpSegmentId },

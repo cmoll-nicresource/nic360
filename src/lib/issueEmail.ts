@@ -69,7 +69,7 @@ export function renderPublicationAdHtml(ad: PublicationAd): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 28px;"><tr><td align="center" style="padding:10px;background:${C.pale};"><div style="font:10px ${SANS};color:${C.muted};letter-spacing:1px;text-transform:uppercase;padding-bottom:8px;">Advertisement</div><a href="${escapeHtml(absolute(`/api/ads/${ad.id}/click`))}"><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(image?.alt || 'Advertisement')}" width="600" border="0" style="display:block;width:100%;max-width:600px;height:auto;"></a></td></tr></table>`
 }
 
-function renderItemHtml(item: NonNullable<ReturnType<typeof editionItem>>) {
+function renderItemHtml(item: NonNullable<ReturnType<typeof editionItem>>, headingTag = 'h3') {
   const eyebrow = [item.location, sentenceCase(item.subject)]
     .filter(Boolean)
     .map(escapeHtml)
@@ -100,7 +100,7 @@ function renderItemHtml(item: NonNullable<ReturnType<typeof editionItem>>) {
     .join(' &nbsp;·&nbsp; ')
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout:fixed;"><tr><td style="padding:22px 0 24px;border-bottom:1px solid ${C.border};color:${C.ink};overflow-wrap:break-word;word-wrap:break-word;">
 ${eyebrow ? `<div style="font:11px/1.6 ${SANS};font-weight:700;letter-spacing:.7px;color:${C.teal};text-transform:uppercase;margin-bottom:8px;">${eyebrow}</div>` : ''}
-<h3 style="font:700 22px/1.3 ${SERIF};margin:0 0 14px;">${link(absolute(item.href), item.title, `color:${C.navy};text-decoration:none;`)}</h3>
+<${headingTag} style="font:700 22px/1.3 ${SERIF};margin:0 0 14px;">${link(absolute(item.href), item.title, `color:${C.navy};text-decoration:none;`)}</${headingTag}>
 ${metadata}<div style="font:15px/1.7 ${SANS};color:${C.ink};">${richText(item.content)}</div>${actions}
 ${foot ? `<div style="font:12px/1.6 ${SANS};color:${C.muted};margin-top:10px;">${foot}</div>` : ''}
 <div style="font:12px/1.6 ${SANS};margin-top:10px;">${link(absolute(item.href), item.kind === 'bill' ? 'View legislation →' : 'Read on Nicotine360 →')}</div>
@@ -116,7 +116,7 @@ export function renderExcerptListBody(
   const sections = editionSections(issue)
   const contents =
     sections.length > 1
-      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.pale};margin:0 0 28px;"><tr><td style="padding:16px 18px;"><div style="font:10px ${SANS};font-weight:700;letter-spacing:1px;color:${C.muted};text-transform:uppercase;margin-bottom:8px;">In this edition</div>${sections.map((section) => `<div style="font:13px/1.6 ${SANS};padding:3px 0;">${link('#' + section.anchor, headingLabel(section.heading))}</div>`).join('')}</td></tr></table>`
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.pale};margin:0 0 28px;"><tr><td style="padding:16px 18px;"><div style="font:10px ${SANS};font-weight:700;letter-spacing:1px;color:${C.muted};text-transform:uppercase;margin-bottom:8px;">In this edition</div>${sections.map((section) => `${section.startsParent ? `<div style="font:700 13px/1.6 ${SANS};padding-top:8px;color:${C.navy};">${escapeHtml(headingLabel(section.parentHeading))}</div>` : ''}<div style="font:13px/1.6 ${SANS};padding:3px 0 3px ${section.parentHeading ? '14' : '0'}px;">${link('#' + section.anchor, headingLabel(section.subheading))}</div>`).join('')}</td></tr></table>`
       : ''
   const parts = [
     issue.intro
@@ -127,8 +127,11 @@ export function renderExcerptListBody(
   let itemIndex = 0,
     adIndex = 0
   for (const [index, section] of sections.entries()) {
+    if (section.startsParent)
+      parts.push(`<h2 style="margin:${index ? '36' : '0'}px 0 14px;padding:12px 16px;background:${C.navy};color:#ffffff;font:700 21px/1.4 ${SANS};">${escapeHtml(headingLabel(section.parentHeading))}</h2>`)
+    const headingTag = section.parentHeading ? 'h3' : 'h2'
     parts.push(
-      `<table id="${section.anchor}" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:${index ? '32' : '0'}px;border-top:2px solid ${C.navy};"><tr><td style="padding:14px 0 6px;"><h2 style="margin:0;font:700 17px/1.4 ${SANS};color:${C.navy};"><span style="font:11px ${SANS};color:${C.teal};padding-right:10px;">${String(index + 1).padStart(2, '0')}</span>${escapeHtml(headingLabel(section.heading))}</h2></td></tr></table>`,
+      `<table id="${section.anchor}" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:${index && !section.startsParent ? '32' : '0'}px;border-top:2px solid ${C.navy};"><tr><td style="padding:14px 0 6px;"><${headingTag} style="margin:0;font:700 17px/1.4 ${SANS};color:${C.navy};"><span style="font:11px ${SANS};color:${C.teal};padding-right:10px;">${String(index + 1).padStart(2, '0')}</span>${escapeHtml(headingLabel(section.subheading))}</${headingTag}></td></tr></table>`,
     )
     for (const reference of section.items || []) {
       if (isAdSlotBeforeIndex(itemIndex) && adIndex < ads.length)
@@ -138,7 +141,7 @@ export function renderExcerptListBody(
         const groupedBySubject = section.heading
           .split(': ')
           .some((heading) => heading.toLowerCase() === item.subject.toLowerCase())
-        parts.push(renderItemHtml(groupedBySubject ? { ...item, subject: '' } : item))
+        parts.push(renderItemHtml(groupedBySubject ? { ...item, subject: '' } : item, section.parentHeading ? 'h4' : 'h3'))
       }
       itemIndex++
     }

@@ -110,10 +110,21 @@ export function publicationHttpUrl(value: string | null | undefined): string | n
 }
 
 export function editionSections(issue: PublicationIssue) {
-  return (issue.sections || []).map((section, index) => ({
-    ...section,
-    anchor: `edition-section-${index + 1}`,
-  }))
+  let previousParent = ''
+  return (issue.sections || []).map((section, index) => {
+    const separator = section.heading.indexOf(': ')
+    const parentHeading = separator > 0 ? section.heading.slice(0, separator) : ''
+    const subheading = parentHeading ? section.heading.slice(separator + 2) : section.heading
+    const startsParent = !!parentHeading && parentHeading !== previousParent
+    previousParent = parentHeading
+    return {
+      ...section,
+      anchor: `edition-section-${index + 1}`,
+      parentHeading,
+      subheading,
+      startsParent,
+    }
+  })
 }
 
 export function editionWebPath(issue: PublicationIssue, publication: Publication) {

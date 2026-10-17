@@ -2,6 +2,7 @@ import type { CollectionConfig, CollectionSlug, Field } from 'payload'
 
 import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
+import { publicationGroupingRules } from '@/lib/publicationGrouping'
 
 function includeExclude(name: string, relationTo: CollectionSlug): Field {
   return {
@@ -28,6 +29,21 @@ export const Publications: CollectionConfig = {
     create: staffCanWrite,
     update: staffCanWrite,
     delete: staffCanWrite,
+  },
+  hooks: {
+    beforeValidate: [
+      ({ data, originalDoc }) => {
+        if (data && (data.format ?? originalDoc?.format) === 'excerpt-list')
+          data.groupingRules = publicationGroupingRules({ ...originalDoc, ...data })
+        return data
+      },
+    ],
+    afterRead: [
+      ({ doc }) => {
+        if (doc.format === 'excerpt-list') doc.groupingRules = publicationGroupingRules(doc)
+        return doc
+      },
+    ],
   },
   fields: [
     { name: 'title', type: 'text', required: true },
@@ -123,15 +139,17 @@ export const Publications: CollectionConfig = {
       type: 'group',
       admin: {
         condition: (data) => data?.format === 'excerpt-list',
+        description: 'Excerpts are grouped by continent, then primary subject. US News Clippings uses primary subject only. Item sorting remains adjustable.',
       },
       fields: [
         {
           name: 'groupBy',
           type: 'select',
+          admin: { readOnly: true },
           defaultValue: 'none',
           options: [
             'none',
-            'region',
+            { label: 'Continent', value: 'region' },
             'country',
             'primarySubject',
             'sector',
@@ -142,9 +160,10 @@ export const Publications: CollectionConfig = {
         {
           name: 'thenGroupBy',
           type: 'select',
+          admin: { readOnly: true },
           options: [
             'none',
-            'region',
+            { label: 'Continent', value: 'region' },
             'country',
             'primarySubject',
             'sector',

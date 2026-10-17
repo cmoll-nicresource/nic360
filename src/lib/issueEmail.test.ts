@@ -59,6 +59,23 @@ const issue = {
 } as PublicationIssue
 
 describe('publication edition content', () => {
+  it('renders continent headings once with nested subjects, linked contents and semantic article headings', () => {
+    const html = renderExcerptListBody({ ...issue, sections: [
+      { heading: 'Asia: Taxation', items: [{ relationTo: 'articles', value: article }] },
+      { heading: 'Asia: Research', items: [] },
+      { heading: 'Europe: Taxation', items: [] },
+    ] }, publication, [])
+    expect(html.match(/<h2[^>]*>Asia<\/h2>/g)).toHaveLength(1)
+    expect(html.match(/<h2[^>]*>Europe<\/h2>/g)).toHaveLength(1)
+    expect(html).toMatch(/<h3[^>]*>.*Taxation<\/h3>/)
+    expect(html).toMatch(/<h4[^>]*>.*A headline &amp; context/)
+    expect(html).not.toContain('Asia / Taxation')
+    for (let i = 1; i <= 3; i++) {
+      expect(html).toContain(`href="#edition-section-${i}"`)
+      expect(html).toContain(`id="edition-section-${i}"`)
+    }
+    expect(html).toContain('Final paragraph must not disappear.')
+  })
   it('retains full news excerpts, source attribution, location and dates in HTML and plain text', () => {
     const html = renderIssueEmailHtml(issue, publication, []),
       text = newsletterPlainText(html)

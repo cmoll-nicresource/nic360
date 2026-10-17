@@ -50,14 +50,14 @@ function matches(doc: Record<string, unknown>, where: Where): boolean {
     })
   })
 }
-function fixture() {
+function fixture(stories = articles) {
   const find = vi.fn(
     async (options: { collection: string; where?: Where; page?: number; limit?: number }) => {
       let docs: Record<string, unknown>[] =
         options.collection === 'locations'
           ? locations
           : options.collection === 'articles'
-            ? articles
+            ? stories
             : [
                 {
                   id: 20,
@@ -84,6 +84,7 @@ const pub = (slug: string, selectionRules = {}) =>
     title: slug.replaceAll('-', ' '),
     slug,
     frequency: 'weekly',
+    format: 'excerpt-list',
     selectionRules,
     groupingRules: { groupBy: 'none', sortBy: 'title' },
   }) as Publication
@@ -108,7 +109,7 @@ describe('publication selection boundaries', () => {
     publication.groupingRules = { groupBy: 'region' }
     const sections = await buildSectionsFromRules(payload, publication, '2026-10-16T00:00:00Z')
     expect(ids(sections)).toEqual([2, 3, 10])
-    expect(sections.map((s) => s.heading)).toEqual(['Asia'])
+    expect(sections.map((s) => s.heading)).toEqual(['Asia: Other'])
     expect(find.mock.calls.some(([o]) => o.collection === 'bills')).toBe(false)
   })
   it('keeps Vapor product filtering and makes any Clippings publication news-only', async () => {
@@ -155,6 +156,45 @@ describe('publication selection boundaries', () => {
     )
     expect(ids(result)).toHaveLength(501)
     expect(find.mock.calls.filter(([o]) => o.collection === 'locations')).toHaveLength(2)
+  })
+})
+
+describe('publication editorial grouping', () => {
+  const tax = { id: 1, name: 'Taxation' }, research = { id: 2, name: 'Research' }
+  const stories = [
+    article(21, [7, 1], { primarySubject: tax }),
+    article(22, [7, 1, 5, 4], { primarySubject: research }),
+    article(23, [4], { primarySubject: tax }),
+    article(24, [3], { primarySubject: research }),
+    article(25, [], {}),
+    article(26, [4], { primarySubject: tax, title: 'A first title' }),
+  ]
+  it('groups by continent then primary subject, retains each item once and sorts within subjects', async () => {
+    const { payload } = fixture(stories)
+    const sections = await buildSectionsFromRules(payload, pub('vapor-news-clippings'), '2026-10-16')
+    expect(sections.map((s) => [s.heading, s.items.map((i) => i.value)])).toEqual([
+      ['Asia: Taxation', [26, 23]],
+      ['North America: Research', [22, 24]],
+      ['North America: Taxation', [21]],
+      ['Other: Other', [25]],
+    ])
+    expect(ids(sections)).toEqual([21, 22, 23, 24, 25, 26])
+  })
+  it('uses primary subject alone for US News Clippings despite stale saved settings', async () => {
+    const { payload } = fixture(stories)
+    const publication = pub('us-news-clippings')
+    publication.groupingRules = { groupBy: 'country', thenGroupBy: 'sector', sortBy: 'title' }
+    const sections = await buildSectionsFromRules(payload, publication, '2026-10-16')
+    expect(sections.map((s) => [s.heading, s.items.map((i) => i.value)])).toEqual([
+      ['Research', [22, 24]], ['Taxation', [21]],
+    ])
+  })
+  it('uses the foreign country continent for mixed Global stories even when a US continent tag comes first', async () => {
+    const { payload } = fixture(stories)
+    const sections = await buildSectionsFromRules(payload, pub('global-news-clippings'), '2026-10-16')
+    expect(sections.map((s) => [s.heading, s.items.map((i) => i.value)])).toEqual([
+      ['Asia: Research', [22]], ['Asia: Taxation', [26, 23]],
+    ])
   })
 })
 describe('issue-date windows', () => {
