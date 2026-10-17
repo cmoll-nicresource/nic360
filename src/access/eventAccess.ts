@@ -5,6 +5,10 @@ import { staffHasRole } from '@/access/staffRoles'
 /** Event marketing info, agenda, sponsors, ticket types: public. */
 export const anyoneCanRead: Access = () => true
 
+/** Draft event marketing and agenda records stay in the staff workspace. */
+export const anyoneCanReadPublished: Access = ({ req }) =>
+  staffHasRole(req.user, 'editor') || { _status: { equals: 'published' } }
+
 export const staffCanManageEvents: Access = ({ req }) => staffHasRole(req.user, 'editor')
 
 /** Discount codes, orders and registrations: gatekeeper+ only (brief: gatekeeper manages these). */

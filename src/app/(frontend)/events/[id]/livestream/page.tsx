@@ -19,7 +19,7 @@ export default async function LivestreamPage({ params }: { params: Promise<{ id:
   const payload = await getPayload({ config: payloadConfig })
   const { user } = await payload.auth({ headers })
 
-  const event = await payload.findByID({ collection: 'events', id, depth: 0, overrideAccess: true }).catch(() => null)
+  const event = await payload.findByID({ collection: 'events', id, depth: 0, user, overrideAccess: false }).catch(() => null)
   if (!event) notFound()
 
   const isReader = !!user && 'collection' in user && user.collection === 'users'

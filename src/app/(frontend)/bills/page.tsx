@@ -60,7 +60,7 @@ export default async function BillsPage({
     payload.find({ collection: 'products', limit: 100, sort: 'name', overrideAccess: true }),
     payload.find({ collection: 'subjects', limit: 200, sort: 'name', overrideAccess: true }),
     payload.find({ collection: 'locations', limit: 200, sort: 'name', overrideAccess: true }),
-    payload.count({ collection: 'bills', overrideAccess: true }),
+    payload.count({ collection: 'bills', where: { _status: { equals: 'published' } }, overrideAccess: true }),
   ])
 
   const baseWhere = excerptWhere(filters, 'billDate')
@@ -81,7 +81,8 @@ export default async function BillsPage({
         where: { and: [baseWhere, { id: { in: rankedIds } }].filter((w) => Object.keys(w).length) },
         depth: 1,
         limit: 100,
-        overrideAccess: true,
+        user,
+        overrideAccess: false,
       })
       bills = sortByIdOrder(docs, rankedIds)
       totalDocs = bills.length
@@ -94,7 +95,8 @@ export default async function BillsPage({
       sort: '-billDate',
       limit: PAGE_SIZE,
       page,
-      overrideAccess: true,
+      user,
+      overrideAccess: false,
     })
     bills = result.docs
     totalDocs = result.totalDocs

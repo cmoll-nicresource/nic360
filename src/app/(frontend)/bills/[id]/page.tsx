@@ -25,7 +25,7 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
   const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
   const canReadFull = isStaff || planSatisfies(plan, 'base')
 
-  const bill = await payload.findByID({ collection: 'bills', id, depth: 1, overrideAccess: true }).catch(() => null)
+  const bill = await payload.findByID({ collection: 'bills', id, depth: 1, user, overrideAccess: false }).catch(() => null)
   if (!bill) notFound()
 
   const jurisdiction = bill.locations?.find((l) => typeof l === 'object')

@@ -1,7 +1,7 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { CHANNEL_OPTIONS } from '@/config/channels'
-import { anyoneCanRead, canReadLivestream, staffCanManageEvents } from '@/access/eventAccess'
+import { anyoneCanReadPublished, canReadLivestream, staffCanManageEvents } from '@/access/eventAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 type DayRow = { date: string; name?: string | null }
@@ -41,7 +41,7 @@ export const Events: CollectionConfig = {
   },
   versions: { drafts: true },
   access: {
-    read: anyoneCanRead,
+    read: anyoneCanReadPublished,
     create: staffCanManageEvents,
     update: staffCanManageEvents,
     delete: staffCanManageEvents,

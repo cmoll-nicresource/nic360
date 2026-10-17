@@ -1,18 +1,33 @@
 import { test, expect } from '@playwright/test'
 import { fixtures as f, roleContext, signIn } from '../support/fixtures'
+import { lexicalFromText } from '../../src/lib/lexical'
 
 const marks: Record<string, number> = {}
+const bills: Record<string, number> = {}
+let draftEvent: number, draftSession: number
 test.beforeAll(async ({ request }) => {
   await signIn(request, 'editor')
+  const event = await request.post('/api/events', { data: { name: 'Permission draft conference', channel: 'infocus', startsAt: '2090-10-01T12:00:00Z', endDate: '2090-10-02T12:00:00Z', _status: 'draft' } })
+  expect(event.status()).toBe(201)
+  draftEvent = (await event.json()).doc.id
+  const session = await request.post('/api/sessions', { data: { event: f.refs.event, title: 'Permission draft agenda', day: '2090-10-01T12:00:00Z', type: 'Panel', _status: 'draft' } })
+  expect(session.status()).toBe(201)
+  draftSession = (await session.json()).doc.id
   for (const status of ['published', 'draft']) {
     const response = await request.post('/api/trademarks', { data: { title: 'Permission fixture ' + status + ' mark', _status: status } })
     expect(response.status()).toBe(201)
     marks[status] = (await response.json()).doc.id
+    const bill = await request.post('/api/bills', { data: { title: 'Permission fixture ' + status + ' bill', billType: 'Bill', billNumber: 'TEST-' + status, billDate: '2090-10-15T12:00:00Z', abstract: lexicalFromText('Permission full legislative abstract ' + status), fullText: lexicalFromText('Permission full legislative text ' + status), _status: status } })
+    expect(bill.status()).toBe(201)
+    bills[status] = (await bill.json()).doc.id
   }
 })
 test.afterAll(async ({ request }) => {
   await signIn(request, 'editor')
   for (const id of Object.values(marks)) await request.delete('/api/trademarks/' + id)
+  for (const id of Object.values(bills)) await request.delete('/api/bills/' + id)
+  if (draftSession) await request.delete('/api/sessions/' + draftSession)
+  if (draftEvent) await request.delete('/api/events/' + draftEvent)
 })
 
 for (const role of [
@@ -35,6 +50,10 @@ for (const role of [
       premium = role === 'premium'
     try {
       const article = await api.get('/api/articles/' + f.articles.us + '?depth=0')
+      expect((await api.get('/api/events/' + f.refs.event)).status()).toBe(200)
+      expect((await api.get('/api/events/' + draftEvent + '?draft=true')).status() === 200).toBe(staff)
+      expect((await api.get('/api/sessions/' + draftSession + '?draft=true')).status() === 200).toBe(staff)
+      expect((await (await api.get('/events/' + draftEvent + '/livestream')).text()).includes('Permission draft conference')).toBe(staff)
       expect(article.status()).toBe(200)
       expect('excerpt' in (await article.json())).toBe(staff || member)
       expect(
@@ -52,6 +71,16 @@ for (const role of [
       }
       const listing = await (await api.get('/trademarks?keyword=Permission%20fixture')).text()
       expect(listing.includes('Permission fixture draft mark')).toBe(staff)
+      for (const status of ['published', 'draft']) {
+        const allowed = staff || status === 'published'
+        const response = await api.get('/api/bills/' + bills[status] + '?draft=true')
+        expect(response.status() === 200).toBe(allowed)
+        if (response.ok()) expect('abstract' in await response.json()).toBe(staff || member)
+        const html = await (await api.get('/bills/' + bills[status])).text()
+        expect(html.includes('Permission fixture ' + status + ' bill')).toBe(allowed)
+        expect(html.includes('Permission full legislative abstract ' + status)).toBe(allowed && (staff || member))
+      }
+      expect((await (await api.get('/bills?keyword=Permission%20fixture')).text()).includes('Permission fixture draft bill')).toBe(staff)
       for (const path of [
         '/api/datasets/' + f.refs.dataset + '/rows',
         '/api/datasets/' + f.refs.dataset + '/export?format=csv',

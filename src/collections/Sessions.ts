@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { anyoneCanRead, canReadReplay, staffCanManageEvents } from '@/access/eventAccess'
+import { anyoneCanReadPublished, canReadReplay, staffCanManageEvents } from '@/access/eventAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Sessions: CollectionConfig = {
@@ -14,7 +14,7 @@ export const Sessions: CollectionConfig = {
   },
   versions: { drafts: true },
   access: {
-    read: anyoneCanRead,
+    read: anyoneCanReadPublished,
     create: staffCanManageEvents,
     update: staffCanManageEvents,
     delete: staffCanManageEvents,
