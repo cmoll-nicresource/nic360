@@ -162,7 +162,7 @@ export function SignupWizard() {
           {error && <p style={{ color: '#8a2b2b' }}>{error}</p>}
           {existingAccount && (
             <p className="muted">
-              <Link href="/account">Sign in instead →</Link>
+              <Link href="/login">Sign in instead →</Link> or <Link href="/forgot-password">set a new password</Link>.
             </p>
           )}
           <button type="submit" className="btn" disabled={busy}>

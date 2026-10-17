@@ -60,6 +60,12 @@ export default async function AccountPage() {
       <h1>Account</h1>
 
       <div className="card">
+        <h2>Password</h2>
+        <p>To change your password, request a secure link at your account email address.</p>
+        <Link href="/forgot-password">Change password</Link>
+      </div>
+
+      <div className="card">
         <h2>Profile</h2>
         <EditProfileForm
           userId={fullUser.id}

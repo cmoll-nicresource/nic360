@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react'
+import Link from 'next/link'
 
 import { LoginForm } from '@/components/LoginForm'
 import { SiteNav } from '@/components/SiteNav'
@@ -19,6 +20,10 @@ export default function LoginPage() {
         <Suspense>
           <LoginForm />
         </Suspense>
+        <p className="notice notice-info">
+          Used our previous website? Your account has moved, but your old password has not.
+          {' '}<Link href="/forgot-password">Set a new password</Link> using the same email address.
+        </p>
         <p className="muted" style={{ textAlign: 'center', marginTop: 16 }}>
           New here? <a href="/signup">Create an account</a>.
         </p>

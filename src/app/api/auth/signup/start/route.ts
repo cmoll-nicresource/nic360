@@ -34,9 +34,12 @@ export async function POST(request: Request) {
         { status: 429, headers: { 'Retry-After': '60' } },
       )
 
-    if (existing?.signup?.completedAt) {
+    // Imported/staff-created verified accounts already have a profile. Direct
+    // them to password recovery; don't make them repeat signup or alter it.
+    // A verified signup still holding a challenge may restart its profile flow.
+    if (existing?.signup?.completedAt || (existing?._verified && !existing.signup?.code)) {
       return NextResponse.json(
-        { error: 'An account already exists for that email. Sign in instead.', status: 'exists' },
+        { error: 'An account already exists for that email. Sign in or set a new password.', status: 'exists' },
         { status: 409 },
       )
     }

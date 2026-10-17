@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import React, { useState } from 'react'
 
 export function ResetPasswordForm({ token }: { token: string }) {
@@ -43,6 +44,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={8}
+          autoComplete="new-password"
           style={{ display: 'block', marginTop: 4 }}
         />
       </label>
@@ -53,10 +56,13 @@ export function ResetPasswordForm({ token }: { token: string }) {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           required
+          minLength={8}
+          autoComplete="new-password"
           style={{ display: 'block', marginTop: 4 }}
         />
       </label>
-      {error && <p style={{ color: '#8a2b2b' }}>{error}</p>}
+      <p className="muted">Use at least 8 characters.</p>
+      {error && <p role="alert" style={{ color: '#8a2b2b' }}>{error} <Link href="/forgot-password">Request a new reset link</Link>.</p>}
       <button type="submit" disabled={busy}>
         {busy ? 'Saving…' : 'Set password and sign in'}
       </button>

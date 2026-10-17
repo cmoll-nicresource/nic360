@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { assignAccessProviderOnVerify } from '@/hooks/assignAccessProviderOnVerify'
 import { setLastLoginAt } from '@/hooks/setLastLoginAt'
+import { enforceReaderResetPassword } from '@/hooks/enforceReaderResetPassword'
 import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
 import { SITE_URL } from '@/lib/env'
@@ -22,6 +23,7 @@ export const Users: CollectionConfig = {
   auth: {
     verify: true,
     forgotPassword: {
+      expiration: 60 * 60 * 1000,
       generateEmailSubject: ({ req } = {}) =>
         req?.context.eventInvitation
           ? 'Your Nicotine360 event invitation'
@@ -32,6 +34,7 @@ export const Users: CollectionConfig = {
       generateEmailHTML: ({ token, req } = {}) =>
         `<p>${req?.context.eventInvitation ? 'A colleague has registered you for an event on Nicotine360. Set your password to access your ticket and event.' : 'You are receiving this because you (or someone else) requested a password reset.'}</p>
 <p><a href="${SITE_URL}/reset-password/${token}">${SITE_URL}/reset-password/${token}</a></p>
+<p>This link expires in one hour. If you request another link, use the newest email. Setting a password does not change your company subscription or publication email preferences.</p>
 <p>${req?.context.eventInvitation ? 'If this was unexpected, contact Nicotine360 staff.' : 'If you did not request this, you can ignore this email.'}</p>`,
     },
   },
@@ -49,6 +52,7 @@ export const Users: CollectionConfig = {
     delete: staffHasMinRole('gatekeeper'),
   },
   hooks: {
+    beforeOperation: [enforceReaderResetPassword],
     afterChange: [assignAccessProviderOnVerify, syncMailchimpOnUserChange],
     afterLogin: [setLastLoginAt],
   },

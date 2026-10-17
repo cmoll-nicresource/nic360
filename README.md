@@ -6,6 +6,8 @@ Scheduled backups and the October 16 isolated restore rehearsal are documented i
 
 Editor Chrome extension setup, the one-time 2.2 upgrade, website sign-in and browser revocation are documented in [News Clipper](docs/news-clipper.md). The extension is packaged separately from website deployment.
 
+Reader signup, changing passwords and the migrated-account launch plan are documented in [account onboarding](docs/account-onboarding.md). Old-site passwords were not migrated; existing readers use the same email address to set a new password.
+
 Payload CMS 3 + Next.js rebuild of Nicotine360. See [CLAUDE.md](./CLAUDE.md) for the project brief and [docs/entity-map.md](./docs/entity-map.md) for field-level detail. Build order and "done when" criteria for each milestone are in CLAUDE.md.
 
 ## Setup
