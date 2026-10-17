@@ -5,6 +5,7 @@ import config from '@/payload.config'
 import { staffHasRole } from '@/access/staffRoles'
 import { extensionCorsHeaders, extensionOptionsResponse } from '@/lib/extensionCors'
 import { lexicalFromText } from '@/lib/lexical'
+import { clipHttpUrl, clipPublishedDate } from '@/lib/extensionClip'
 
 type ClipBody = {
   title?: string
@@ -12,6 +13,8 @@ type ClipBody = {
   sourceUrl?: string
   sourceDomain?: string
   sourceDate?: string
+  socialPreview?: { description?: string; imageUrl?: string }
+  locationIds?: number[]
 }
 
 export async function OPTIONS(request: Request) {
@@ -62,8 +65,7 @@ export async function GET(request: Request) {
 /**
  * Creates a draft Article from the Nic360 News Clipper browser extension
  * (tma-ext/). Saved as a draft because the extension can't supply the
- * required index terms (locations/sectors/products/subjects) — an editor
- * fills those in and publishes from the admin.
+ * subject/product indexing is reviewed manually before publishing.
  */
 export async function POST(request: Request) {
   const cors = extensionCorsHeaders(request.headers.get('origin'))
@@ -76,19 +78,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Staff sign-in required.' }, { status: 401, headers: cors })
     }
 
-    const body = (await request.json()) as ClipBody
-    const title = body.title?.trim()
-    const sourceUrl = body.sourceUrl?.trim()
+    let body: ClipBody
+    try { body = await request.json() } catch {
+      return NextResponse.json({ error: 'Invalid clip data.' }, { status: 400, headers: cors })
+    }
+    if (!body || typeof body !== 'object')
+      return NextResponse.json({ error: 'Invalid clip data.' }, { status: 400, headers: cors })
+    const title = typeof body.title === 'string' ? body.title.trim().slice(0, 1000) : ''
+    const sourceUrl = clipHttpUrl(body.sourceUrl)
     if (!title || !sourceUrl) {
-      return NextResponse.json({ error: 'Title and source URL are required.' }, { status: 400, headers: cors })
+      return NextResponse.json({ error: 'Title and a valid HTTP(S) source URL are required.' }, { status: 400, headers: cors })
+    }
+    let sourceDate: string | undefined
+    try { sourceDate = clipPublishedDate(body.sourceDate) } catch (error) {
+      return NextResponse.json({ error: (error as Error).message }, { status: 400, headers: cors })
+    }
+    const imageValue = body.socialPreview?.imageUrl
+    const imageUrl = clipHttpUrl(imageValue, true)
+    if (imageValue && !imageUrl)
+      return NextResponse.json({ error: 'The preview image must have a valid HTTPS URL.' }, { status: 400, headers: cors })
+    const description = typeof body.socialPreview?.description === 'string' ? body.socialPreview.description.trim().slice(0, 10000) : ''
+    const excerptText = typeof body.excerptText === 'string' ? body.excerptText.trim().slice(0, 10000) : description
+    if (body.locationIds !== undefined && (!Array.isArray(body.locationIds) || body.locationIds.length > 20 || body.locationIds.some(id => !Number.isSafeInteger(id) || id <= 0)))
+      return NextResponse.json({ error: 'Choose up to 20 valid locations.' }, { status: 400, headers: cors })
+    const locationIds = [...new Set(body.locationIds ?? [])]
+    if (locationIds.length) {
+      const found = await payload.find({ collection: 'locations', where: { id: { in: locationIds } }, limit: 20, depth: 0, user, overrideAccess: false })
+      if (found.docs.length !== locationIds.length)
+        return NextResponse.json({ error: 'One of the selected locations no longer exists. Refresh the location list.' }, { status: 400, headers: cors })
     }
 
     const { docs: existing } = await payload.find({
       collection: 'articles',
-      where: { sourceUrl: { equals: sourceUrl } },
+      where: { or: [{ sourceUrl: { equals: sourceUrl } }, { sourceUrl: { equals: body.sourceUrl!.trim() } }] },
       limit: 1,
       depth: 0,
       overrideAccess: true,
+      draft: true,
     })
     if (existing[0]) {
       return NextResponse.json(
@@ -97,7 +123,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const domain = body.sourceDomain?.trim().toLowerCase().replace(/^www\./, '')
+    const domain = new URL(sourceUrl).hostname.toLowerCase().replace(/^www\./, '')
     let sourceId: number | undefined
     if (domain) {
       const { docs: sources } = await payload.find({
@@ -117,12 +143,13 @@ export async function POST(request: Request) {
       data: {
         title,
         source: sourceId,
-        sourceDate: body.sourceDate || undefined,
+        sourceDate,
         sourceUrl,
-        excerpt: lexicalFromText(body.excerptText?.trim() || title),
+        excerpt: excerptText ? lexicalFromText(excerptText) : undefined,
+        socialPreview: { description: description || undefined, imageUrl },
+        locations: locationIds,
         ingestion: { source: 'extension', externalId: sourceUrl, importedAt: new Date().toISOString() },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- locations/sectors/products/subjects/primarySubject are required for publishing but intentionally left for an editor to fill in before this draft is published
-      } as any,
+      },
       draft: true,
       user,
       overrideAccess: false,

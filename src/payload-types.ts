@@ -486,6 +486,9 @@ export interface Publication {
       exclude?: (number | Subject)[] | null;
     };
   };
+  /**
+   * Excerpts are grouped by continent, then primary subject. US News Clippings uses primary subject only. Item sorting remains adjustable.
+   */
   groupingRules?: {
     groupBy?: ('none' | 'region' | 'country' | 'primarySubject' | 'sector' | 'product' | 'excerptType') | null;
     thenGroupBy?: ('none' | 'region' | 'country' | 'primarySubject' | 'sector' | 'product' | 'excerptType') | null;
@@ -970,6 +973,13 @@ export interface Article {
   products?: (number | Product)[] | null;
   primarySubject?: (number | null) | Subject;
   subjects?: (number | Subject)[] | null;
+  /**
+   * Captured by the news clipper and kept when the excerpt is edited. Image URLs reference the publisher’s original image.
+   */
+  socialPreview?: {
+    description?: string | null;
+    imageUrl?: string | null;
+  };
   ingestion?: {
     source?: ('manual' | 'statenet' | 'uspto' | 'extension' | 'migration') | null;
     externalId?: string | null;
@@ -2143,6 +2153,12 @@ export interface ArticlesSelect<T extends boolean = true> {
   products?: T;
   primarySubject?: T;
   subjects?: T;
+  socialPreview?:
+    | T
+    | {
+        description?: T;
+        imageUrl?: T;
+      };
   ingestion?:
     | T
     | {

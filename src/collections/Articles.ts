@@ -65,6 +65,17 @@ export const Articles: CollectionConfig = {
       },
     },
     ...indexTermFields(),
+    {
+      name: 'socialPreview',
+      type: 'group',
+      label: 'Original social preview',
+      access: { read: canReadFullContent },
+      admin: { description: 'Captured by the news clipper and kept when the excerpt is edited. Image URLs reference the publisher’s original image.' },
+      fields: [
+        { name: 'description', type: 'textarea' },
+        { name: 'imageUrl', type: 'text', label: 'Preview image URL' },
+      ],
+    },
     ingestionField(),
     {
       name: 'searchText',
