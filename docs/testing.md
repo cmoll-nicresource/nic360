@@ -1,6 +1,6 @@
 # Testing and release checks
 
-Updated October 16, 2026. The repeatable checks are in `.github/workflows/checks.yml`.
+Updated October 17, 2026. The repeatable checks are in `.github/workflows/checks.yml`.
 
 ## What runs on every push and pull request
 
@@ -16,10 +16,11 @@ Updated October 16, 2026. The repeatable checks are in `.github/workflows/checks
 | Editorial journey/configuration contracts | Full excerpt entry, automatic title, saved draft, rule build, unsent preview; actual seeded publication settings and repaired legacy Vapor taxonomy |
 | Accessibility | Axe WCAG A/AA scans of home, login, signup, password reset and gatekeeper workspace, across the browser projects |
 | Email rendering | Five excerpt editions at 320, 390 and 1,200 pixels; screenshots and rendered HTML retained for review |
+| Navigation and legislative portal | Separate Publications/Guides menus at 390, 1,024 and 1,440px; iTrac navigation, synthetic embedded portal, new-tab fallback, accessibility and role-based URL/iframe visibility |
 | Bounded load | 80 alternating anonymous/Premium reads at concurrency 10, access-boundary checks, a 5,020-row CSV export and a company report over 15,000 views |
 | Backup/recovery smoke | Actual backup worker against synthetic PostgreSQL, shared-snapshot fingerprints, archive checksums and an isolated network-disabled restore; synthetic attachment byte/hash checks |
 
-The measured offline baseline is **474 passing tests**, with 48 opt-in integration tests skipped by that command. Those integrations are enabled separately in CI. The browser matrix has **79 checks**. Publication grouping regression tests cover continent → primary subject, subject-only US News Clippings, stale saved settings, missing taxonomy, mixed-country stories, region tags accompanying US-only stories, genuine foreign-region tags, nested linked contents and semantic heading levels. Edition deduplication tests cover repeated IDs, migrated copies with different IDs/timestamps/taxonomy, changed excerpts, different source URLs, incomplete records and eligibility before deduplication; the PostgreSQL fixture includes separate records for an identical story. Email browser checks exercise the nested layout at all three widths. Current offline coverage is 44.07% statements, 42.51% branches, 46.39% functions and 45.08% lines across access/hooks/library/API modules, including untested modules. Conservative floors prevent regressions; this is not a claim of comprehensive coverage.
+The measured offline baseline is **486 passing tests**, with 48 opt-in integration tests skipped by that command. Those integrations are enabled separately in CI. The browser matrix has **87 checks**. Publication grouping regression tests cover continent → primary subject, subject-only US News Clippings, stale saved settings, missing taxonomy, mixed-country stories, region tags accompanying US-only stories, genuine foreign-region tags, nested linked contents and semantic heading levels. Edition deduplication tests cover repeated IDs, migrated copies with different IDs/timestamps/taxonomy, changed excerpts, different source URLs, incomplete records and eligibility before deduplication; the PostgreSQL fixture includes separate records for an identical story. Email browser checks exercise the nested layout at all three widths. Current offline coverage is 44.16% statements, 42.64% branches, 46.45% functions and 45.16% lines across access/hooks/library/API modules, including untested modules. Conservative floors prevent regressions; this is not a claim of comprehensive coverage.
 
 CI retains HTML coverage, browser traces for failures, screenshots and synthetic email review files for seven days. Real recovery data must never be uploaded as an Actions artifact. A phone viewport is not a real iPhone; WebKit is not a guarantee of every Safari version. The bounded load test is a regression check, not a maximum-capacity measurement.
 

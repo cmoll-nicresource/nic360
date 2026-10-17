@@ -17,6 +17,7 @@ export function testEnvironment() {
     STRIPE_SECRET_KEY: '',
     S3_BUCKET: '',
     MAILCHIMP_API_KEY: '',
+    STATENET_ITRAC_URL: 'https://itrac.example.invalid/portal?key=synthetic-test-only',
     EMAIL_PROVIDER: 'simulate',
     STRIPE_MODE: 'test',
     NEXT_TELEMETRY_DISABLED: '1',

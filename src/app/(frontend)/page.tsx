@@ -212,6 +212,25 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+        <section className="edition-section">
+          <SectionHeading eyebrow="DAILY · WEEKLY · MONTHLY" title="Publications"
+            href="/publications" action="All publications">
+            <p className="muted">Recurring briefings and reports, with the latest edition and past issues in one place.</p>
+          </SectionHeading>
+          <div className="edition-publication-topics">
+            {[
+              ['news', 'News & analysis', 'Industry news clippings and specialist reporting.'],
+              ['legislation', 'Legislative reporting', 'Daily snapshots and weekly reports on legislative activity.'],
+              ['trademarks', 'Trademark reports', 'Weekly filings and monthly trademark activity.'],
+            ].map(([anchor, title, description]) => (
+              <Link key={anchor} href={`/publications#${anchor}`}>
+                <h3>{title}</h3>
+                <p>{description}</p>
+                <span className="edition-text-link">Explore editions ↗</span>
+              </Link>
+            ))}
+          </div>
+        </section>
         <section className="edition-reference-band">
           <EditorialPhoto
             photo="barn"
@@ -219,22 +238,15 @@ export default async function HomePage() {
             sizes="(max-width: 600px) 100vw, 420px"
           />
           <div>
-            <p className="edition-eyebrow">KEEP THE ESSENTIALS CLOSE</p>
-            <h2>
-              Briefings for today.
-              <br />
-              References for the long view.
-            </h2>
+            <p className="edition-eyebrow">REFERENCE GUIDES</p>
+            <h2>Keep the essentials close.</h2>
             <p>
-              Read specialist publications and explore in-depth guides alongside your daily
-              reporting.
+              In-depth references to the tax, trade and regulatory frameworks shaping your work.
+              Browse each guide and download the resources you need.
             </p>
             <div className="edition-actions">
-              <Link href="/publications" className="btn btn-secondary">
-                Publication library ↗
-              </Link>
-              <Link href="/guides" className="edition-text-link">
-                Reference guides ↗
+              <Link href="/guides" className="btn btn-secondary">
+                Explore guides ↗
               </Link>
             </div>
           </div>

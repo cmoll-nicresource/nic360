@@ -34,7 +34,7 @@ export default async function GuidesPage() {
         <div className="header-band-inner">
           <div>
             <p className="edition-eyebrow">THE REFERENCE SHELF</p>
-            <h1>Keep the essentials close.</h1>
+            <h1>Guides</h1>
             <p>In-depth guides to the tax, trade and regulatory frameworks shaping your work.</p>
           </div>
           {guides && (

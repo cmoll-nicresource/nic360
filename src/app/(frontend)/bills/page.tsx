@@ -5,6 +5,7 @@ import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { LawIcon } from '@/components/brandIcons'
 import { EditorialPhoto } from '@/components/frontend/EditorialPhoto'
+import { LegislationNav } from '@/components/frontend/LegislationNav'
 
 import config from '@/payload.config'
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
@@ -135,6 +136,7 @@ export default async function BillsPage({
         </div>
       </div>
       <div className="page">
+        <LegislationNav active="bills" />
         <ExcerptFilterBar
           basePath="/bills"
           sectors={sectors}

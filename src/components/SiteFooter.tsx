@@ -20,13 +20,14 @@ export function SiteFooter() {
             <h4>Tracking</h4>
             <Link href="/articles">News</Link>
             <Link href="/bills">Legislation</Link>
+            <Link href="/bills/itrac">StateNet iTrac</Link>
             <Link href="/trademarks">Trademarks</Link>
           </div>
           <div>
             <h4>Content</h4>
             <Link href="/datasets">Data</Link>
-            <Link href="/guides">Guides</Link>
             <Link href="/publications">Publications</Link>
+            <Link href="/guides">Guides</Link>
           </div>
           <div>
             <h4>Organization</h4>

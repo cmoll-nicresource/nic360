@@ -49,6 +49,9 @@ for (const role of [
       member = ['base', 'premium'].includes(role),
       premium = role === 'premium'
     try {
+      const portalHtml = await (await api.get('/bills/itrac')).text()
+      expect(portalHtml.includes('itrac.example.invalid')).toBe(staff || member)
+      expect(portalHtml.includes('<iframe')).toBe(staff || member)
       const article = await api.get('/api/articles/' + f.articles.us + '?depth=0')
       expect((await api.get('/api/events/' + f.refs.event)).status()).toBe(200)
       expect((await api.get('/api/events/' + draftEvent + '?draft=true')).status() === 200).toBe(staff)

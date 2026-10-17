@@ -71,19 +71,16 @@ export async function SiteNav() {
       </Link>
       <MobileNavToggle key={pathname} />
       <div className="nav-links" id="primary-links">
-        {[
-          ['/articles', 'News'],
-          ['/bills', 'Legislation'],
-          ['/trademarks', 'Trademarks'],
-        ].map(([href, label]) => (
-          <Link
-            key={href}
-            href={href}
-            aria-current={pathname.startsWith(href) ? 'page' : undefined}
-          >
-            {label}
-          </Link>
-        ))}
+        <Link href="/articles" aria-current={pathname.startsWith('/articles') ? 'page' : undefined}>
+          News
+        </Link>
+        <NavDropdown label="Legislation" active={pathname.startsWith('/bills')}>
+          <Link href="/bills">Bill library</Link>
+          <Link href="/bills/itrac">StateNet iTrac</Link>
+        </NavDropdown>
+        <Link href="/trademarks" aria-current={pathname.startsWith('/trademarks') ? 'page' : undefined}>
+          Trademarks
+        </Link>
         <NavDropdown label="Data" active={pathname.startsWith('/datasets')} wide>
           {['policy', 'markets', 'trade'].map((category) => (
             <div className="nav-dropdown-group" key={category}>
@@ -101,29 +98,19 @@ export async function SiteNav() {
             <Link href="/datasets">Explore all data ↗</Link>
           </div>
         </NavDropdown>
-        <NavDropdown
-          label="Library"
-          active={pathname.startsWith('/guides') || pathname.startsWith('/publications')}
-          wide
-        >
-          <div className="nav-dropdown-group">
-            <h4>Reference guides</h4>
-            {guides?.docs.slice(0, 5).map((g) => (
-              <Link key={g.id} href={`/guides/${g.slug}`}>
-                {g.title}
-              </Link>
-            ))}
-            <Link href="/guides">View all guides ↗</Link>
-          </div>
-          <div className="nav-dropdown-group">
-            <h4>Publications</h4>
-            {publications?.docs.slice(0, 6).map((p) => (
-              <Link key={p.id} href={`/publications/${p.slug}`}>
-                {p.title}
-              </Link>
-            ))}
-            <Link href="/publications">View all publications ↗</Link>
-          </div>
+        <NavDropdown label="Publications" active={pathname.startsWith('/publications')}>
+          {publications?.docs.map((p) => (
+            <Link key={p.id} href={`/publications/${p.slug}`}>
+              {p.title}
+            </Link>
+          ))}
+          <Link href="/publications">View all publications ↗</Link>
+        </NavDropdown>
+        <NavDropdown label="Guides" active={pathname.startsWith('/guides')}>
+          {guides?.docs.slice(0, 6).map((g) => (
+            <Link key={g.id} href={`/guides/${g.slug}`}>{g.title}</Link>
+          ))}
+          <Link href="/guides">View all guides ↗</Link>
         </NavDropdown>
         <NavDropdown label="Events" active={pathname.startsWith('/events')}>
           {events.docs.map((event) => (

@@ -18,8 +18,8 @@ export default async function PublicationsPage() {
       <header className="header-band">
         <div className="header-band-inner">
           <div>
-            <p className="edition-eyebrow">THE READING ROOM</p>
-            <h1>A clearer view of your industry.</h1>
+            <p className="edition-eyebrow">DAILY · WEEKLY · MONTHLY</p>
+            <h1>Publications</h1>
             <p>
               Daily briefings, specialist reporting and monthly analysis. Read the latest edition or
               explore the archive.
@@ -46,7 +46,7 @@ export default async function PublicationsPage() {
               )
               if (!docs.length) return null
               return (
-                <section key={category} className="edition-section">
+                <section key={category} id={category} className="edition-section">
                   <SectionHeading
                     eyebrow="PUBLICATIONS"
                     title={
