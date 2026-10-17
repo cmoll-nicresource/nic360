@@ -12,6 +12,7 @@ const locations = [
   { id: 5, name: 'Asia', level: 'region' },
   { id: 6, name: 'United Kingdom', level: 'country' },
   { id: 7, name: 'North America', level: 'region' },
+  { id: 8, name: 'Europe', level: 'region' },
 ]
 const article = (id: number, locs: number[], extra = {}) => ({
   id,
@@ -194,6 +195,17 @@ describe('publication editorial grouping', () => {
     const sections = await buildSectionsFromRules(payload, pub('global-news-clippings'), '2026-10-16')
     expect(sections.map((s) => [s.heading, s.items.map((i) => i.value)])).toEqual([
       ['Asia: Research', [22]], ['Asia: Taxation', [26, 23]],
+    ])
+  })
+  it('retains a genuine foreign continent tag on a US story, and does not infer US-only from North America alone', async () => {
+    const { payload } = fixture([
+      article(27, [7, 1, 8], { primarySubject: tax }),
+      article(28, [7], { primarySubject: tax }),
+      article(29, [7, 1], { primarySubject: tax }),
+    ])
+    const sections = await buildSectionsFromRules(payload, pub('global-news-clippings'), '2026-10-16')
+    expect(sections.map((s) => [s.heading, s.items.map((i) => i.value)])).toEqual([
+      ['Europe: Taxation', [27]], ['North America: Taxation', [28]],
     ])
   })
 })

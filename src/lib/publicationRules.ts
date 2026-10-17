@@ -253,7 +253,9 @@ export async function buildSectionsFromRules(
     more = result.hasNextPage
     page++
   }
+  const locationsById = new Map(allLocations.map((l) => [l.id, l]))
   let foreignIds: number[] | undefined
+  const usAncestorIds = new Set<number>()
   if (publicationGeography(publication) === 'non-us') {
     const us = allLocations.filter(
       (l) => l.level === 'country' && l.name.trim().toLowerCase() === 'united states',
@@ -264,9 +266,13 @@ export async function buildSectionsFromRules(
       )
     const domestic = new Set(expandLocationDescendants(allLocations, [us[0].id]))
     foreignIds = allLocations.filter((l) => !domestic.has(l.id)).map((l) => l.id)
+    let parentId = idOf(us[0].parent)
+    while (parentId && !usAncestorIds.has(parentId)) {
+      usAncestorIds.add(parentId)
+      parentId = idOf(locationsById.get(parentId)?.parent)
+    }
   }
   let items = await fetchSelectedItems(payload, publication, allLocations, issueDate, foreignIds)
-  const locationsById = new Map(allLocations.map((l) => [l.id, l]))
   if (foreignIds) {
     const foreign = new Set(foreignIds)
     // Region tags accompany country tags in migrated content. North America
@@ -278,7 +284,14 @@ export async function buildSectionsFromRules(
         const loc = locationsById.get(idOf(ref)!)
         return loc && loc.level !== 'region'
       })
-      return !specific.length || specific.some((ref) => foreign.has(idOf(ref)!))
+      return (
+        !specific.length ||
+        specific.some((ref) => foreign.has(idOf(ref)!)) ||
+        refs.some((ref) => {
+          const id = idOf(ref)!
+          return foreign.has(id) && !usAncestorIds.has(id)
+        })
+      )
     })
   }
   // For mixed US/non-US stories, group by the non-US location in Global.
@@ -286,8 +299,11 @@ export async function buildSectionsFromRules(
     for (const item of items)
       if (item.collection !== 'trademarks') {
         const excerpt = item as Article | Bill
-        excerpt.locations = (excerpt.locations ?? []).filter((ref) =>
-          foreignIds!.includes(idOf(ref)!),
+        const hasUSLocation = (excerpt.locations ?? []).some(
+          (ref) => !foreignIds!.includes(idOf(ref)!),
+        )
+        excerpt.locations = (excerpt.locations ?? []).filter(
+          (ref) => foreignIds!.includes(idOf(ref)!) && !(hasUSLocation && usAncestorIds.has(idOf(ref)!)),
         )
       }
 
