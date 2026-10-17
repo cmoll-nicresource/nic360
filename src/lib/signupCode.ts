@@ -1,12 +1,11 @@
 import type { Payload } from 'payload'
+import { randomInt } from 'node:crypto'
 
 const CODE_LENGTH = 6
 const CODE_TTL_MS = 15 * 60 * 1000 // 15 minutes
 
 export function generateCode(): string {
-  let code = ''
-  for (let i = 0; i < CODE_LENGTH; i++) code += Math.floor(Math.random() * 10)
-  return code
+  return String(randomInt(10 ** CODE_LENGTH)).padStart(CODE_LENGTH, '0')
 }
 
 export function codeExpiresAt(): string {
@@ -15,7 +14,8 @@ export function codeExpiresAt(): string {
 
 export function isCodeExpired(expiresAt: string | null | undefined): boolean {
   if (!expiresAt) return true
-  return new Date(expiresAt).getTime() < Date.now()
+  const time = new Date(expiresAt).getTime()
+  return !Number.isFinite(time) || time <= Date.now()
 }
 
 /** Sends the sign-up code using whatever email adapter is configured (Mandrill, or console in dev). */

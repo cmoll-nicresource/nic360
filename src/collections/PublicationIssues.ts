@@ -1,6 +1,6 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
-import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
+import { requireBasePlanForPublished, staffCanWrite } from '@/access/excerptAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 import { staffHasMinRole } from '@/access/staffRoles'
 import { preserveIssueStats } from '@/hooks/preserveIssueStats'
@@ -53,7 +53,7 @@ export const PublicationIssues: CollectionConfig = {
   },
   versions: { drafts: true },
   access: {
-    read: requireBasePlanToRead,
+    read: requireBasePlanForPublished,
     create: staffCanWrite,
     update: staffCanWrite,
     delete: staffCanWrite,

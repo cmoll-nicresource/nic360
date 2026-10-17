@@ -1,0 +1,48 @@
+name: Independent backup recovery
+on:
+  workflow_dispatch:
+    inputs:
+      restore:
+        description: Rehearse a complete isolated restore
+        type: boolean
+        default: false
+  schedule:
+    - cron: '17 */6 * * *'
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: independent-backup-recovery
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: vars.RECOVERY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.10.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::226541720866:role/nic360-github-recovery
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+      - name: Weekly isolated database and uploaded-file restore
+        # Sunday at 00 UTC, or an explicitly requested manual rehearsal.
+        if: inputs.restore || (github.event_name == 'schedule' && github.event.schedule == '17 */6 * * *')
+        shell: bash
+        run: |
+          if [ '${{ inputs.restore }}' = 'true' ] || { [ "$(date -u +%u)" = 7 ] && [ "$(date -u +%H)" -lt 6 ]; }; then
+            node ops/backups/rehearse.mjs
+          fi
+      - name: Check independent backup and recovery freshness
+        if: always()
+        run: node ops/backups/health.mjs
+      # Customer data and recovered objects must never become Actions artifacts.

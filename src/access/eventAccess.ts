@@ -25,7 +25,8 @@ export async function hasActiveRegistration(
   user: PayloadRequest['user'],
   eventId: number,
 ): Promise<boolean> {
-  if (user?.collection !== 'users') return false
+  if (user?.collection !== 'users' || user.status === 'suspended' || user._verified === false)
+    return false
   const { totalDocs } = await payload.find({
     collection: 'event-registrations',
     where: {

@@ -23,10 +23,12 @@ function providerIsEffective(provider: AccessProvider): boolean {
  * re-deriving plan logic from the provider fields directly.
  */
 export async function getReaderPlan(
-  user: Pick<User, 'accessProvider'> | null | undefined,
+  user:
+    (Pick<User, 'accessProvider'> & Partial<Pick<User, 'status' | '_verified'>>) | null | undefined,
   payload: Payload,
 ): Promise<ReaderPlan> {
-  if (!user?.accessProvider) return 'none'
+  if (!user?.accessProvider || user.status === 'suspended' || user._verified === false)
+    return 'none'
 
   const provider =
     typeof user.accessProvider === 'object'

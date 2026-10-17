@@ -4,6 +4,7 @@ import type { Transporter } from 'nodemailer'
 
 import { applyEmailSafeMode } from './emailSafeMode'
 import { consoleEmailTransport } from './consoleEmailTransport'
+import { assertTestIsolation } from './testIsolation'
 
 /**
  * Builds the transport used for account email (verification, password
@@ -15,6 +16,15 @@ import { consoleEmailTransport } from './consoleEmailTransport'
  * beta/dev environment.
  */
 export function buildAccountEmailTransport(): Transporter {
+  if (process.env.E2E_SMTP_URL) {
+    assertTestIsolation()
+    const smtp = new URL(process.env.E2E_SMTP_URL)
+    if (!['localhost', '127.0.0.1'].includes(smtp.hostname))
+      throw new Error('Test SMTP must be loopback-only.')
+    const transport = nodemailer.createTransport(process.env.E2E_SMTP_URL)
+    applyEmailSafeMode(transport)
+    return transport
+  }
   const hasSesConfig = Boolean(process.env.SES_ACCESS_KEY_ID && process.env.SES_SECRET_ACCESS_KEY)
 
   const transport = hasSesConfig

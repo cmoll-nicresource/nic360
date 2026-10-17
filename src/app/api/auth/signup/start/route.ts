@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import config from '@/payload.config'
 import { codeExpiresAt, generateCode, sendSignupCodeEmail } from '@/lib/signupCode'
+import { signupChallenge } from '@/lib/signupChallenge'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -24,6 +25,14 @@ export async function POST(request: Request) {
       overrideAccess: true,
     })
     const existing = docs[0]
+    if (
+      existing?.signup?.codeExpiresAt &&
+      Date.parse(existing.signup.codeExpiresAt) > Date.now() + 14 * 60 * 1000
+    )
+      return NextResponse.json(
+        { error: 'Please wait a minute before requesting another code.' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      )
 
     if (existing?.signup?.completedAt) {
       return NextResponse.json(
@@ -53,7 +62,7 @@ export async function POST(request: Request) {
     await payload.update({
       collection: 'users',
       id: userId,
-      data: { signup: { code, codeExpiresAt: expiresAt } },
+      data: { signup: { code: signupChallenge(code), codeExpiresAt: expiresAt } },
       overrideAccess: true,
     })
 

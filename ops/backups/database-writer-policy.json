@@ -1,0 +1,8 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Effect":"Allow","Action":"s3:GetBucketLocation","Resource":"arn:aws:s3:::nic360-backups-226541720866-us-east-1"},
+    {"Effect":"Allow","Action":["s3:ListBucket","s3:ListBucketMultipartUploads"],"Resource":"arn:aws:s3:::nic360-backups-226541720866-us-east-1","Condition":{"StringLike":{"s3:prefix":["database-daily/*"]}}},
+    {"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:AbortMultipartUpload","s3:ListMultipartUploadParts"],"Resource":"arn:aws:s3:::nic360-backups-226541720866-us-east-1/database-daily/*"}
+  ]
+}

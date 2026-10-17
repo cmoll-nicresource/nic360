@@ -1,0 +1,10 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Effect":"Allow","Action":"s3:ListBucket","Resource":"arn:aws:s3:::nic360-backups-226541720866-us-east-1","Condition":{"StringLike":{"s3:prefix":["uploads/*","database-daily/*","verification/*"]}}},
+    {"Effect":"Allow","Action":"s3:GetObject","Resource":["arn:aws:s3:::nic360-backups-226541720866-us-east-1/uploads/*","arn:aws:s3:::nic360-backups-226541720866-us-east-1/database-daily/*","arn:aws:s3:::nic360-backups-226541720866-us-east-1/verification/*"]},
+    {"Effect":"Allow","Action":"s3:PutObject","Resource":"arn:aws:s3:::nic360-backups-226541720866-us-east-1/verification/*"},
+    {"Effect":"Allow","Action":"cloudwatch:PutMetricData","Resource":"*","Condition":{"StringEquals":{"cloudwatch:namespace":"Nic360/Recovery"}}},
+    {"Effect":"Allow","Action":"ses:SendEmail","Resource":"arn:aws:ses:us-east-1:226541720866:identity/nicotineresource.org","Condition":{"StringEquals":{"ses:FromAddress":"noreply@nicotineresource.org"},"ForAllValues:StringEquals":{"ses:Recipients":["cmoll@nicotineresource.org"]},"Null":{"ses:Recipients":"false"}}}
+  ]
+}

@@ -143,6 +143,7 @@ export const Users: CollectionConfig = {
       type: 'select',
       defaultValue: 'active',
       required: true,
+      access: { create: staffHasMinRole('gatekeeper'), update: staffHasMinRole('gatekeeper') },
       options: [
         { label: 'Active', value: 'active' },
         { label: 'Suspended', value: 'suspended' },
@@ -159,6 +160,7 @@ export const Users: CollectionConfig = {
       },
       access: {
         // Readers can see their own provider but not reassign themselves to another.
+        create: staffHasMinRole('gatekeeper'),
         update: staffHasMinRole('gatekeeper'),
       },
     },
@@ -193,6 +195,7 @@ export const Users: CollectionConfig = {
       },
       access: {
         read: staffHasMinRole('gatekeeper'),
+        create: staffHasMinRole('gatekeeper'),
         update: staffHasMinRole('gatekeeper'),
       },
       fields: [

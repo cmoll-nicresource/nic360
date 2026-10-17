@@ -1,0 +1,14 @@
+{
+  "AlarmName":"nic360-backup-worker-health",
+  "AlarmDescription":"Independent six-hour backup/recovery health check. Missing heartbeat is breaching; CloudWatch's additional lookback can delay missing-data detection beyond one period.",
+  "Namespace":"Nic360/Recovery",
+  "MetricName":"BackupHealth",
+  "Statistic":"Minimum",
+  "Period":21600,
+  "EvaluationPeriods":1,
+  "DatapointsToAlarm":1,
+  "Threshold":1,
+  "ComparisonOperator":"LessThanThreshold",
+  "TreatMissingData":"breaching",
+  "AlarmActions":["arn:aws:sns:us-east-1:226541720866:nic360-backup-alerts"]
+}

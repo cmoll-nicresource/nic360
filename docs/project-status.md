@@ -4,6 +4,8 @@ Updated October 16, 2026. This is the current work list. The original milestones
 
 ## Completed
 
+- October 16: durable production-build/browser CI, account lifecycle and endpoint permissions tests, publication configuration/migrated taxonomy contracts, synthetic trade database checks, coverage reporting/floors, accessibility, cross-browser email screenshots, bounded load and synthetic backup/recovery smoke. See [testing](./testing.md). Tests also exposed and closed signup-completion, suspension and direct-draft access gaps.
+
 - October 16: [excerpt publication selection](./publication-selection.md) corrected: US geography, Global's mixed-location exception, news-only Clippings, published excerpts, issue-date windows and full pagination, with saved-rule repair and regression coverage.
 - October 16: [company usage reports](./company-usage-reports.md) for admins/gatekeepers, with provider/date selection, all current users, activity summaries and CSV export.
 - October 16: role-specific admin workspace: daily editorial actions and drafts for editors; subscriptions, readers, attendees and orders for gatekeepers. Taxonomy management and staff directory are admin only; existing-term selectors and own-account access remain available. See [staff workspace](./staff-workspace.md).

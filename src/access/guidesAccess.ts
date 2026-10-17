@@ -1,4 +1,4 @@
-import type { Access } from 'payload'
+import type { Access, Where } from 'payload'
 
 import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
 import { staffHasRole } from '@/access/staffRoles'
@@ -16,7 +16,10 @@ export const canReadGuide: Access = async ({ req }) => {
   if (req.user?.collection !== 'users') return false
 
   const plan = await getReaderPlan(req.user, req.payload)
-  if (planSatisfies(plan, 'premium')) return true
-  if (planSatisfies(plan, 'base')) return { requiresPremium: { equals: false } }
+  if (planSatisfies(plan, 'premium')) return { _status: { equals: 'published' } } as Where
+  if (planSatisfies(plan, 'base'))
+    return {
+      and: [{ _status: { equals: 'published' } }, { requiresPremium: { equals: false } }],
+    } as Where
   return false
 }

@@ -16,6 +16,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { buildAccountEmailTransport } from './lib/accountEmailTransport'
+import { assertTestIsolation } from './lib/testIsolation'
 
 import { AccessProviders } from './collections/AccessProviders'
 import { Articles } from './collections/Articles'
@@ -56,6 +57,7 @@ import { tmogImportTask } from './jobs/tmogImportTask'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+if (process.env.E2E_TEST_MODE === '1') assertTestIsolation()
 
 // S3-compatible file storage (AWS S3 or Cloudflare R2) — leave S3_BUCKET
 // unset in development to keep using local disk. Files stay served through
@@ -210,12 +212,15 @@ export default buildConfig({
     // auto-queued for this tick) and runs it. Not used on serverless hosts,
     // but this project deploys as a persistent Railway service, so the
     // in-process cron check is fine.
-    autoRun: [
-      { cron: '0 12 * * 5', queue: 'tmog-import', limit: 1 },
-      { cron: '* * * * *', queue: 'newsletters', limit: 1 },
-      { cron: '*/5 * * * *', queue: 'operations', limit: 1 },
-      { cron: '* * * * *', queue: 'event-invitations', limit: 1 },
-    ],
+    autoRun:
+      process.env.E2E_TEST_MODE === '1'
+        ? []
+        : [
+            { cron: '0 12 * * 5', queue: 'tmog-import', limit: 1 },
+            { cron: '* * * * *', queue: 'newsletters', limit: 1 },
+            { cron: '*/5 * * * *', queue: 'operations', limit: 1 },
+            { cron: '* * * * *', queue: 'event-invitations', limit: 1 },
+          ],
   },
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

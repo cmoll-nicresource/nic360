@@ -14,7 +14,8 @@ async function readerSatisfiesBasePlan(req: PayloadRequest): Promise<boolean> {
  * can list and open documents so listing pages can show title/teaser fields;
  * the body fields themselves are gated by `canReadFullContent` below.
  */
-export const anyoneCanReadTeaser: Access = () => true
+export const anyoneCanReadTeaser: Access = ({ req }) =>
+  staffHasRole(req.user, 'editor') || { _status: { equals: 'published' } }
 
 /**
  * Field-level access for a body/content field (Article.excerpt,
@@ -35,6 +36,12 @@ export const canReadFullContent: FieldAccess = async ({ req }) => {
 export const requireBasePlanToRead: Access = async ({ req }) => {
   if (staffHasRole(req.user, 'editor')) return true
   return readerSatisfiesBasePlan(req)
+}
+
+/** Versioned subscriber content must not expose drafts through direct API reads. */
+export const requireBasePlanForPublished: Access = async ({ req }) => {
+  if (staffHasRole(req.user, 'editor')) return true
+  return (await readerSatisfiesBasePlan(req)) ? { _status: { equals: 'published' } } : false
 }
 
 /** Only staff (editor role or above) can create, edit or publish excerpts. */

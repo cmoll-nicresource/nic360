@@ -61,6 +61,16 @@ For database recovery, obtain the archive and recorded SHA-256 before restoring.
 
 ## Limits and operating costs
 
+### Repeatable verification added October 16
+
+The repository now includes a separate PostgreSQL/rclone [logical backup worker](../ops/backups/Dockerfile). It exports the database and stable-table fingerprints from the **same MVCC snapshot**, writes archive/fingerprint SHA-256 sums, and publishes a completion marker only after the archive is uploaded. Its planned destination is `database-daily/`; it requires its own scheduled Railway service and destination write policy. It has no application process, mail transport or payment integration.
+
+[rehearse.mjs](../ops/backups/rehearse.mjs) downloads completed backups, verifies SHA-256, restores PostgreSQL 18 with `--network none`, compares every stable table, recovers upload bytes and checks manifest hashes plus CMS attachment references. It removes its disposable container/volume and private temporary files. A local synthetic execution passed with 85 stable tables and three PDF attachments. CI runs that round trip on every push without cloud access.
+
+[health.mjs](../ops/backups/health.mjs) rejects upload/database markers older than 30 hours and recovery evidence older than eight days. The [independent workflow](../.github/workflows/recovery.yml) runs outside the app every six hours, with a Sunday/manual full rehearsal. The intended AWS role is `nic360-github-recovery`, restricted to this repository's master branch, read-only backup access, recovery-evidence writes, a scoped CloudWatch heartbeat and alerts only to `cmoll@nicotineresource.org`. Missing heartbeat alarms provide a second check on the scheduler itself. **Cloud activation remains pending AWS authentication/provisioning; repository code alone is not an active monitor.**
+
+The restore check deliberately fails on missing attachment references, including the ten pre-existing prototype/sample records listed above. No blanket missing-file exception list was introduced. Resolve those source content defects or explicitly review a narrowly scoped exception before claiming a fully healthy recovery. The old rehearsal evidence remains valid for the bytes actually present; it does not recreate absent originals.
+
 Database and object storage are separate systems, so their scheduled snapshots are not a single atomic recovery point. Inspect file references when pairing recovery dates; if uploads changed between backups, combine the appropriate retained file snapshots instead of silently accepting missing attachments. Daily scheduling targets roughly a day's recovery-point gap, not point-in-time recovery. Enabling database PITR would be a separate infrastructure change.
 
 The first automatic runs are still future events at setup time; the schedules are verified and the jobs have been manually exercised. Check the next daily cron result and database snapshot. A cron service that fails must show failure and must not publish a completion marker. The existing app's operational monitor does not currently monitor this independent backup service: missing-marker/failure notifications are a follow-up, and the app alone cannot report an outage that prevents itself from running.

@@ -1485,6 +1485,15 @@ a:focus-visible {
   color: rgba(255, 255, 255, 0.5);
 }
 
+.site-footer-bottom .muted {
+  color: #b9c5d1;
+}
+
+.page p a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .site-footer-legal {
   display: flex;
   justify-content: center;

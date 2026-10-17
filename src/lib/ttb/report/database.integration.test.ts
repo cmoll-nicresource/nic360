@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildReport } from './chapters'
 import { loadChapterFigures, loadLines } from './data'
 import { parseCbpPdf } from '../trq'
+import {loadSyntheticTradeFixture} from './syntheticFixture'
 
 // Opt-in only. Uses the existing local trade history without Payload init,
 // schema push, imports, uploads, emails, or changes to global pg parsers.
@@ -20,6 +21,7 @@ describe.skipIf(process.env.TTB_INTEGRATION !== '1')('trade report against local
     }
     client = new pg.Client({ connectionString, connectionTimeoutMillis: 5000 })
     await client.connect()
+    if(process.env.TTB_SYNTHETIC_FIXTURE==='1')await loadSyntheticTradeFixture(client)
     await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
   })
 

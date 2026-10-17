@@ -27,6 +27,10 @@ ttb-trade
 
 # Generated report previews and rendered QA pages.
 /tmp/
+/.test-artifacts/
+/coverage/
+/playwright-report/
+/test-results/
 
 # Licensed full-resolution photography masters; deploy only optimized web copies.
 /assets/photography/originals/

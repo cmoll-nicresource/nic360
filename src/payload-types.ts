@@ -1267,6 +1267,9 @@ export interface PublicationIssue {
   id: number;
   publication: number | Publication;
   issueDate: string;
+  /**
+   * Suggested from the publication and issue date. You can enter a custom title.
+   */
   title: string;
   format: 'excerpt-list' | 'pdf-report' | 'custom-html';
   intro?: {

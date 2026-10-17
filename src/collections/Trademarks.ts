@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
+import { requireBasePlanForPublished, staffCanWrite } from '@/access/excerptAccess'
 import { ingestionField } from '@/fields/ingestion'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
@@ -23,7 +23,7 @@ export const Trademarks: CollectionConfig = {
   },
   access: {
     // No public teaser for trademarks: the whole document requires a plan.
-    read: requireBasePlanToRead,
+    read: requireBasePlanForPublished,
     create: staffCanWrite,
     update: staffCanWrite,
     delete: staffCanWrite,
@@ -125,7 +125,10 @@ export const Trademarks: CollectionConfig = {
       label: 'Trademark image',
       type: 'upload',
       relationTo: 'media',
-      admin: { description: 'Blank when the USPTO image endpoint 404s for this mark (word-only marks, or not yet available).' },
+      admin: {
+        description:
+          'Blank when the USPTO image endpoint 404s for this mark (word-only marks, or not yet available).',
+      },
     },
     ingestionField(),
   ],

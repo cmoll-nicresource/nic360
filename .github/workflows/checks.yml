@@ -25,13 +25,25 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec tsc --noEmit
       - run: pnpm lint
-      - run: pnpm test
+      - run: pnpm test:coverage
+      - run: node --test ops/backups/health.test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-coverage
+          path: coverage/
+          retention-days: 7
       - run: pnpm exec vitest run src/lib/writeDatasetRows.integration.test.ts src/lib/emailFlagSchema.integration.test.ts src/lib/ses/newsletter.integration.test.ts src/lib/repairLegacyArticleExcerpts.integration.test.ts src/lib/companyUsage.integration.test.ts
         env:
           DATASET_INTEGRATION: '1'
           NEWSLETTER_INTEGRATION: '1'
           LEGACY_ARTICLE_REPAIR_INTEGRATION: '1'
           PAYLOAD_SECRET: 'ci-only-nic360-test-secret-not-a-live-secret'
+          DATABASE_URI: postgresql://postgres:postgres@localhost:5432/nic360_test
+      - run: pnpm exec vitest run src/lib/ttb/report/database.integration.test.ts
+        env:
+          TTB_INTEGRATION: '1'
+          TTB_SYNTHETIC_FIXTURE: '1'
           DATABASE_URI: postgresql://postgres:postgres@localhost:5432/nic360_test
       - run: pnpm exec vitest run src/lib/operations/monitor.integration.test.ts
         env:
@@ -48,3 +60,51 @@ jobs:
           CHECKOUT_INTEGRATION: '1'
           PAYLOAD_SECRET: 'ci-only-nic360-test-secret-not-a-live-secret'
           DATABASE_URI: postgresql://postgres:postgres@localhost:5432/nic360_test
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nic360_e2e_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URI: postgresql://postgres:postgres@127.0.0.1:5432/nic360_e2e_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.10.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - run: pnpm test:e2e:seed
+      - name: Exercise backup worker and isolated recovery with synthetic data
+        run: |
+          mkdir -p .test-artifacts/backup-archive
+          docker build -f ops/backups/Dockerfile -t nic360-backup-test .
+          docker run --rm --network host \
+            -e BACKUP_DATABASE_URL="$TEST_DATABASE_URI" \
+            -e UPLOAD_BACKUP_BUCKET=/backup \
+            -e RCLONE_CONFIG_ARCHIVE_TYPE=local \
+            -v "$PWD/.test-artifacts/backup-archive:/backup" nic360-backup-test
+          sudo chown -R "$(id -u):$(id -g)" .test-artifacts/backup-archive
+          node tests/support/backup-fixture.mjs
+          RECOVERY_LOCAL_DIRECTORY="$PWD/.test-artifacts/backup-archive" node ops/backups/rehearse.mjs
+          rm -rf .test-artifacts/backup-archive
+      - run: pnpm test:e2e:build
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-and-email-review
+          path: .test-artifacts/
+          retention-days: 7
