@@ -5,6 +5,7 @@ import { ADMIN_GROUPS } from '@/config/adminGroups'
 import { staffHasMinRole } from '@/access/staffRoles'
 import { preserveIssueStats } from '@/hooks/preserveIssueStats'
 import { defaultIssueFields } from '@/hooks/defaultIssueFields'
+import { defaultIssueDate } from '@/lib/publicationIssueTitle'
 
 const protectNewsletterState: CollectionBeforeChangeHook = async ({
   data,
@@ -75,7 +76,7 @@ export const PublicationIssues: CollectionConfig = {
           name: 'issueDate',
           type: 'date',
           required: true,
-          defaultValue: () => new Date().toISOString(),
+          defaultValue: () => defaultIssueDate(),
         },
       ],
     },

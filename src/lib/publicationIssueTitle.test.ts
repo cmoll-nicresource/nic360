@@ -1,5 +1,9 @@
 import { expect, it } from 'vitest'
-import { publicationIssueTitle } from './publicationIssueTitle'
+import { defaultIssueDate, publicationIssueTitle } from './publicationIssueTitle'
+it('defaults to the Eastern calendar day after UTC midnight, including year rollover', () => {
+  expect(defaultIssueDate(new Date('2026-10-17T00:15:00Z'))).toBe('2026-10-16T12:00:00.000Z')
+  expect(defaultIssueDate(new Date('2027-01-01T02:00:00Z'))).toBe('2026-12-31T12:00:00.000Z')
+})
 it('formats daily and weekly dates with full month, padded day and year', () => {
   for (const frequency of ['daily', 'weekly'])
     expect(publicationIssueTitle('US News Clippings', frequency, '2026-10-09T00:00:00Z')).toBe(

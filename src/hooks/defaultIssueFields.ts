@@ -1,5 +1,5 @@
 import type { CollectionBeforeValidateHook } from 'payload'
-import { publicationIssueTitle } from '@/lib/publicationIssueTitle'
+import { defaultIssueDate, publicationIssueTitle } from '@/lib/publicationIssueTitle'
 
 export const defaultIssueFields: CollectionBeforeValidateHook = async ({
   data,
@@ -20,7 +20,7 @@ export const defaultIssueFields: CollectionBeforeValidateHook = async ({
   const publication = await req.payload.findByID({ collection: 'publications', id, depth: 0, req })
   if (needsFormat) data.format = publication.format
   if (needsTitle) {
-    const date = data.issueDate ?? originalDoc?.issueDate ?? new Date().toISOString()
+    const date = data.issueDate ?? originalDoc?.issueDate ?? defaultIssueDate()
     data.issueDate = date
     data.title = publicationIssueTitle(publication.title, publication.frequency, date)
   }
