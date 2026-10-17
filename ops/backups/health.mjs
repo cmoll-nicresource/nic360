@@ -29,7 +29,7 @@ export async function latest(prefix, maxHours) {
   const [key] = await completedSnapshots(prefix)
   if (!key) throw new Error('No completed snapshot under ' + prefix)
   const marker = JSON.parse((await getBytes(key)).toString())
-  assertFresh(marker, maxHours)
+  try { assertFresh(marker, maxHours) } catch (error) { throw new Error(prefix + ': ' + error.message) }
   if (marker.snapshot !== key.slice(0, -'/complete.json'.length)) throw new Error('Snapshot marker path mismatch')
   return { ...marker, key }
 }
@@ -38,8 +38,10 @@ export async function recordRecovery(summary) {
   await s3.send(new PutObjectCommand({ Bucket: bucket, Key: snapshot + '/complete.json', Body: JSON.stringify({ ...summary, snapshot, completedAt: new Date().toISOString() }), ContentType: 'application/json', ServerSideEncryption: 'AES256' }))
 }
 export async function checkHealth() {
-  const result = await Promise.all([latest('uploads/', 30), latest('database-daily/', 30), latest('verification/', 8 * 24)])
-  return result.map(({ snapshot, completedAt }) => ({ snapshot, completedAt }))
+  const result = await Promise.allSettled([latest('uploads/', 30), latest('database-daily/', 30), latest('verification/', 8 * 24)])
+  const failures = result.filter(item => item.status === 'rejected')
+  if (failures.length) throw new Error(failures.map(item => item.reason.message).join('\n'))
+  return result.map(({ value: { snapshot, completedAt } }) => ({ snapshot, completedAt }))
 }
 export async function metric(healthy) {
   await new CloudWatchClient({ region }).send(new PutMetricDataCommand({ Namespace: 'Nic360/Recovery', MetricData: [{ MetricName: 'BackupHealth', Unit: 'Count', Value: healthy ? 1 : 0 }] }))

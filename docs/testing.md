@@ -43,6 +43,8 @@ The separate [backup/recovery workflow](../.github/workflows/recovery.yml) check
 
 Actual Outlook/Gmail and mobile mail-client rendering still require human review. Open the generated `email-review/*.html` and screenshots from the CI artifact, then inspect a controlled delivery to the approved staff inbox. Check the logo, excerpt text, linked contents, legislative fields, dark mode, image blocking, link targets, footer and unsubscribe. Browser screenshots do not certify Outlook's Word renderer or Gmail's CSS rewriting. No reader audience send or real Stripe charge is part of this suite.
 
+SES accepted five `[TEST layout review]` synthetic samples to `cmoll@nicotineresource.org` during this work. They contain a staff-review notice and disabled preview unsubscribe links; acceptance is not proof of inbox placement or client rendering. `ops/email-review.mjs` defaults to a dry run and requires `--send-to-approved-staff` to repeat this fixed-recipient send. Do not use the samples as real issues.
+
 External providers also need periodic controlled checks: hosted Stripe test checkout with a signed webhook, SES simulator feedback and unsubscribe, Census/CBP/USPTO source availability, and restoration after significant schema/storage changes. Unit mocks and synthetic PostgreSQL cannot prove those services are reachable. Record date, environment, outcome and cleanup in the relevant runbook.
 
 Before launch, staff should still perform a beta acceptance pass using their actual roles and review publication content. Automated checks do not settle editorial accuracy, consent, audience selection, live-payment activation or cutover decisions.
