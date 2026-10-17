@@ -3,6 +3,7 @@ import type { Payload, Where } from 'payload'
 import type { Publication } from '@/payload-types'
 import { buildSectionsFromRules } from './publicationRules'
 import { publicationDateWindow } from './publicationDateWindow'
+import { lexicalFromText } from './lexical'
 
 const locations = [
   { id: 1, name: 'United States', level: 'country', parent: 7 },
@@ -161,6 +162,22 @@ describe('publication selection boundaries', () => {
 })
 
 describe('publication editorial grouping', () => {
+  it('includes a migrated story once even with different record IDs and subject tags', async () => {
+    const shared = { title: 'Repeated migrated story', sourceUrl: 'https://publisher.example/story', excerpt: lexicalFromText('Identical full excerpt.') }
+    const { payload } = fixture([
+      article(31, [1], { ...shared, primarySubject: { id: 1, name: 'Research' } }),
+      article(32, [1], { ...shared, primarySubject: { id: 2, name: 'Taxation' } }),
+      article(33, [1], { ...shared, excerpt: lexicalFromText('A separate update.') }),
+      article(34, [1], { ...shared, sourceUrl: 'https://other.example/story' }),
+    ])
+    const sections = await buildSectionsFromRules(payload, pub('us-news-clippings'), '2026-10-16')
+    expect(ids(sections)).toEqual([31, 33, 34])
+  })
+  it('deduplicates only after geographic eligibility, retaining a valid foreign copy', async () => {
+    const shared = { title: 'Repeated migrated story', sourceUrl: 'https://publisher.example/story', excerpt: lexicalFromText('Identical full excerpt.') }
+    const { payload } = fixture([article(31, [7, 1], shared), article(32, [4], shared)])
+    expect(ids(await buildSectionsFromRules(payload, pub('global-news-clippings'), '2026-10-16'))).toEqual([32])
+  })
   const tax = { id: 1, name: 'Taxation' }, research = { id: 2, name: 'Research' }
   const stories = [
     article(21, [7, 1], { primarySubject: tax }),

@@ -66,9 +66,18 @@ describe.skipIf(process.env.PUBLICATION_RULES_INTEGRATION !== '1')(
           products: [...products],
           subjects: [subject],
           sourceDate: date,
+          sourceUrl: `https://example.invalid/publication-rule/${encodeURIComponent(marker)}/${name}`,
           _status: status,
           excerpt: lexicalFromText('Controlled publication-rule verification.'),
         })
+      // A separate migrated record for the same story, with a different timestamp.
+      // The real Payload query must select the story once without deleting either row.
+      ids.domesticDuplicate = await add('articles', {
+        title: marker + ' domestic', locations: [us], subjects: [subject],
+        sourceDate: '2090-10-15T15:00:00Z', _status: 'published',
+        sourceUrl: `https://example.invalid/publication-rule/${encodeURIComponent(marker)}/domestic`,
+        excerpt: lexicalFromText('Controlled publication-rule verification.'),
+      })
     }, 60000)
     afterAll(async () => {
       if (payload) {

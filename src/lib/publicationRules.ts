@@ -4,6 +4,7 @@ import type { Article, Bill, Location, Publication, Trademark } from '@/payload-
 import { publicationGeography, publicationSelectionRules } from './publicationSelectionPolicy'
 import { publicationDateWindow } from './publicationDateWindow'
 import { publicationGroupingRules } from './publicationGrouping'
+import { uniquePublicationExcerpts } from './publicationDeduplication'
 
 type ExcerptType = 'articles' | 'bills' | 'trademarks'
 type ExcerptDoc = (Article | Bill | Trademark) & { collection: ExcerptType }
@@ -308,7 +309,7 @@ export async function buildSectionsFromRules(
       }
 
   const groups = new Map<string, ExcerptDoc[]>()
-  for (const item of items) {
+  for (const item of uniquePublicationExcerpts(items)) {
     const primary = await groupKeyFor(payload, item, grouping.groupBy ?? 'none', locationsById)
     const secondary = grouping.thenGroupBy
       ? await groupKeyFor(payload, item, grouping.thenGroupBy, locationsById)
