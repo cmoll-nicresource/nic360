@@ -620,7 +620,6 @@ A location rule matches the place and everything inside it (*United States* matc
 |---|---|---|
 | `intro` | richText, optional | |
 | `sections` | array, sortable | one group each; continent > primary subject is stored as *Europe: Regulation* and rendered as a continent heading followed by subject subheadings in email, preview and web editions. US News Clippings uses subject headings only. |
-
 | `sections.heading` | text | |
 | `sections.items` | relationship → Articles, Bills, Trademarks (polymorphic), hasMany, ordered | |
 
