@@ -4,6 +4,8 @@ Current completed work and next steps: [project checklist](docs/project-status.m
 
 Scheduled backups and the October 16 isolated restore rehearsal are documented in [backup and recovery](docs/backup-recovery.md).
 
+Editor Chrome extension setup, the one-time 2.2 upgrade, website sign-in and browser revocation are documented in [News Clipper](docs/news-clipper.md). The extension is packaged separately from website deployment.
+
 Payload CMS 3 + Next.js rebuild of Nicotine360. See [CLAUDE.md](./CLAUDE.md) for the project brief and [docs/entity-map.md](./docs/entity-map.md) for field-level detail. Build order and "done when" criteria for each milestone are in CLAUDE.md.
 
 ## Setup
@@ -24,7 +26,7 @@ The current reader layouts, search, dataset explorer and access checks are descr
 
 Dataset transactions, PDF permissions, webhook verification, and the guarded local demo reset are documented in [docs/import-and-access-safety.md](./docs/import-and-access-safety.md). `pnpm seed` refuses the working database; it requires a dedicated local demo/test database and explicit reset switches.
 
-`pnpm test` runs the offline Vitest suite, including trade-report database-response regressions and actual PDF table-layout checks. `pnpm test:watch` reruns on change. `pnpm test:trade-report` opts into read-only integration checks against local Postgres with the restored trade history; these are skipped in the offline suite. Collection access rules, hooks and HTTP flows still require manual verification.
+`pnpm test` runs the offline Vitest suite, including trade-report database-response regressions and actual PDF table-layout checks. `pnpm test:watch` reruns on change. `pnpm test:trade-report` opts into read-only integration checks against local Postgres with the restored trade history; these are skipped in the offline suite. Automated PostgreSQL and browser checks cover access rules, account journeys and HTTP flows; see [testing](docs/testing.md) for commands, coverage and remaining human acceptance checks.
 
 `pnpm trade:check` checks trade prerequisites without initializing Payload or changing the database. `pnpm trade:render 2026 8` generates a local PDF preview under `tmp/` from a read-only snapshot. Setup, verification, and the guarded production restore plan are in [docs/ttb-trade-report.md](./docs/ttb-trade-report.md).
 

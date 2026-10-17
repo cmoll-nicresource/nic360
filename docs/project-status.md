@@ -1,8 +1,10 @@
 # Current project checklist
 
-Updated October 16, 2026. This is the current work list. The original milestones and dated changelog in CLAUDE.md/entity-map.md are history, not an outstanding-task list.
+Updated October 17, 2026. This is the current work list. The original milestones and dated changelog in CLAUDE.md/entity-map.md are history, not an outstanding-task list.
 
 ## Completed
+
+- October 17: [News Clipper 2.2](./news-clipper.md) deployed to beta and packaged separately for Chrome. Editors connect through website staff sign-in and approval, with device-only, revocable 12-hour clipper credentials. Metadata extraction includes title, original social preview, publication date and reviewed existing locations; subject/product indexing and publishing remain manual. All GitHub checks and a real unpacked-Chrome beta sign-in/import/revocation test passed; temporary fixtures and SSH access were removed. Existing installations need the documented one-time reinstall; deploying the website does not update Chrome.
 
 - October 16: durable production-build/browser CI, account lifecycle and endpoint permissions tests, publication configuration/migrated taxonomy contracts, synthetic trade database checks, coverage reporting/floors, accessibility, cross-browser email screenshots, bounded load and synthetic backup/recovery smoke. See [testing](./testing.md). Tests also exposed and closed signup-completion, suspension and direct-draft access gaps.
 
