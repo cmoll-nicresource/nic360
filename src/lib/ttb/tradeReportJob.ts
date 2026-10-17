@@ -2,6 +2,7 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import type { Payload } from 'payload'
+import { publicationIssueTitle } from '../publicationIssueTitle'
 
 import { lexicalFromText } from '@/lib/lexical'
 
@@ -45,7 +46,10 @@ export interface TradeReportJobResult {
  * mirroring src/lib/trademarkReportJob.ts's shape (a logged run record,
  * draft issues the editor reviews/sends themselves).
  */
-export async function runTradeReportJob(payload: Payload, opts: RunTradeReportJobOptions): Promise<TradeReportJobResult> {
+export async function runTradeReportJob(
+  payload: Payload,
+  opts: RunTradeReportJobOptions,
+): Promise<TradeReportJobResult> {
   const run = await payload.create({
     collection: 'trade-import-runs',
     data: {
@@ -94,13 +98,24 @@ export async function runTradeReportJob(payload: Payload, opts: RunTradeReportJo
     // Generate the report for the most recently loaded month.
     const latest = [...loaded].sort((a, b) => a.yr * 12 + a.mo - (b.yr * 12 + b.mo)).pop()
     if (latest) {
-      const issueId = await generateReportIssue(payload, latest.yr, latest.mo, opts.inputs ?? {}, notes)
+      const issueId = await generateReportIssue(
+        payload,
+        latest.yr,
+        latest.mo,
+        opts.inputs ?? {},
+        notes,
+      )
       if (issueId) issuesCreated.push(issueId)
     }
 
-    const countOf = (flow: Flow, field: 'rows' | 'replaced') => loaded.find((r) => r.flow === flow)?.[field] ?? 0
+    const countOf = (flow: Flow, field: 'rows' | 'replaced') =>
+      loaded.find((r) => r.flow === flow)?.[field] ?? 0
     const countIssues = (kind: string) =>
-      loaded.reduce((n, r) => n + r.issues.filter((i) => i.kind === kind).reduce((s, i) => s + (i.rowCount ?? 0), 0), 0)
+      loaded.reduce(
+        (n, r) =>
+          n + r.issues.filter((i) => i.kind === kind).reduce((s, i) => s + (i.rowCount ?? 0), 0),
+        0,
+      )
 
     const finished = await payload.update({
       collection: 'trade-import-runs',
@@ -142,7 +157,10 @@ export async function runTradeReportJob(payload: Payload, opts: RunTradeReportJo
 }
 
 function writeTempFile(buffer: Buffer, ext: string): string {
-  const tmpPath = path.join(os.tmpdir(), `trade-barometer-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`)
+  const tmpPath = path.join(
+    os.tmpdir(),
+    `trade-barometer-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`,
+  )
   fs.writeFileSync(tmpPath, buffer)
   return tmpPath
 }
@@ -150,14 +168,25 @@ function writeTempFile(buffer: Buffer, ext: string): string {
 async function uploadGuideFile(payload: Payload, buffer: Buffer, ext: string): Promise<number> {
   const tmpPath = writeTempFile(buffer, ext)
   try {
-    const doc = await payload.create({ collection: 'guide-files', data: {}, filePath: tmpPath, overrideAccess: true })
+    const doc = await payload.create({
+      collection: 'guide-files',
+      data: {},
+      filePath: tmpPath,
+      overrideAccess: true,
+    })
     return doc.id
   } finally {
     fs.unlinkSync(tmpPath)
   }
 }
 
-async function generateReportIssue(payload: Payload, yr: number, mo: number, inputs: Inputs, notes: string[]): Promise<number | null> {
+async function generateReportIssue(
+  payload: Payload,
+  yr: number,
+  mo: number,
+  inputs: Inputs,
+  notes: string[],
+): Promise<number | null> {
   const { docs: pubs } = await payload.find({
     collection: 'publications',
     where: { generator: { equals: 'monthly-trade-barometer' } },
@@ -166,14 +195,19 @@ async function generateReportIssue(payload: Payload, yr: number, mo: number, inp
   })
   const publication = pubs[0]
   if (!publication) {
-    throw new Error('No publication with generator "monthly-trade-barometer" found; a complete report issue cannot be created.')
+    throw new Error(
+      'No publication with generator "monthly-trade-barometer" found; a complete report issue cannot be created.',
+    )
   }
 
   const resolved = await resolveReportInputs(inputs, yr, mo)
-  if (resolved.inputs.usTrade?.source) notes.push(`US trade source snapshot (billions): ${JSON.stringify(resolved.inputs.usTrade)}`)
-  if (resolved.inputs.trq?.source) notes.push(`CBP TRQ source snapshot (kilograms): ${JSON.stringify(resolved.inputs.trq)}`)
+  if (resolved.inputs.usTrade?.source)
+    notes.push(`US trade source snapshot (billions): ${JSON.stringify(resolved.inputs.usTrade)}`)
+  if (resolved.inputs.trq?.source)
+    notes.push(`CBP TRQ source snapshot (kilograms): ${JSON.stringify(resolved.inputs.trq)}`)
   notes.push(...resolved.notes)
-  if (resolved.notes.length) throw new Error(`Cannot generate a complete PDF. ${resolved.notes.join(' ')}`)
+  if (resolved.notes.length)
+    throw new Error(`Cannot generate a complete PDF. ${resolved.notes.join(' ')}`)
   const client = await payload.db.pool.connect()
   let report: Awaited<ReturnType<typeof buildReport>>
   try {
@@ -190,7 +224,12 @@ async function generateReportIssue(payload: Payload, yr: number, mo: number, inp
     collection: 'publication-issues',
     data: {
       publication: publication.id,
-      title: `${publication.title} - ${report.subtitle}`,
+      title: publicationIssueTitle(
+        publication.title,
+        'monthly',
+        new Date(),
+        new Date(Date.UTC(yr, mo - 1, 1)),
+      ),
       issueDate: new Date(Date.UTC(yr, mo - 1, 1)).toISOString(),
       format: 'pdf-report',
       summary: lexicalFromText(

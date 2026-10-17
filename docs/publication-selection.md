@@ -1,5 +1,7 @@
 # Excerpt publication selection
 
+New issue titles default to `Publication Name - October 09, 2026` for daily/weekly publications, using the saved issue date. Monthly defaults use the previous calendar month and year, e.g. `Publication Name - September 2026` for an October issue. The editor updates suggested titles when the publication/date changes and preserves custom titles. Server-side defaults run before required-field validation. Automated trademark reports use the same format; historical trade reports use their actual reporting month. Existing saved titles are not bulk-renamed.
+
 Confirmed October 16, 2026:
 
 | Publication | Excerpts | Geography / product |

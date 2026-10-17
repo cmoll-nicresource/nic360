@@ -23,6 +23,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ImportDataLink as ImportDataLink_ad0ba29dad1742e54ea075b1abe92653 } from '../../../components/admin/ImportDataLink'
 import { IssuePreview as IssuePreview_7d478cab3427b49dccf27329fb312b04 } from '../../../components/admin/IssuePreview'
+import { IssueTitleDefault as IssueTitleDefault_ca3e83e30666678bff56b4946b16ac39 } from '../../../components/admin/IssueTitleDefault'
 import { BuildFromRulesButton as BuildFromRulesButton_98e18b5c6bc086120f80ba3668b17121 } from '../../../components/admin/BuildFromRulesButton'
 import { SendIssueButtons as SendIssueButtons_f2e6e440952be4366e071120771276c6 } from '../../../components/admin/SendIssueButtons'
 import { ReAddButton as ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705 } from '../../../components/admin/ReAddButton'
@@ -69,6 +70,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "./components/admin/ImportDataLink#ImportDataLink": ImportDataLink_ad0ba29dad1742e54ea075b1abe92653,
   "./components/admin/IssuePreview#IssuePreview": IssuePreview_7d478cab3427b49dccf27329fb312b04,
+  "./components/admin/IssueTitleDefault#IssueTitleDefault": IssueTitleDefault_ca3e83e30666678bff56b4946b16ac39,
   "./components/admin/BuildFromRulesButton#BuildFromRulesButton": BuildFromRulesButton_98e18b5c6bc086120f80ba3668b17121,
   "./components/admin/SendIssueButtons#SendIssueButtons": SendIssueButtons_f2e6e440952be4366e071120771276c6,
   "./components/admin/ReAddButton#ReAddButton": ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705,

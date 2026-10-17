@@ -6,6 +6,7 @@ import type { Trademark } from '@/payload-types'
 import { lexicalFromText } from '@/lib/lexical'
 import { SITE_URL } from '@/lib/env'
 import { requireCompleteTrademarkMonth } from './tmog/monthlyCoverage'
+import { publicationIssueTitle } from './publicationIssueTitle'
 import {
   renderTrademarkPdf,
   reportDate,
@@ -151,7 +152,12 @@ export async function buildTrademarkReportIssues(
         overrideAccess: true,
         data: {
           publication: pubs[0].id,
-          title: `${pubs[0].title} - ${report.period}`,
+          title: publicationIssueTitle(
+            pubs[0].title,
+            report.kind === 'monthly' ? 'monthly' : 'weekly',
+            asOf,
+            report.kind === 'monthly' ? monthStart : undefined,
+          ),
           issueDate: asOf.toISOString(),
           format: 'pdf-report',
           summary: lexicalFromText(summary),

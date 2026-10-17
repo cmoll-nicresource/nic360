@@ -4,19 +4,7 @@ import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 import { staffHasMinRole } from '@/access/staffRoles'
 import { preserveIssueStats } from '@/hooks/preserveIssueStats'
-
-const defaultFormatFromPublication: CollectionBeforeChangeHook = async ({
-  data,
-  req,
-  operation,
-}) => {
-  if (operation !== 'create' || data.format || !data.publication) return data
-  const publication = await req.payload
-    .findByID({ collection: 'publications', id: data.publication, depth: 0, req })
-    .catch(() => null)
-  if (publication) data.format = publication.format
-  return data
-}
+import { defaultIssueFields } from '@/hooks/defaultIssueFields'
 
 const protectNewsletterState: CollectionBeforeChangeHook = async ({
   data,
@@ -70,7 +58,8 @@ export const PublicationIssues: CollectionConfig = {
     delete: staffCanWrite,
   },
   hooks: {
-    beforeChange: [defaultFormatFromPublication, protectNewsletterState, preserveIssueStats],
+    beforeValidate: [defaultIssueFields],
+    beforeChange: [protectNewsletterState, preserveIssueStats],
   },
   fields: [
     {
@@ -90,7 +79,19 @@ export const PublicationIssues: CollectionConfig = {
         },
       ],
     },
-    { name: 'title', type: 'text', required: true },
+    {
+      name: 'titleDefault',
+      type: 'ui',
+      admin: { components: { Field: './components/admin/IssueTitleDefault#IssueTitleDefault' } },
+    },
+    {
+      name: 'title',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Suggested from the publication and issue date. You can enter a custom title.',
+      },
+    },
     {
       name: 'format',
       type: 'select',
