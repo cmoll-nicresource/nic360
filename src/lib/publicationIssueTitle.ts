@@ -29,7 +29,7 @@ export function publicationIssueTitle(
         )
       : new Intl.DateTimeFormat('en-US', {
           month: 'long',
-          day: '2-digit',
+          day: 'numeric',
           year: 'numeric',
           timeZone: 'UTC',
         }).format(date)

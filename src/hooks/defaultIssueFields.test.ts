@@ -9,7 +9,7 @@ it('fills a missing required title before validation even with an explicit forma
     data: { publication: 119, format: 'excerpt-list', issueDate: '2026-10-09' },
     req: { payload: { findByID } },
   } as never)
-  expect(result.title).toBe('US News Clippings - October 09, 2026')
+  expect(result.title).toBe('US News Clippings - October 9, 2026')
 })
 it('fills monthly titles and publication format together', async () => {
   const findByID = vi
