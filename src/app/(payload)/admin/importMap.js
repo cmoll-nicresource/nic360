@@ -31,6 +31,7 @@ import { ManageEventLink as ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c } f
 import { Icon as Icon_16e62c7e42dfe7700742ba3a13bf8900 } from '../../../components/admin/graphics/Icon'
 import { Logo as Logo_13338d86bf8cb9661b50b401726320cd } from '../../../components/admin/graphics/Logo'
 import { WorkspaceNav as WorkspaceNav_74eddeb5ab912fa47a634b4965d750f4 } from '../../../components/admin/workspace/WorkspaceNav'
+import { ConnectedBrowsersView as ConnectedBrowsersView_1191e939f06669da119a9771ec2bfa85 } from '../../../components/admin/workspace/ConnectedBrowsers'
 import { WorkspaceDashboard as WorkspaceDashboard_e66f0dcfc50f86bf45f76f701aff96c2 } from '../../../components/admin/workspace/WorkspaceDashboard'
 import { TradeReportsView as TradeReportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { TrademarkReportsView as TrademarkReportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
@@ -78,6 +79,7 @@ export const importMap = {
   "./components/admin/graphics/Icon#Icon": Icon_16e62c7e42dfe7700742ba3a13bf8900,
   "./components/admin/graphics/Logo#Logo": Logo_13338d86bf8cb9661b50b401726320cd,
   "./components/admin/workspace/WorkspaceNav#WorkspaceNav": WorkspaceNav_74eddeb5ab912fa47a634b4965d750f4,
+  "./components/admin/workspace/ConnectedBrowsers#ConnectedBrowsersView": ConnectedBrowsersView_1191e939f06669da119a9771ec2bfa85,
   "./components/admin/workspace/WorkspaceDashboard#WorkspaceDashboard": WorkspaceDashboard_e66f0dcfc50f86bf45f76f701aff96c2,
   "./components/admin/workspace/StaffTools#TradeReportsView": TradeReportsView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#TrademarkReportsView": TrademarkReportsView_63ff882a65d91f75560ed44e3e743a40,

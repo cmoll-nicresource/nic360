@@ -76,12 +76,7 @@ Migration correction (October 16): the old curated news excerpt is `short_abstra
 
 ### Browser extension (`tma-ext/`)
 
-A Chrome extension (MV3, standalone repo, not part of this app's build) lets staff clip a news article from any page straight into Articles. It talks to two routes under `src/app/api/extension/`, not the main Payload REST API — those two routes are the only place in the app with CORS headers (see `src/lib/extensionCors.ts`), scoped to `chrome-extension://` origins only; the actual access boundary is still the staff JWT they require, not the CORS header.
-
-- `POST /api/extension/login`: `{email, password}` → `payload.login({collection: 'staff', ...})`, returns a JWT the extension stores and sends back as `Authorization: JWT <token>`.
-- `GET /api/extension/articles`: the extension's side panel's "recent clips" list (last 15 Articles with `ingestion.source: 'extension'`, drafts included).
-- `POST /api/extension/articles`: validates the title, excerpt, source URL/date, original social preview and reviewed existing location IDs, resolves the source domain from the URL, and **creates the Article as a draft**. Source URLs omit common tracking parameters for duplicate lookup, including draft records. An editor fills subject/product index terms and publishes in the CMS. Social descriptions are preferred to body scraping, and the original description/image URL survive excerpt edits in `socialPreview`. Images stay external references; they are not fetched by the server.
-- `GET /api/extension/locations`: staff-authenticated, paginated existing location catalog with ancestor labels. Explicit article metadata supplies suggestions, which the editor reviews before saving; no taxonomy terms are created. See [news clipper](./news-clipper.md) for installation, the additive schema and test boundaries.
+The standalone MV3 News Clipper creates draft Articles with reviewed metadata. Version 2.2 connects through website staff sign-in and explicit approval, using a single-use PKCE code and revocable 12-hour opaque credential stored only on the device. It cannot authenticate against the full CMS API. Staff manage their own connections at `/admin/connected-browsers`. See [news clipper](./news-clipper.md) for routes, security boundaries, schema migrations, upgrade instructions and tests.
 
 ## Bill
 

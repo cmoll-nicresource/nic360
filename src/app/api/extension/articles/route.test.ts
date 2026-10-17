@@ -3,13 +3,14 @@ import { lexicalToPlainText } from '@/lib/lexical'
 const m = vi.hoisted(() => ({ auth: vi.fn(), find: vi.fn(), create: vi.fn(), get: vi.fn() }))
 vi.mock('payload', () => ({ getPayload: m.get }))
 vi.mock('@/payload.config', () => ({ default: {} }))
+vi.mock('@/lib/clipperAuth', () => ({ authenticateClipper: async () => (await m.auth()).user }))
 import { POST } from './route'
 
 const clip = { title: 'A clipped story', sourceUrl: 'https://news.example/story?utm_source=mail#top',
   sourceDate: '2026-10-17T09:30:00-04:00', excerptText: 'Edited draft excerpt',
   socialPreview: { description: 'Original social preview', imageUrl: 'https://news.example/preview.jpg' }, locationIds: [3] }
 const request = (body: unknown) => new Request('https://site.example/api/extension/articles', {
-  method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }, body: JSON.stringify(body),
+  method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'chrome-extension://kcefkjklicckafaelknkgnnjmgnnncpm' }, body: JSON.stringify(body),
 })
 beforeEach(() => {
   vi.resetAllMocks()
@@ -32,7 +33,7 @@ it('saves preview, reviewed excerpt, date and selected existing locations as an 
   expect(saved.data._status).not.toBe('published')
   expect(saved.data.products).toBeUndefined()
   expect(m.find.mock.calls.find(([args]) => args.collection === 'sources')![0].where.domain.equals).toBe('news.example')
-  expect(response.headers.get('Access-Control-Allow-Origin')).toBe('chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+  expect(response.headers.get('Access-Control-Allow-Origin')).toBe('chrome-extension://kcefkjklicckafaelknkgnnjmgnnncpm')
 })
 it.each([{ sourceDate: 'not a date' }, { sourceDate: '2026-02-30' }, { sourceUrl: 'javascript:alert(1)' },
   { socialPreview: { imageUrl: 'http://news.example/image' } }, { locationIds: ['3'] }, { locationIds: Array(21).fill(3) }])

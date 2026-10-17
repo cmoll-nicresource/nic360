@@ -27,6 +27,7 @@ export function WorkspaceNav({ user }: { user?: PayloadRequest['user'] }) {
             {task.label}
           </Link>
         ))}
+      <Link href="/admin/connected-browsers" className="nic-workspace-nav__link">Connected browsers</Link>
       <Link href="/" className="nic-workspace-nav__site">
         View public site <span aria-hidden="true">↗</span>
       </Link>

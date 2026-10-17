@@ -101,6 +101,12 @@ export default buildConfig({
         Icon: './components/admin/graphics/Icon#Icon',
       },
       views: {
+        connectedBrowsers: {
+          Component: './components/admin/workspace/ConnectedBrowsers#ConnectedBrowsersView',
+          path: '/connected-browsers',
+          exact: true,
+          meta: { title: 'Connected browsers' },
+        },
         dashboard: {
           Component: './components/admin/workspace/WorkspaceDashboard#WorkspaceDashboard',
         },

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import config from '@/payload.config'
 import { staffHasRole } from '@/access/staffRoles'
+import { authenticateClipper } from '@/lib/clipperAuth'
 import { extensionCorsHeaders, extensionOptionsResponse } from '@/lib/extensionCors'
 import { lexicalFromText } from '@/lib/lexical'
 import { clipHttpUrl, clipPublishedDate } from '@/lib/extensionClip'
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
 
   try {
     const payload = await getPayload({ config: await config })
-    const { user } = await payload.auth({ headers: request.headers })
+    const user = await authenticateClipper(payload, request)
 
     if (!staffHasRole(user, 'editor')) {
       return NextResponse.json({ error: 'Staff sign-in required.' }, { status: 401, headers: cors })
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
 
   try {
     const payload = await getPayload({ config: await config })
-    const { user } = await payload.auth({ headers: request.headers })
+    const user = await authenticateClipper(payload, request)
 
     if (!staffHasRole(user, 'editor')) {
       return NextResponse.json({ error: 'Staff sign-in required.' }, { status: 401, headers: cors })

@@ -9,7 +9,7 @@ if (process.argv.includes('--reset')) {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URI })
   await client.connect()
   try {
-    await client.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public')
+    await client.query('DROP SCHEMA IF EXISTS clipper CASCADE; DROP SCHEMA public CASCADE; CREATE SCHEMA public')
   } finally {
     await client.end()
   }
@@ -20,6 +20,7 @@ const { seedPublications } = await import('../../scripts/seed/publications')
 const { repairPublicationSelectionRules } =
   await import('../../src/lib/repairPublicationSelectionRules')
 const payload = await getPayload({ config })
+await payload.db.pool.query(await readFile('migration/extensionConnections.sql', 'utf8'))
 if ((await payload.count({ collection: 'staff', overrideAccess: true })).totalDocs)
   throw new Error(
     'Test seed requires an empty isolated database. Recreate only the test database before rerunning.',

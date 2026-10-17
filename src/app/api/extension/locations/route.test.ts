@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from 'vitest'
 const m = vi.hoisted(() => ({ auth: vi.fn(), find: vi.fn(), get: vi.fn() }))
 vi.mock('payload', () => ({ getPayload: m.get }))
 vi.mock('@/payload.config', () => ({ default: {} }))
+vi.mock('@/lib/clipperAuth', () => ({ authenticateClipper: async () => (await m.auth()).user }))
 import { GET } from './route'
 beforeEach(() => { vi.resetAllMocks(); m.get.mockResolvedValue(m) })
 it('returns every page of existing terms with hierarchy labels', async () => {

@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import { NextResponse } from 'next/server'
 import config from '@/payload.config'
 import { staffHasRole } from '@/access/staffRoles'
+import { authenticateClipper } from '@/lib/clipperAuth'
 import { extensionCorsHeaders, extensionOptionsResponse } from '@/lib/extensionCors'
 import { clipLocationCatalog } from '@/lib/extensionClip'
 import type { Location } from '@/payload-types'
@@ -10,7 +11,7 @@ export const OPTIONS = extensionOptionsResponse
 export async function GET(request: Request) {
   const cors = extensionCorsHeaders(request.headers.get('origin'))
   const payload = await getPayload({ config: await config })
-  const { user } = await payload.auth({ headers: request.headers })
+  const user = await authenticateClipper(payload, request)
   if (!staffHasRole(user, 'editor'))
     return NextResponse.json({ error: 'Staff sign-in required.' }, { status: 401, headers: cors })
   const locations: Location[] = []
