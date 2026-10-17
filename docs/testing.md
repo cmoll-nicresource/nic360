@@ -39,7 +39,7 @@ Use a new, disposable database named **exactly `nic360_e2e_test`**, accessible o
 
 ## Independent and human checks
 
-The separate [backup/recovery workflow](../.github/workflows/recovery.yml) checks completed snapshot freshness every six hours and provides a weekly/manual restore. AWS OIDC, the daily logical-export service and alert delivery must be provisioned before its operational activation; see [backup recovery](./backup-recovery.md). The synthetic CI rehearsal already works without cloud credentials.
+The separate [backup/recovery workflow](../.github/workflows/recovery.yml) is enabled: it checks completed snapshot freshness every six hours and provides a weekly/manual restore. A dedicated read-only daily logical-export service and master-only AWS OIDC role are provisioned; see [backup recovery](./backup-recovery.md). The synthetic CI rehearsal also works without cloud credentials. AWS SNS email delivery requires the recipient's subscription confirmation. Repeated identical failure emails are limited to once daily; a changed failure alerts immediately.
 
 Actual Outlook/Gmail and mobile mail-client rendering still require human review. Open the generated `email-review/*.html` and screenshots from the CI artifact, then inspect a controlled delivery to the approved staff inbox. Check the logo, excerpt text, linked contents, legislative fields, dark mode, image blocking, link targets, footer and unsubscribe. Browser screenshots do not certify Outlook's Word renderer or Gmail's CSS rewriting. No reader audience send or real Stripe charge is part of this suite.
 

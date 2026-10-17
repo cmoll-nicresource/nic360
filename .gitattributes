@@ -1,1 +1,2 @@
 ops/backups/*.sh text eol=lf
+ops/backups/*.sql text eol=lf

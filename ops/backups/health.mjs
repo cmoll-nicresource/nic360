@@ -2,6 +2,7 @@ import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } fr
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { pathToFileURL } from 'node:url'
+import { createHash } from 'node:crypto'
 
 export const bucket = 'nic360-backups-226541720866-us-east-1'
 const region = 'us-east-1'
@@ -47,11 +48,23 @@ export async function metric(healthy) {
   await new CloudWatchClient({ region }).send(new PutMetricDataCommand({ Namespace: 'Nic360/Recovery', MetricData: [{ MetricName: 'BackupHealth', Unit: 'Count', Value: healthy ? 1 : 0 }] }))
 }
 export async function alert(reason) {
+  const signature = createHash('sha256').update(reason).digest('hex')
+  const stateKey = 'verification/alerts/latest.json'
+  let previous
+  try { previous = JSON.parse((await getBytes(stateKey)).toString()) } catch { /* Missing state must not suppress a failure alert. */ }
+  if (!shouldAlert(previous, signature)) return
   await new SESClient({ region }).send(new SendEmailCommand({
     Source: 'Nicotine360 Operations <noreply@nicotineresource.org>',
     Destination: { ToAddresses: ['cmoll@nicotineresource.org'] },
     Message: { Subject: { Data: 'Nicotine360 backup/recovery check failed' }, Body: { Text: { Data: 'The independent backup/recovery check needs attention.\n\n' + reason + '\n\n' + (process.env.GITHUB_RUN_ID ? 'https://github.com/cmoll-nicresource/nic360/actions/runs/' + process.env.GITHUB_RUN_ID : 'Run from the local operations tools.') } } },
   }))
+  try {
+    await s3.send(new PutObjectCommand({ Bucket: bucket, Key: stateKey, Body: JSON.stringify({ signature, sentAt: new Date().toISOString() }), ContentType: 'application/json', ServerSideEncryption: 'AES256' }))
+  } catch { console.error('Failure alert delivered, but its cooldown could not be recorded.') }
+}
+export function shouldAlert(previous, signature, now = Date.now()) {
+  const age = now - Date.parse(previous?.sentAt)
+  return previous?.signature !== signature || !Number.isFinite(age) || age < 0 || age >= 86400000
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {

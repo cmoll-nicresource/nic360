@@ -30,7 +30,13 @@ const work = await fs.mkdtemp(path.join(os.tmpdir(), 'nic360-recovery-'))
 let created = false
 const run = (args, input) => {
   const result = spawnSync(docker, args, { input, encoding: input instanceof Buffer ? undefined : 'utf8', env: { ...process.env, POSTGRES_PASSWORD: password }, maxBuffer: 64 * 1024 * 1024, timeout: 180000 })
-  if (result.status !== 0) throw new Error('Isolated recovery command failed: ' + args[0])
+  if (result.status !== 0) {
+    const phase = args.find(value => ['pg_restore', 'createdb', 'psql'].includes(value)) || args[0]
+    // Only the first error line: never emit SQL, COPY rows, or following DETAIL/CONTEXT.
+    const line = result.stderr?.toString().split(/\r?\n/).find(value => /error:|ERROR:|FATAL:/.test(value)) || ''
+    const safe = line.replace(/'[^']*'/g, "'[redacted]'").replace(/[\w.+-]+@[\w.-]+/g, '[redacted-email]').slice(0, 350)
+    throw new Error('Isolated recovery command failed: ' + phase + (safe ? ' — ' + safe : ''))
+  }
   return result.stdout
 }
 try {
@@ -47,7 +53,8 @@ try {
   run(['run', '--detach', '--name', name, '--network', 'none', '--env', 'POSTGRES_PASSWORD', 'postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336'])
   created = true
   for (let attempt = 0; ; attempt++) {
-    if (spawnSync(docker, ['exec', name, 'pg_isready', '-U', 'postgres']).status === 0) break
+    // The image briefly starts a socket-only initialization server; wait for the final TCP server.
+    if (spawnSync(docker, ['exec', name, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres']).status === 0) break
     if (attempt >= 60) throw new Error('Isolated database did not start')
     await new Promise(resolve => setTimeout(resolve, 500))
   }
@@ -89,8 +96,10 @@ try {
   console.error(error.message)
   process.exitCode = 1
 } finally {
-  if (created) run(['rm', '--force', '--volumes', name])
+  let cleanupError
+  try { if (created) run(['rm', '--force', '--volumes', name]) } catch (error) { cleanupError = error }
   const resolved = path.resolve(work)
   if (!resolved.startsWith(path.resolve(os.tmpdir()) + path.sep) || !path.basename(resolved).startsWith('nic360-recovery-')) throw new Error('Unexpected recovery cleanup path')
   await fs.rm(resolved, { recursive: true, force: true })
+  if (cleanupError) throw cleanupError
 }

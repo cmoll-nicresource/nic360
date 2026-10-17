@@ -6,7 +6,7 @@
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {"StringEquals": {
       "token.actions.githubusercontent.com:aud":"sts.amazonaws.com",
-      "token.actions.githubusercontent.com:sub":"repo:cmoll-nicresource/nic360:ref:refs/heads/master"
+      "token.actions.githubusercontent.com:sub":"repo:cmoll-nicresource@196381809/nic360@1410823268:ref:refs/heads/master"
     }}
   }]
 }
