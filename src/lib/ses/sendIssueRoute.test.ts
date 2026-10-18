@@ -83,13 +83,17 @@ it('defaults to SES and queues the snapshot instead of sending in the HTTP reque
   expect(queueNewsletter).toHaveBeenCalledWith(
     payload,
     13,
-    'Edition',
     '<body>Snapshot</body>',
     2,
     [],
     false,
   )
   expect(sendBulk).not.toHaveBeenCalled()
+})
+it.each(['excerpt-list', 'pdf-report', 'custom-html'])('uses the issue title for %s test emails despite a historical override', async format => {
+  findByID.mockResolvedValue({ ...issue, format, email: { ...issue.email, subject: 'Ignored historical subject' } })
+  expect((await call({ test: true, testEmail: 'reader@example.invalid' })).status).toBe(200)
+  expect(sendBulk).toHaveBeenCalledWith(expect.objectContaining({ subject: `[TEST] ${issue.title}` }))
 })
 it('keeps simulation visibly separate from actual delivery and leaves the issue unsent', async () => {
   vi.stubEnv('SES_MODE', 'simulated')

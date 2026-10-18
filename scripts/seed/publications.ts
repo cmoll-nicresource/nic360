@@ -301,7 +301,7 @@ export async function seedIssuesAndSendDemo(
   await Promise.all(ads.map((ad) => incrementAdImpressions(payload, ad.id)))
   const client = getMailchimpClient(payload)
   const { campaignId } = await client.createCampaign({
-    subject: fullIssue.email?.subject || fullIssue.title,
+    subject: fullIssue.title,
     previewText: fullIssue.email?.previewText ?? undefined,
     html,
     segmentId: usNewsPub.mailchimp?.segmentId || '',

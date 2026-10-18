@@ -60,14 +60,17 @@ it('uses only the protected file handler for embedded PDFs', async () => {
   expect(result.pdfUrl).toBe('/api/publication-files/file/protected%20report.pdf')
   expect(result.html).toContain('Download the full report')
 })
-it('previews custom HTML and unsaved email metadata', async () => {
+it('uses the unsaved title instead of a legacy email subject', async () => {
   const result = await previewIssue(payload, {
     publication: 7,
+    title: 'Current unsaved issue title',
     format: 'custom-html',
     body: '<h1>Unsaved body</h1>',
     email: { subject: 'Changed subject', previewText: 'Changed preview' },
   })
-  expect(result.subject).toBe('Changed subject')
+  expect(result.subject).toBe('Current unsaved issue title')
+  expect(result.html).toContain('<title>Current unsaved issue title</title>')
+  expect(result.html).not.toContain('Changed subject')
   expect(result.html).toContain('Unsaved body')
   expect(result.previewText).toBe('Changed preview')
 })

@@ -99,6 +99,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
         data: {
           title: marker,
           publication: publicationId,
+          email: { subject: 'Ignored legacy subject override' },
           format: 'excerpt-list',
           issueDate: new Date().toISOString(),
           _status: 'published',
@@ -112,7 +113,6 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       const job = await queueNewsletter(
         payload,
         issueId,
-        'Snapshot subject',
         '<body>Snapshot HTML</body>',
       )
       records.push({ collection: 'payload-jobs', id: job.jobId })
@@ -134,7 +134,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       await runNewsletterSend(payload, edition.id)
       expect(sendBulk).toHaveBeenCalledTimes(1)
       expect(sendBulk.mock.calls[0][0]).toMatchObject({
-        subject: 'Snapshot subject',
+        subject: edition.title,
         html: '<body>Snapshot HTML</body>',
       })
       await runNewsletterSend(payload, edition.id)
@@ -343,7 +343,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
         await input.onAccepted('fixture-retry')
         return { messageCount: 1 }
       })
-      const retry = await queueNewsletter(payload, edition.id, 'Ignored', 'Ignored')
+      const retry = await queueNewsletter(payload, edition.id, 'Ignored')
       records.push({ collection: 'payload-jobs', id: retry.jobId })
       await runNewsletterSend(payload, edition.id)
       expect(sendBulk).toHaveBeenCalledTimes(calls + 1)
@@ -362,7 +362,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
         edition = await issue()
       const deliveries = await queue(edition.id)
       await expect(
-        queueNewsletter(payload, edition.id, 'Ignored', 'Ignored', undefined, [], true),
+        queueNewsletter(payload, edition.id, 'Ignored', undefined, [], true),
       ).rejects.toThrow()
       const delivery = deliveries.find((d) => d.recipientEmail === user.email)!
       await payload.update({
@@ -378,7 +378,6 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       const recovered = await queueNewsletter(
         payload,
         edition.id,
-        'Ignored',
         'Ignored',
         undefined,
         [],
@@ -522,7 +521,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       })
       await runNewsletterSend(payload, edition.id)
       const firstCalls = sendBulk.mock.calls.length
-      const job = await queueNewsletter(payload, edition.id, 'Ignored', 'Ignored')
+      const job = await queueNewsletter(payload, edition.id, 'Ignored')
       records.push({ collection: 'payload-jobs', id: job.jobId })
       await runNewsletterSend(payload, edition.id)
       expect(sendBulk).toHaveBeenCalledTimes(firstCalls)
@@ -546,7 +545,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
         await input.onAccepted('fixture-retry')
         return { messageCount: 1 }
       })
-      const retry = await queueNewsletter(payload, edition.id, 'Ignored', 'Ignored')
+      const retry = await queueNewsletter(payload, edition.id, 'Ignored')
       records.push({ collection: 'payload-jobs', id: retry.jobId })
       await runNewsletterSend(payload, edition.id)
       expect(sendBulk).toHaveBeenCalledTimes(firstCalls + 1)

@@ -86,7 +86,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       user,
       issue,
       publication,
-      subject: issue.email?.subject || issue.title,
+      subject: issue.title,
       html: renderIssueEmailHtml(issue, publication, ads),
       ads,
       isTest,
@@ -223,7 +223,6 @@ async function sendViaSes({
       await queueNewsletter(
         payload,
         issue.id,
-        subject,
         html,
         user?.collection === 'staff' ? user.id : undefined,
         ads.map((a) => a.id),

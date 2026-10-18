@@ -19,7 +19,6 @@ export class NewsletterError extends Error {
 export async function queueNewsletter(
   payload: Payload,
   issueId: number,
-  subject: string,
   html: string,
   staffId?: number,
   adIds: number[] = [],
@@ -83,7 +82,7 @@ export async function queueNewsletter(
             status: 'sending',
             campaignId: `ses-${issueId}`,
             sendHtml: html,
-            sendSubject: subject,
+            sendSubject: issue.title,
             sendAdIds: adIds,
             targetCount: recipients.length,
             lastError: null,

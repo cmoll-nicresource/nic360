@@ -1344,7 +1344,7 @@ export interface PublicationIssue {
   body?: string | null;
   email?: {
     /**
-     * Defaults to the issue title if left blank.
+     * Historical override retained for reference. Publication emails always use the issue title.
      */
     subject?: string | null;
     previewText?: string | null;

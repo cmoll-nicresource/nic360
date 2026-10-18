@@ -170,7 +170,7 @@ export const PublicationIssues: CollectionConfig = {
         {
           name: 'subject',
           type: 'text',
-          admin: { description: 'Defaults to the issue title if left blank.' },
+          admin: { readOnly: true, description: 'Historical override retained for reference. Publication emails always use the issue title.' },
         },
         { name: 'previewText', label: 'Preview text', type: 'text' },
         {

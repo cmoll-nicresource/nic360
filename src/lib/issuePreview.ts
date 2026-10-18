@@ -27,7 +27,7 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
     intro: data.intro,
     summary: data.summary,
     body: data.body,
-    email: { subject: data.email?.subject, previewText: data.email?.previewText },
+    email: { previewText: data.email?.previewText },
     sections: [],
   } as unknown as PublicationIssue
   if ((data.sections?.length || 0) > 100) throw new Error('Too many sections to preview.')
@@ -84,7 +84,7 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
     : null
   return {
     html,
-    subject: issue.email?.subject || issue.title,
+    subject: issue.title,
     previewText: issue.email?.previewText || '',
     pdfUrl,
   }

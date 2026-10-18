@@ -155,7 +155,7 @@ export function renderIssueEmailHtml(
   publication: Publication,
   ads: PublicationAd[],
 ): string {
-  const subject = issue.email?.subject || issue.title
+  const subject = issue.title
   const preheader = issue.email?.previewText
     ? `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(issue.email.previewText)}</div>`
     : ''

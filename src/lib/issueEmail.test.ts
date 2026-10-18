@@ -59,6 +59,11 @@ const issue = {
 } as PublicationIssue
 
 describe('publication edition content', () => {
+  it.each(['excerpt-list', 'pdf-report', 'custom-html'] as const)('uses the issue title in %s email HTML despite a historical override', format => {
+    const html = renderIssueEmailHtml({ ...issue, format, body: '<p>Custom content</p>' }, publication, [])
+    expect(html).toContain('<title>US News Clippings - October 9, 2026</title>')
+    expect(html).not.toContain('Inbox subject override')
+  })
   it('renders continent headings once with nested subjects, linked contents and semantic article headings', () => {
     const html = renderExcerptListBody({ ...issue, sections: [
       { heading: 'Asia: Taxation', items: [{ relationTo: 'articles', value: article }] },
@@ -89,7 +94,8 @@ describe('publication edition content', () => {
       expect(text).toContain(value)
     expect(html).toContain('https://example.com/story?a=1&amp;b=2')
     expect(html).toContain('/articles/11')
-    expect(html).toContain('<title>Inbox subject override</title>')
+    expect(html).toContain('<title>US News Clippings - October 9, 2026</title>')
+    expect(html).not.toContain('Inbox subject override')
     expect(html).toContain('>US News Clippings</h1>')
     expect(html).toContain('/publications/us-news/issues/30')
     expect(html).toContain('alt="Nicotine360"')
