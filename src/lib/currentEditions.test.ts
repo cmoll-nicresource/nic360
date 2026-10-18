@@ -5,7 +5,7 @@ import { currentEditions } from './currentEditions'
 const find = vi.fn()
 beforeEach(() => vi.resetAllMocks())
 describe('current publication editions', () => {
-  it('does not query a subscriber library for an ineligible reader', async () => {
+  it('does not query a subscriber library for an ineligible user', async () => {
     vi.mocked(frontendContext).mockResolvedValue({ canRead: false, payload: { find } } as never)
     expect(await currentEditions()).toEqual({ publications: [], issues: [] })
     expect(find).not.toHaveBeenCalled()

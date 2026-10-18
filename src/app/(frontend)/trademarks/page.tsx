@@ -8,7 +8,7 @@ import { StampIcon } from '@/components/brandIcons'
 import { EditorialPhoto } from '@/components/frontend/EditorialPhoto'
 
 import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { TrademarkFilterBar } from '@/components/TrademarkFilterBar'
 import { formatDate } from '@/lib/formatDate'
 import { searchColumnsForIds, sortByIdOrder } from '@/lib/fullTextSearch'
@@ -47,7 +47,7 @@ export default async function TrademarksPage({
   const isStaff = !!user && 'collection' in user && user.collection === 'staff'
   const plan =
     user && 'collection' in user && user.collection === 'users'
-      ? await getReaderPlan(user, payload)
+      ? await getSubscriptionPlan(user, payload)
       : 'none'
   const canRead = isStaff || planSatisfies(plan, 'base')
   const { totalDocs: totalTrademarks } = await payload.count({

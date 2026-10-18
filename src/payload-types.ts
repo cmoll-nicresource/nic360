@@ -276,7 +276,7 @@ export interface Staff {
   collection: 'staff';
 }
 /**
- * Readers: members using a company subscription, or event attendees.
+ * Site accounts. Users may have a subscription through an access provider, register for a conference, both, or neither.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
@@ -284,7 +284,7 @@ export interface Staff {
 export interface User {
   id: number;
   /**
-   * Not required until the reader completes sign-up.
+   * Not required until the user completes sign-up.
    */
   firstName?: string | null;
   lastName?: string | null;
@@ -333,11 +333,11 @@ export interface User {
   lastLoginAt?: string | null;
   status: 'active' | 'suspended';
   /**
-   * Set automatically when a verified email matches a provider's allowed domains. Empty for event-only attendees.
+   * Set automatically when a verified email matches a provider's allowed domains. Optional for any user; conference registrations are separate.
    */
   accessProvider?: (number | null) | AccessProvider;
   /**
-   * Checkboxes on the account page. Only shown to readers with an active Base or Premium plan.
+   * Checkboxes on the account page. Only shown to users with an active Base or Premium plan.
    */
   emailPublications?: (number | Publication)[] | null;
   /**
@@ -355,7 +355,7 @@ export interface User {
     code?: string | null;
     codeExpiresAt?: string | null;
     /**
-     * Set once the reader finishes sign-up (password + profile).
+     * Set once the user finishes sign-up (password + profile).
      */
     completedAt?: string | null;
   };
@@ -401,7 +401,7 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * The employer organizations whose subscriptions members inherit.
+ * Organizations through which users receive subscription access.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "access-providers".
@@ -419,7 +419,7 @@ export interface AccessProvider {
    */
   licenseExpiresAt?: string | null;
   /**
-   * Email domains (itc.in) or exact addresses. A reader who verifies a matching email is attached to this provider automatically.
+   * Email domains (itc.in) or exact addresses. A user who verifies a matching email is attached to this provider automatically.
    */
   allowedDomains?:
     | {
@@ -584,7 +584,7 @@ export interface Subject {
   createdAt: string;
 }
 /**
- * One ticket for one attendee.
+ * One user registration for a specific event. Subscription access is separate.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "event-registrations".
@@ -594,7 +594,7 @@ export interface EventRegistration {
   order: number | Order;
   event: number | Event;
   /**
-   * Set once the attendee has an account.
+   * The user registered for this event. Historical or invited registrations may await account linking.
    */
   attendee?: (number | null) | User;
   attendeeName: string;
@@ -1402,7 +1402,7 @@ export interface PublicationIssue {
 export interface PublicationAd {
   id: number;
   /**
-   * Internal label (the sponsor's name) — not shown to readers.
+   * Internal label (the sponsor's name) — not shown to users.
    */
   advertiser: string;
   publication: number | Publication;
@@ -1415,7 +1415,7 @@ export interface PublicationAd {
   startDate: string;
   endDate: string;
   /**
-   * Filled in automatically. "Impressions" counts issue sends this ad was placed in (not reader-level opens — Mailchimp doesn't give us per-recipient delivery counts the way SES does).
+   * Filled in automatically. "Impressions" counts issue sends this ad was placed in (not user-level opens — Mailchimp doesn't give us per-recipient delivery counts the way SES does).
    */
   stats?: {
     impressions?: number | null;
@@ -1433,7 +1433,7 @@ export interface PublicationAd {
 export interface EmailFlag {
   id: number;
   /**
-   * Required for new flags. Cleared automatically if the reader is deleted.
+   * Required for new flags. Cleared automatically if the user is deleted.
    */
   user?: (number | null) | User;
   /**
@@ -1633,7 +1633,7 @@ export interface LivestreamPing {
   createdAt: string;
 }
 /**
- * A log of which reader visited which front-end page and when, for first-party traffic reporting (no third-party analytics). Staff visits are not tracked. See /admin/analytics for the dashboard.
+ * A log of which user visited which front-end page and when, for first-party traffic reporting (no third-party analytics). Staff visits are not tracked. See /admin/analytics for the dashboard.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "page-views".

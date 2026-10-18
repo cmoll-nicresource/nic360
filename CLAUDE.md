@@ -4,15 +4,15 @@ Read this first. Field-level detail for every entity lives in `docs/entity-map.m
 
 ## What this is
 
-A rebuild of Nicotine360 (nicotine360.org), a subscription news and intelligence site for the nicotine and tobacco industry, run by a 501(c)(6) trade organization with five staff. Readers get access through their employer's company-wide subscription (mostly via membership dues) or by buying a ticket to an event.
+A rebuild of Nicotine360 (nicotine360.org), a subscription news and intelligence site for the nicotine and tobacco industry, run by a 501(c)(6) trade organization with five staff. Users are site account holders; subscribers have a subscription through an access provider, and attendees are users registered for a specific conference. NRC membership is not a site distinction. See [docs/terminology.md](docs/terminology.md).
 
-**Original goal: a working skeleton prototype.** The five milestones below are complete. The project now includes migrated data, refreshed reader/staff interfaces, trade/trademark PDFs and live queued SES newsletters. Use [docs/project-status.md](docs/project-status.md) for current completed work and next steps, `docs/entity-map.md` for the feature map, and individual runbooks for operations. Beta trade setup and report fixes are complete; the user reported successful generation. Broader acceptance checks remain separate from that successful workflow.
+**Original goal: a working skeleton prototype.** The five milestones below are complete. The project now includes migrated data, refreshed user/staff interfaces, trade/trademark PDFs and live queued SES newsletters. Use [docs/project-status.md](docs/project-status.md) for current completed work and next steps, `docs/entity-map.md` for the feature map, and individual runbooks for operations. Beta trade setup and report fixes are complete; the user reported successful generation. Broader acceptance checks remain separate from that successful workflow.
 
 ## Stack
 
-The reader experience refresh (dashboard, discovery, publications/guides/events, complete dataset exploration and exports) is documented in `docs/frontend-experience.md`. Its current behavior supersedes the older design-review checklist.
+The user experience refresh (dashboard, discovery, publications/guides/events, complete dataset exploration and exports) is documented in `docs/frontend-experience.md`. Its current behavior supersedes the older design-review checklist.
 
-The current staff interface lives under `/admin`, including trade reports, dataset imports, event management and reader access diagnostics. See `docs/admin-workspace.md` for the role-aware dashboard, custom-view shell, legacy redirects and verification notes.
+The current staff interface lives under `/admin`, including trade reports, dataset imports, event management and user access diagnostics. See `docs/admin-workspace.md` for the role-aware dashboard, custom-view shell, legacy redirects and verification notes.
 
 | Part | Choice |
 |---|---|
@@ -29,7 +29,7 @@ The current staff interface lives under `/admin`, including trade reports, datas
 ## Core rules
 
 **Two kinds of login, kept apart**
-- `users`: readers (members and event attendees).
+- `users`: site accounts, with optional access provider subscriptions and conference registrations.
 - `staff`: the five employees who use the CMS admin. Only `staff` can log in to `/admin`.
 
 **Staff roles** (each includes the ones above it)
@@ -37,7 +37,7 @@ The current staff interface lives under `/admin`, including trade reports, datas
 - `gatekeeper` (2 staff): plus manage Users, Access Providers, discount codes, registrations, EmailFlags.
 - `admin` (Papa): plus manage Staff and global settings.
 
-**Reader access** is decided by content type and the reader's company — with one per-item exception, Guides:
+**User access** is decided by content type and the user's company — with one per-item exception, Guides:
 
 | Content | Who can read |
 |---|---|
@@ -50,7 +50,7 @@ The current staff interface lives under `/admin`, including trade reports, datas
 - A user's plan comes from their Access Provider: `plan` (None · Base · Premium), with `status` Trial or Live and `licenseExpiresAt` in the future or empty. Anything else means no access.
 - Premium includes Base.
 - Users with no provider (event attendees) see only events they registered for.
-- Put this in one helper (`src/access/readerPlan.ts`) that every `access.read` function and protected route uses. Public listing pages may show titles and teasers; full content checks the plan.
+- Put this in one helper (`src/access/subscriptionPlan.ts`) that every `access.read` function and protected route uses. Public listing pages may show titles and teasers; full content checks the plan.
 
 ## Collections by milestone
 
@@ -115,7 +115,7 @@ Missing TRQ inputs are also fetched automatically from the latest weekly CBP Com
 - Seed scripts: never reset the working or hosted database. The demo reset requires a dedicated loopback `nic360_*_demo`/`nic360_*_test` database, `ALLOW_DESTRUCTIVE_LOCAL_SEED=true`, and `pnpm seed --reset-local-demo`; see `docs/import-and-access-safety.md`.
 - Tests: `pnpm test` (Vitest, `src/**/*.test.ts`) covers pure logic — no DB or network. Add a test alongside any new pure function with real edge cases (parsing, pricing, classification, access rules), not just UI/collection code.
 - Secrets come only from env: `DATABASE_URI`, `PAYLOAD_SECRET`, `S3_*`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SES_*`, `MAILCHIMP_API_KEY`, `MAILCHIMP_MODE`. Keep `.env.example` up to date.
-- Email safety: real migrated readers exist on beta. Account/operations email redirects to the safe mailbox by default; newsletter audience sends are blocked while safe mode is on. SES has production sending access; its sandbox is not a backstop. Keep `EMAIL_SAFE_MODE=on` until a deliberately approved rollout. See `docs/newsletter-delivery.md`.
+- Email safety: real migrated users exist on beta. Account/operations email redirects to the safe mailbox by default; newsletter audience sends are blocked while safe mode is on. SES has production sending access; its sandbox is not a backstop. Keep `EMAIL_SAFE_MODE=on` until a deliberately approved rollout. See `docs/newsletter-delivery.md`.
 - Keep it simple: this is a prototype for a five-person team. Prefer Payload built-ins over custom infrastructure.
 
 ## Historical prototype exclusions

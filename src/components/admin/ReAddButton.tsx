@@ -13,12 +13,12 @@ export function ReAddButton() {
     savedDocumentData && 'status' in savedDocumentData ? savedDocumentData.status : undefined
   if (status === 'resolved') return null
   if (savedDocumentData && !savedDocumentData.user)
-    return <p>This reader was deleted. The flag is retained for follow-up.</p>
+    return <p>This user was deleted. The flag is retained for follow-up.</p>
 
   async function handleClick() {
     if (
       !window.confirm(
-        'Has the reader asked to resume publication emails, and has the delivery problem been resolved? Re-add restores their previous choices. Any SES account-level suppression must also be reviewed in AWS.',
+        'Has the user asked to resume publication emails, and has the delivery problem been resolved? Re-add restores their previous choices. Any SES account-level suppression must also be reviewed in AWS.',
       )
     ) {
       return

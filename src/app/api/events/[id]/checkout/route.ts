@@ -1,9 +1,9 @@
-import { requireReader } from '@/lib/requireReader'
+import { requireUser } from '@/lib/requireUser'
 import { CheckoutError, createEventCheckout } from '@/lib/createEventCheckout'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { payload, user } = await requireReader()
+    const { payload, user } = await requireUser()
     const { id } = await params
     return Response.json(await createEventCheckout(payload, user, Number(id), await request.json()))
   } catch (error) {

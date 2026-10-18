@@ -76,7 +76,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       }
       vi.unstubAllEnvs()
     }, 60000)
-    async function reader() {
+    async function createUser() {
       const user = await payload.create({
         collection: 'users',
         data: {
@@ -127,7 +127,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       return deliveries.docs
     }
     it('serializes simultaneous sends, snapshots content, and does not resend accepted recipients', async () => {
-      await reader()
+      await createUser()
       const edition = await issue()
       const results = await Promise.allSettled([queue(edition.id), queue(edition.id)])
       expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
@@ -149,8 +149,8 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
         ).email?.status,
       ).toBe('sent')
     }, 30000)
-    it('processes a bounce once, preserves prior preferences, and skips the now-suppressed queued reader', async () => {
-      const user = await reader()
+    it('processes a bounce once, preserves prior preferences, and skips the now-suppressed queued user', async () => {
+      const user = await createUser()
       const edition = await issue()
       await queue(edition.id)
       const key = marker + '-bounce'
@@ -213,7 +213,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       ).toBe(1)
     }, 30000)
     it('records test events without changing audience preferences or campaign statistics', async () => {
-      const user = await reader()
+      const user = await createUser()
       const edition = await issue(),
         key = marker + '-test'
       await processSesEvent(
@@ -254,7 +254,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       ).toBe(0)
     })
     it('unsubscribes with a signed one-click POST, leaves GET inert, and preserves choices on repeated POSTs', async () => {
-      const user = await reader()
+      const user = await createUser()
       const { GET, POST } = await import('@/app/api/newsletters/unsubscribe/route')
       const url = `http://localhost/api/newsletters/unsubscribe?token=${unsubscribeToken(user.id, user.email)}`
       expect((await GET(new Request(url))).status).toBe(200)
@@ -294,7 +294,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       ).toEqual([])
     })
     it('rolls back the suppression flag and preference changes together on failure', async () => {
-      const user = await reader()
+      const user = await createUser()
       await expect(
         inPayloadTransaction(payload, async (req) => {
           await flagUserByEmail(
@@ -328,7 +328,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       ).toBe(0)
     })
     it('can retry a definitive server rejection without resending accepted messages', async () => {
-      const user = await reader(),
+      const user = await createUser(),
         edition = await issue()
       await queue(edition.id)
       sendBulk.mockImplementation(async (input) => {
@@ -358,7 +358,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       ).toBe('sent')
     }, 30000)
     it('recovers an interrupted worker after ten minutes while preserving uncertain attempts', async () => {
-      const user = await reader(),
+      const user = await createUser(),
         edition = await issue()
       const deliveries = await queue(edition.id)
       await expect(
@@ -397,7 +397,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       expect(sendBulk.mock.calls.some((c) => c[0].recipients[0].email === user.email)).toBe(false)
     }, 30000)
     it('reconciles an uncertain acceptance from a verified delivery event and counts its SNS retry once', async () => {
-      const user = await reader(),
+      const user = await createUser(),
         edition = await issue()
       const deliveries = await queue(edition.id)
       const delivery = deliveries.find((d) => d.recipientEmail === user.email)!
@@ -442,7 +442,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       ).toBe(1)
     })
     it('preserves authoritative metrics across queueing, concurrent version saves, worker finalization and editorial saves', async () => {
-      const user = await reader(),
+      const user = await createUser(),
         edition = await issue()
       const event = {
         type: 'Delivery' as const,
@@ -510,7 +510,7 @@ describe.skipIf(process.env.NEWSLETTER_INTEGRATION !== '1')(
       expect(draft.stats?.recipientCount).toBeGreaterThan(0)
     }, 30000)
     it('never retries an ambiguous timeout, but can retry a definitive SES rejection without resending successes', async () => {
-      const user = await reader()
+      const user = await createUser()
       const edition = await issue()
       await queue(edition.id)
       sendBulk.mockImplementation(async (input) => {

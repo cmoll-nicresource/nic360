@@ -3,7 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { assignAccessProviderOnVerify } from '@/hooks/assignAccessProviderOnVerify'
 import { setLastLoginAt } from '@/hooks/setLastLoginAt'
 import { sortUsersByLogin } from '@/hooks/sortUsersByLogin'
-import { enforceReaderResetPassword } from '@/hooks/enforceReaderResetPassword'
+import { enforceUserResetPassword } from '@/hooks/enforceUserResetPassword'
 import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
 import { SITE_URL } from '@/lib/env'
@@ -20,7 +20,7 @@ export const Users: CollectionConfig = {
     group: ADMIN_GROUPS.accounts,
     useAsTitle: 'email',
     defaultColumns: ['email', 'firstName', 'lastName', 'accessProvider', 'status', 'lastLoginAt'],
-    description: 'Readers: members using a company subscription, or event attendees.',
+    description: 'Site accounts. Users may have a subscription through an access provider, register for a conference, both, or neither.',
   },
   auth: {
     verify: true,
@@ -31,7 +31,7 @@ export const Users: CollectionConfig = {
           ? 'Your Nicotine360 event invitation'
           : 'Reset your Nicotine360 password',
       // Payload's default reset-password link always points at /admin/reset,
-      // which only works for the admin.user collection (staff). Readers get
+      // which only works for the admin.user collection (staff). Users get
       // their own front-end page instead.
       generateEmailHTML: ({ token, req } = {}) =>
         `<p>${req?.context.eventInvitation ? 'A colleague has registered you for an event on Nicotine360. Set your password to access your ticket and event.' : 'You are receiving this because you (or someone else) requested a password reset.'}</p>
@@ -54,7 +54,7 @@ export const Users: CollectionConfig = {
     delete: staffHasMinRole('gatekeeper'),
   },
   hooks: {
-    beforeOperation: [enforceReaderResetPassword],
+    beforeOperation: [enforceUserResetPassword],
     afterChange: [assignAccessProviderOnVerify, syncMailchimpOnUserChange],
     afterLogin: [setLastLoginAt],
     afterOperation: [sortUsersByLogin],
@@ -66,7 +66,7 @@ export const Users: CollectionConfig = {
         {
           name: 'firstName',
           type: 'text',
-          admin: { description: 'Not required until the reader completes sign-up.' },
+          admin: { description: 'Not required until the user completes sign-up.' },
         },
         { name: 'lastName', type: 'text' },
       ],
@@ -163,10 +163,10 @@ export const Users: CollectionConfig = {
       relationTo: 'access-providers',
       admin: {
         description:
-          "Set automatically when a verified email matches a provider's allowed domains. Empty for event-only attendees.",
+          "Set automatically when a verified email matches a provider's allowed domains. Optional for any user; conference registrations are separate.",
       },
       access: {
-        // Readers can see their own provider but not reassign themselves to another.
+        // Users can see their own provider but not reassign themselves to another.
         create: staffHasMinRole('gatekeeper'),
         update: staffHasMinRole('gatekeeper'),
       },
@@ -179,7 +179,7 @@ export const Users: CollectionConfig = {
       hasMany: true,
       admin: {
         description:
-          'Checkboxes on the account page. Only shown to readers with an active Base or Premium plan.',
+          'Checkboxes on the account page. Only shown to users with an active Base or Premium plan.',
       },
     },
     {
@@ -213,7 +213,7 @@ export const Users: CollectionConfig = {
           type: 'date',
           admin: {
             readOnly: true,
-            description: 'Set once the reader finishes sign-up (password + profile).',
+            description: 'Set once the user finishes sign-up (password + profile).',
           },
         },
       ],

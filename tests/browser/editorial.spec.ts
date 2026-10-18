@@ -72,7 +72,7 @@ for (const role of ['gatekeeper', 'admin'])
     await page.goto('/admin')
     await expect(
       page.getByRole('heading', {
-        name: role === 'admin' ? 'Administration workspace' : 'Membership & events',
+        name: role === 'admin' ? 'Administration workspace' : 'Users & events',
         level: 1,
       }),
     ).toBeVisible()

@@ -22,8 +22,8 @@ export default async function LivestreamPage({ params }: { params: Promise<{ id:
   const event = await payload.findByID({ collection: 'events', id, depth: 0, user, overrideAccess: false }).catch(() => null)
   if (!event) notFound()
 
-  const isReader = !!user && 'collection' in user && user.collection === 'users'
-  const canWatch = Boolean(event.hasLivestream) && isReader && (await hasActiveRegistration(payload, user, event.id))
+  const isUser = !!user && 'collection' in user && user.collection === 'users'
+  const canWatch = Boolean(event.hasLivestream) && isUser && (await hasActiveRegistration(payload, user, event.id))
 
   return (
     <>
@@ -39,7 +39,7 @@ export default async function LivestreamPage({ params }: { params: Promise<{ id:
         {event.hasLivestream && !canWatch && (
           <div className="locked-content">
             Sign in with a registered ticket for this event to watch.{' '}
-            {!isReader && <Link href="/account">Sign in</Link>}
+            {!isUser && <Link href="/account">Sign in</Link>}
           </div>
         )}
 

@@ -20,7 +20,7 @@ export const Orders: CollectionConfig = {
   },
   access: {
     read: readOwnOrManaged,
-    // Created by the Stripe checkout route (overrideAccess), not directly by readers.
+    // Created by the Stripe checkout route (overrideAccess), not directly by users.
     create: staffCanManageRegistrations,
     update: staffCanManageRegistrations,
     delete: staffCanManageRegistrations,

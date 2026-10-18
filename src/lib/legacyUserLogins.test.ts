@@ -10,7 +10,7 @@ it('does not manufacture logins from missing, invalid, out-of-range or future da
     expect(legacyLoginDate(value, new Date('2026-10-18T12:00:00Z'))).toBeNull()
 })
 it('uses exact normalized email matching without merging aliases', () => {
-  expect(normalizeLoginEmail(' Reader+News@Example.invalid ')).toBe('reader+news@example.invalid')
+  expect(normalizeLoginEmail(' User+News@Example.invalid ')).toBe('user+news@example.invalid')
 })
 it('prefers the most recent valid sign-in and falls back when one legacy field is missing', () => {
   expect(latestLegacyLogin('2026-10-13 12:00:00', '2026-09-01 12:00:00')).toBe('2026-10-13T12:00:00.000Z')

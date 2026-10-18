@@ -2,7 +2,7 @@ import type { Payload, PayloadRequest } from 'payload'
 
 /**
  * Records one front-end page visit for first-party traffic reporting.
- * Staff aren't tracked — only readers (and anonymous visitors, with a blank
+ * Staff aren't tracked — only users (and anonymous visitors, with a blank
  * visitor). Never throws — analytics must never break a page render. Call
  * this inside `after()` (next/server) so it runs once the response has
  * already been sent, instead of adding latency to the page itself.

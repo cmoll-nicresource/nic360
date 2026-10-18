@@ -20,7 +20,7 @@ async function render(role: string) {
   return { html: renderToStaticMarkup(await WorkspaceDashboard(props)), find, count }
 }
 describe('staff dashboard daily workflows', () => {
-  it('queries and presents only member operations for gatekeepers', async () => {
+  it('queries and presents only user operations for gatekeepers', async () => {
     const { html, find, count } = await render('gatekeeper')
     expect(find.mock.calls.map(([query]) => query.collection).sort()).toEqual(['orders', 'users'])
     expect(count.mock.calls.map(([query]) => query.collection)).toEqual(['email-flags'])

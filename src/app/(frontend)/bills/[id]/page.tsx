@@ -7,7 +7,7 @@ import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 
 import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { formatDate } from '@/lib/formatDate'
 import { billStatusPill } from '@/lib/statusPill'
 import { StatusBadge, TagPill } from '@/components/StatusBadge'
@@ -22,7 +22,7 @@ export default async function BillDetailPage({ params }: { params: Promise<{ id:
   const { user } = await payload.auth({ headers })
 
   const isStaff = !!user && 'collection' in user && user.collection === 'staff'
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
+  const plan = user && 'collection' in user && user.collection === 'users' ? await getSubscriptionPlan(user, payload) : 'none'
   const canReadFull = isStaff || planSatisfies(plan, 'base')
 
   const bill = await payload.findByID({ collection: 'bills', id, depth: 1, user, overrideAccess: false }).catch(() => null)

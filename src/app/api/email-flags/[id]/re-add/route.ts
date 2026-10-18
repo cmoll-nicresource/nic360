@@ -5,7 +5,7 @@ import { inPayloadTransaction, transactionDb } from '@/lib/payloadTransaction'
 import { sql } from '@payloadcms/db-postgres'
 
 /**
- * Staff use this after confirming the reader wants to resume and reviewing
+ * Staff use this after confirming the user wants to resume and reviewing
  * delivery problems (including any AWS account-level suppression).
  */
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,7 +23,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       return NextResponse.json(
         {
           error:
-            'This reader was deleted. The flag remains for follow-up; publication choices cannot be restored.',
+            'This user was deleted. The flag remains for follow-up; publication choices cannot be restored.',
         },
         { status: 409 },
       )

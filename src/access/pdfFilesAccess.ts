@@ -1,12 +1,12 @@
 import type { Access } from 'payload'
 import { staffHasRole } from './staffRoles'
-import { getReaderPlan } from './readerPlan'
+import { getSubscriptionPlan } from './subscriptionPlan'
 
 /** A file inherits access from a published parent; unlinked/draft files are staff-only. */
 export const canReadPdfFile: Access = async ({ req }) => {
   if (staffHasRole(req.user, 'editor')) return true
   if (req.user?.collection !== 'users') return false
-  const plan = await getReaderPlan(req.user, req.payload)
+  const plan = await getSubscriptionPlan(req.user, req.payload)
   if (plan === 'none') return false
   const ids = new Set<number>()
   async function collect(collection: 'guides' | 'publication-issues') {

@@ -1,14 +1,14 @@
 import type { CollectionAfterChangeHook } from 'payload'
 
 import type { User } from '@/payload-types'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { getMailchimpClient } from '@/lib/mailchimp'
 
 /**
- * Keeps Mailchimp in sync with our site whenever a reader's choices, name,
+ * Keeps Mailchimp in sync with our site whenever a user's choices, name,
  * email or eligibility changes. Our site is the source of truth; Mailchimp
  * only mirrors it (unsubscribes are the one exception — see the webhook
- * route). Ineligible readers (provider expired, plan dropped to None, etc.)
+ * route). Ineligible users (provider expired, plan dropped to None, etc.)
  * have their preferences cleared defensively, in case something wrote to
  * emailPublications without going through the account page's eligibility
  * check first.
@@ -32,7 +32,7 @@ export const syncMailchimpOnUserChange: CollectionAfterChangeHook<User> = async 
 
   if (!relevantFieldsChanged) return doc
 
-  const plan = await getReaderPlan(doc, req.payload)
+  const plan = await getSubscriptionPlan(doc, req.payload)
   const eligible = planSatisfies(plan, 'base')
 
   if (!eligible && (doc.emailPublications?.length ?? 0) > 0) {

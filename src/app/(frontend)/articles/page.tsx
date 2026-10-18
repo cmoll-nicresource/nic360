@@ -146,7 +146,7 @@ export default async function ArticlesPage({
             pageSize={PAGE_SIZE}
           />
           {!canRead && (
-            <div className="edition-member-note">
+            <div className="edition-subscription-note">
               <strong>Go beyond the headlines.</strong>
               <p>
                 Sign in with your company’s subscription to read curated excerpts and briefings.

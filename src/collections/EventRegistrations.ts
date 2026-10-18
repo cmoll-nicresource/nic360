@@ -23,7 +23,7 @@ export const EventRegistrations: CollectionConfig = {
     group: ADMIN_GROUPS.events,
     useAsTitle: 'id',
     defaultColumns: ['event', 'attendeeName', 'ticketType', 'status'],
-    description: 'One ticket for one attendee.',
+    description: 'One user registration for a specific event. Subscription access is separate.',
   },
   access: {
     read: readOwnOrManaged,
@@ -38,7 +38,7 @@ export const EventRegistrations: CollectionConfig = {
       name: 'attendee',
       type: 'relationship',
       relationTo: 'users',
-      admin: { description: 'Set once the attendee has an account.' },
+      admin: { description: 'The user registered for this event. Historical or invited registrations may await account linking.' },
     },
     {
       type: 'row',

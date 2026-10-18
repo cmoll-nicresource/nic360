@@ -7,7 +7,7 @@
 import 'dotenv/config' // next dev/build load .env automatically; running via tsx directly does not.
 import type { Payload } from 'payload'
 import { assertSafeDemoSeed } from '../src/lib/localSafety'
-import { getReaderPlan } from '../src/access/readerPlan'
+import { getSubscriptionPlan } from '../src/access/subscriptionPlan'
 import { SEED_PASSWORD, seedAccounts } from './seed/accounts'
 import { seedCountries, seedDatasets, seedGuides } from './seed/data'
 import { seedExcerptContent } from './seed/excerpts'
@@ -143,7 +143,7 @@ async function main() {
   })
   await seedVirtualAttendeesAndWatchData(payload, infocus.id)
 
-  console.log('\nAccess summary (via getReaderPlan, the shared helper):\n')
+  console.log('\nAccess summary (via getSubscriptionPlan, the shared helper):\n')
   const { docs: allUsers } = await payload.find({
     collection: 'users',
     depth: 1,
@@ -155,7 +155,7 @@ async function main() {
       email: u.email,
       provider:
         u.accessProvider && typeof u.accessProvider === 'object' ? u.accessProvider.name : '(none)',
-      plan: await getReaderPlan(u, payload),
+      plan: await getSubscriptionPlan(u, payload),
     })),
   )
   console.table(rows)

@@ -8,7 +8,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { PublicationCover } from '@/components/frontend/Editorial'
 
 import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { staffHasRole } from '@/access/staffRoles'
 import { adSlotCount, getActiveAdsForPublication } from '@/lib/publicationAds'
 import { renderExcerptListBody } from '@/lib/issueEmail'
@@ -31,7 +31,7 @@ export default async function IssueDetailPage({
   const isStaff = staffHasRole(user, 'editor')
   const plan =
     user && 'collection' in user && user.collection === 'users'
-      ? await getReaderPlan(user, payload)
+      ? await getSubscriptionPlan(user, payload)
       : 'none'
   const canRead = isStaff || planSatisfies(plan, 'base')
 

@@ -35,13 +35,13 @@ export async function backfillUserLogins(client: Client, sources: LegacyUserLogi
   )
   const beforeJson = JSON.stringify(rows)
   const beforeHash = createHash('sha256').update(beforeJson).digest('hex')
-  if (apply && beforeHash !== expectedBeforeHash) throw new Error('Reader state changed since preview. Create a fresh snapshot.')
+  if (apply && beforeHash !== expectedBeforeHash) throw new Error('User state changed since preview. Create a fresh snapshot.')
   const matched = new Set<string>()
   const changes: { id: number; lastLoginAt: string }[] = []
   const stats = { sourceReaders: sources.length, matchedReaders: rows.length, unmatchedReaders: 0, updated: 0, filledEmpty: 0, advancedOlder: 0, preservedNewer: 0, alreadyCorrect: 0 }
   for (const row of rows) {
     const email = normalizeLoginEmail(row.email)
-    if (matched.has(email)) throw new Error('Ambiguous duplicate destination reader emails.')
+    if (matched.has(email)) throw new Error('Ambiguous duplicate destination user emails.')
     matched.add(email)
     const source = byEmail.get(email)!
     const before = row.last_login_at?.getTime()
@@ -65,7 +65,7 @@ export async function backfillUserLogins(client: Client, sources: LegacyUserLogi
     const after = await client.query<{ id: number; unchanged_hash: string }>(
       "SELECT u.id,md5((to_jsonb(u)-'last_login_at')::text) AS unchanged_hash FROM users u WHERE id=ANY($1::int[]) ORDER BY u.id", [rows.map(row => row.id)],
     )
-    if (JSON.stringify(after.rows) !== JSON.stringify(rows.map(({ id, unchanged_hash }) => ({ id, unchanged_hash })))) throw new Error('Unexpected change to another reader field; roll back.')
+    if (JSON.stringify(after.rows) !== JSON.stringify(rows.map(({ id, unchanged_hash }) => ({ id, unchanged_hash })))) throw new Error('Unexpected change to another user field; roll back.')
   }
   return { stats, beforeHash, snapshotGzip: gzipSync(beforeJson).toString('base64') }
 }

@@ -11,7 +11,7 @@ export async function SiteNav() {
   const { payload, user, isStaff, canRead, plan } = await frontendContext()
   const pathname = (await headers()).get('x-pathname') || ''
   if (pathname) after(() => logPageView(payload, pathname, user))
-  const isReader = user?.collection === 'users'
+  const isUser = user?.collection === 'users'
   const [datasets, guides, publications, events] = await Promise.all([
     payload.find({
       collection: 'datasets',
@@ -60,12 +60,12 @@ export async function SiteNav() {
       overrideAccess: false,
     }),
   ])
-  const initials = isReader
+  const initials = isUser
     ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'U'
     : ''
   return (
     <nav className="topnav" aria-label="Main navigation">
-      <Link href={isReader ? '/dashboard' : '/'} className="brand">
+      <Link href={isUser ? '/dashboard' : '/'} className="brand">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="Nicotine360" />
       </Link>
@@ -155,7 +155,7 @@ export async function SiteNav() {
             </Link>
           </>
         )}
-        {isReader && (
+        {isUser && (
           <NavDropdown label={initials} active={pathname === '/account'}>
             <Link href="/dashboard">Your briefing</Link>
             <Link href="/account">Account & preferences</Link>

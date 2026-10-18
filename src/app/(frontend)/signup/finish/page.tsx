@@ -4,7 +4,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { SiteNav } from '@/components/SiteNav'
 import { NoSubscriptionNotice } from '@/components/NoSubscriptionNotice'
 import { PublicationPreferencesForm } from '@/components/PublicationPreferencesForm'
@@ -34,7 +34,7 @@ export default async function SignupFinishPage() {
   }
 
   const fullUser = await payload.findByID({ collection: 'users', id: user.id, depth: 1, overrideAccess: true })
-  const plan = await getReaderPlan(fullUser, payload)
+  const plan = await getSubscriptionPlan(fullUser, payload)
   const isSubscriber = planSatisfies(plan, 'base')
 
   return (

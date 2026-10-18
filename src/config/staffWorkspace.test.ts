@@ -10,7 +10,7 @@ describe('staff workspace navigation', () => {
     expect(STAFF_TASKS.every((task) => task.href.startsWith('/admin/'))).toBe(true)
     expect(new Set(STAFF_TASKS.map((task) => task.href)).size).toBe(STAFF_TASKS.length)
   })
-  it('does not expose staff tools to anonymous visitors or reader accounts', () => {
+  it('does not expose staff tools to anonymous visitors or user accounts', () => {
     expect(staffTasksFor(null)).toEqual([])
     expect(
       staffTasksFor({
@@ -29,7 +29,7 @@ describe('staff workspace navigation', () => {
     expect(editor).not.toContain('/admin/trademark-reports')
     expect(editor).not.toContain('/admin/access-check')
     const gatekeeper = staffTasksFor(staff('gatekeeper'))
-    expect(gatekeeper.every((task) => task.audience === 'members')).toBe(true)
+    expect(gatekeeper.every((task) => task.audience === 'users')).toBe(true)
     expect(gatekeeper.filter((task) => task.daily).map((task) => task.label)).toEqual([
       'Manage subscriptions',
       'Register a user',

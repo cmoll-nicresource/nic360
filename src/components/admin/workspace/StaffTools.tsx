@@ -16,7 +16,7 @@ import {
   getSessionPopularity,
   summarizeAttendeeReport,
 } from '@/lib/eventAnalytics'
-import { getReaderPlan } from '@/access/readerPlan'
+import { getSubscriptionPlan } from '@/access/subscriptionPlan'
 import { requireWorkspaceRole, WorkspacePage, WorkspaceShell } from './WorkspaceShell'
 
 export function TradeReportsView(props: AdminViewServerProps) {
@@ -376,25 +376,25 @@ export async function AccessCheckView(props: AdminViewServerProps) {
     overrideAccess: false,
   })
   const rows = await Promise.all(
-    users.map(async (user) => ({ user, plan: await getReaderPlan(user, req.payload) })),
+    users.map(async (user) => ({ user, plan: await getSubscriptionPlan(user, req.payload) })),
   )
   return (
     <WorkspaceShell props={props}>
       <WorkspacePage
-        title="Reader access"
+        title="User access"
         eyebrow="AUDIENCE & ACCESS"
-        description="Check effective reader plans and membership providers."
-        actions={<Link href="/admin/collections/users">Manage readers →</Link>}
+        description="Check effective subscription plans and access providers."
+        actions={<Link href="/admin/collections/users">Manage users →</Link>}
       >
         <div className="nic-workspace__panel">
           <div className="nic-workspace__table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>Reader</th>
+                  <th>User</th>
                   <th>Access provider</th>
                   <th>Effective plan</th>
-                  <th>Reader access</th>
+                  <th>User access</th>
                 </tr>
               </thead>
               <tbody>
@@ -409,7 +409,7 @@ export async function AccessCheckView(props: AdminViewServerProps) {
                     <td>
                       {typeof user.accessProvider === 'object' && user.accessProvider
                         ? user.accessProvider.name
-                        : 'Event access only'}
+                        : 'No access provider'}
                     </td>
                     <td>
                       <span className="nic-workspace__status">{plan}</span>
@@ -419,7 +419,7 @@ export async function AccessCheckView(props: AdminViewServerProps) {
                         ? 'Tracking, guides, publications & data'
                         : plan === 'base'
                           ? 'Tracking, guides & publications'
-                          : 'Registered events'}
+                          : 'No subscription access'}
                     </td>
                   </tr>
                 ))}
@@ -428,8 +428,8 @@ export async function AccessCheckView(props: AdminViewServerProps) {
           </div>
           {totalDocs > users.length && (
             <p>
-              Showing {users.length} of {totalDocs} readers.{' '}
-              <Link href="/admin/collections/users">Search all readers →</Link>
+              Showing {users.length} of {totalDocs} users.{' '}
+              <Link href="/admin/collections/users">Search all users →</Link>
             </p>
           )}
         </div>
@@ -453,7 +453,7 @@ export function CompanyReportsView(props: AdminViewServerProps) {
     <WorkspaceShell props={props}>
       <WorkspacePage
         title="Company usage reports"
-        eyebrow="MEMBER OPERATIONS"
+        eyebrow="USER OPERATIONS"
         description="Review each company's users and their website activity over a date range."
       >
         <CompanyUsageView payload={req.payload} user={req.user} searchParams={props.searchParams} />

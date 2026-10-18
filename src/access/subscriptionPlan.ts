@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 
 import type { AccessProvider, User } from '@/payload-types'
 
-export type ReaderPlan = 'none' | 'base' | 'premium'
+export type SubscriptionPlan = 'none' | 'base' | 'premium'
 
 /**
  * A provider only grants access while it's Trial or Live and not past its
@@ -18,15 +18,15 @@ function providerIsEffective(provider: AccessProvider): boolean {
 }
 
 /**
- * The single source of truth for "what can this reader see." Every
- * access.read function and protected route should call this instead of
- * re-deriving plan logic from the provider fields directly.
+ * The single source of truth for a user's effective subscription plan.
+ * Subscription-gated access checks call this rather than re-deriving
+ * provider rules. Conference registration is checked separately.
  */
-export async function getReaderPlan(
+export async function getSubscriptionPlan(
   user:
     (Pick<User, 'accessProvider'> & Partial<Pick<User, 'status' | '_verified'>>) | null | undefined,
   payload: Payload,
-): Promise<ReaderPlan> {
+): Promise<SubscriptionPlan> {
   if (!user?.accessProvider || user.status === 'suspended' || user._verified === false)
     return 'none'
 
@@ -48,7 +48,7 @@ export async function getReaderPlan(
   return 'none'
 }
 
-export function planSatisfies(plan: ReaderPlan, required: 'base' | 'premium'): boolean {
+export function planSatisfies(plan: SubscriptionPlan, required: 'base' | 'premium'): boolean {
   if (plan === 'none') return false
   if (required === 'base') return true // base or premium both satisfy a base requirement
   return plan === 'premium'

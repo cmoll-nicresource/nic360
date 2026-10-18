@@ -15,7 +15,7 @@ export type DatasetWriteOptions = {
 /** Internal trusted-import path; callers enforce staff permissions and validate mapping. */
 export async function writeDatasetRows(payload: Payload, options: DatasetWriteOptions) {
   return withTransaction(payload, async (client) => {
-    // Serialize CSV and trade refreshes for this dataset. Ordinary readers keep
+    // Serialize CSV and trade refreshes for this dataset. Ordinary users keep
     // seeing the complete previous version until this transaction commits.
     const locked = await client.query('select id from datasets where id = $1 for update', [
       options.datasetId,

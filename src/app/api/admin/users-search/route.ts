@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { requireStaff } from '@/lib/requireStaff'
 import { buildUserSearchWhere } from '@/lib/userSearch'
 
-/** Backs the Analytics dashboard's "By user" search — there are 1000+ readers, too many for a plain dropdown. */
+/** Backs the Analytics dashboard's "By user" search — there are 1000+ users, too many for a plain dropdown. */
 export async function GET(request: Request) {
   try {
     const { payload } = await requireStaff('gatekeeper')

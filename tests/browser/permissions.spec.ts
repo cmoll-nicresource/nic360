@@ -82,28 +82,28 @@ for (const role of [
     const ctx = await roleContext(browser, role),
       api = ctx.request,
       staff = !!f.staff[role],
-      member = ['base', 'premium'].includes(role),
+      subscriber = ['base', 'premium'].includes(role),
       premium = role === 'premium'
     try {
       const portalHtml = await (await api.get('/bills/itrac')).text()
-      expect(portalHtml.includes('itrac.example.invalid')).toBe(staff || member)
-      expect(portalHtml.includes('<iframe')).toBe(staff || member)
+      expect(portalHtml.includes('itrac.example.invalid')).toBe(staff || subscriber)
+      expect(portalHtml.includes('<iframe')).toBe(staff || subscriber)
       const article = await api.get('/api/articles/' + f.articles.us + '?depth=0')
       expect((await api.get('/api/events/' + f.refs.event)).status()).toBe(200)
       expect((await api.get('/api/events/' + draftEvent + '?draft=true')).status() === 200).toBe(staff)
       expect((await api.get('/api/sessions/' + draftSession + '?draft=true')).status() === 200).toBe(staff)
       expect((await (await api.get('/events/' + draftEvent + '/livestream')).text()).includes('Permission draft conference')).toBe(staff)
       expect(article.status()).toBe(200)
-      expect('excerpt' in (await article.json())).toBe(staff || member)
+      expect('excerpt' in (await article.json())).toBe(staff || subscriber)
       expect(
         (await api.get('/api/articles/' + f.articles.draft + '?draft=true')).status() === 200,
       ).toBe(staff)
       const rendered = await api.get('/articles/' + f.articles.us)
       expect(rendered.status()).toBe(200)
-      expect((await rendered.text()).includes('Synthetic full excerpt for us.')).toBe(staff || member)
+      expect((await rendered.text()).includes('Synthetic full excerpt for us.')).toBe(staff || subscriber)
       expect(await (await api.get('/articles/' + f.articles.draft)).text()).not.toContain('Fixture draft')
       for (const status of ['published', 'draft']) {
-        const allowed = staff || (member && status === 'published')
+        const allowed = staff || (subscriber && status === 'published')
         expect((await api.get('/api/trademarks/' + marks[status] + '?draft=true')).status() === 200).toBe(allowed)
         const html = await (await api.get('/trademarks/' + marks[status])).text()
         expect(html.includes('Permission fixture ' + status + ' mark')).toBe(allowed)
@@ -114,10 +114,10 @@ for (const role of [
         const allowed = staff || status === 'published'
         const response = await api.get('/api/bills/' + bills[status] + '?draft=true')
         expect(response.status() === 200).toBe(allowed)
-        if (response.ok()) expect('abstract' in await response.json()).toBe(staff || member)
+        if (response.ok()) expect('abstract' in await response.json()).toBe(staff || subscriber)
         const html = await (await api.get('/bills/' + bills[status])).text()
         expect(html.includes('Permission fixture ' + status + ' bill')).toBe(allowed)
-        expect(html.includes('Permission full legislative abstract ' + status)).toBe(allowed && (staff || member))
+        expect(html.includes('Permission full legislative abstract ' + status)).toBe(allowed && (staff || subscriber))
       }
       expect((await (await api.get('/bills?keyword=Permission%20fixture')).text()).includes('Permission fixture draft bill')).toBe(staff)
       for (const path of [
@@ -130,7 +130,7 @@ for (const role of [
           '/api/guide-files/file/' + encodeURIComponent(f.files[kind].filename),
         )
         expect(response.status() === 200, 'protected ' + kind + ' PDF').toBe(
-          staff || (kind === 'base' ? member : kind === 'premium' && premium),
+          staff || (kind === 'base' ? subscriber : kind === 'premium' && premium),
         )
         if (response.ok()) expect((await response.body()).subarray(0, 5).toString()).toBe('%PDF-')
       }
@@ -165,8 +165,8 @@ for (const role of [
         expect(ids.length).toBe(role === 'admin' ? 3 : 1)
         if (role !== 'admin') expect(ids).toEqual([f.staff[role].id])
       } else expect(directory.ok()).toBe(false)
-      if (f.readers[role] && role !== 'unverified') {
-        const response = await api.patch('/api/users/' + f.readers[role].id, {
+      if (f.users[role] && role !== 'unverified') {
+        const response = await api.patch('/api/users/' + f.users[role].id, {
           data: {
             accessProvider: f.providers.premium,
             status: role === 'suspended' ? 'active' : 'suspended',
@@ -206,7 +206,7 @@ test('signup completion cannot reset a known verified account without current pr
 }) => {
   const result = await request.post('/api/auth/signup/complete', {
     data: {
-      email: f.readers.premium.email,
+      email: f.users.premium.email,
       password: 'replacement-not-allowed',
       firstName: 'Attacker',
       lastName: 'Fixture',
@@ -216,13 +216,13 @@ test('signup completion cannot reset a known verified account without current pr
   expect(
     (
       await request.post('/api/users/login', {
-        data: { email: f.readers.premium.email, password: f.password },
+        data: { email: f.users.premium.email, password: f.password },
       })
     ).status(),
   ).toBe(200)
 })
 
-test('public account creation cannot grant membership or email verification', async ({ request }) => {
+test('public account creation cannot grant subscription or email verification', async ({ request }) => {
   const email = 'public-create-' + crypto.randomUUID() + '@example.invalid'
   const response = await request.post('/api/users', { data: {
     email, password: f.password, firstName: 'Synthetic', lastName: 'Public',
@@ -246,17 +246,17 @@ test('staff cannot elevate their own role', async ({ browser }) => {
   } finally { await ctx.close() }
 })
 
-test('gatekeeper subscription changes take effect for an existing reader session', async ({ browser }) => {
+test('gatekeeper subscription changes take effect for an existing user session', async ({ browser }) => {
   const gatekeeper = await roleContext(browser, 'gatekeeper')
-  const reader = await roleContext(browser, 'premium')
+  const user = await roleContext(browser, 'premium')
   try {
     for (const status of ['suspended', 'active']) {
-      expect((await gatekeeper.request.patch('/api/users/' + f.readers.premium.id, { data: { status } })).status()).toBe(200)
-      const response = await reader.request.get('/api/datasets/' + f.refs.dataset + '/rows')
+      expect((await gatekeeper.request.patch('/api/users/' + f.users.premium.id, { data: { status } })).status()).toBe(200)
+      const response = await user.request.get('/api/datasets/' + f.refs.dataset + '/rows')
       expect(response.status()).toBe(status === 'active' ? 200 : 403)
     }
   } finally {
-    await gatekeeper.request.patch('/api/users/' + f.readers.premium.id, { data: { status: 'active' } })
-    await Promise.all([gatekeeper.close(), reader.close()])
+    await gatekeeper.request.patch('/api/users/' + f.users.premium.id, { data: { status: 'active' } })
+    await Promise.all([gatekeeper.close(), user.close()])
   }
 })

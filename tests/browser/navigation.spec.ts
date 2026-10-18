@@ -29,7 +29,7 @@ test('publications and guides are separate destinations, with iTrac under legisl
   }
 })
 
-test('eligible members can use the embedded portal with a new-tab fallback', async ({ page, context }) => {
+test('eligible subscribers can use the embedded portal with a new-tab fallback', async ({ page, context }) => {
   await signIn(context.request, 'base')
   let requested = false
   await page.route('https://itrac.example.invalid/**', route => {

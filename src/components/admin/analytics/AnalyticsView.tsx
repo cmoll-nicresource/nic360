@@ -58,7 +58,7 @@ export function AnalyticsView({
     <Gutter className="nic-analytics">
       <h1>Analytics</h1>
       <p className="nic-analytics__muted">
-        First-party reader traffic — no third-party analytics, and staff visits aren&apos;t tracked.
+        First-party user traffic — no third-party analytics, and staff visits aren&apos;t tracked.
       </p>
 
       <div className="nic-analytics__tabs">
@@ -159,7 +159,7 @@ async function OverviewTab({ payload }: { payload: Payload }) {
           ))}
         </div>
         <div className="nic-analytics__card">
-          <h3>Most active readers (30 days)</h3>
+          <h3>Most active users (30 days)</h3>
           {stats.topUsers.length === 0 && <p className="nic-analytics__muted">No data yet.</p>}
           {stats.topUsers.map((u) => (
             <RankRow
@@ -197,7 +197,7 @@ async function UsersTab({ payload, userId }: { payload: Payload; userId?: string
     <div className="nic-analytics__card">
       <UserSearchPicker initialLabel={selected ? visitorLabel(selected) : undefined} />
 
-      {selectedId && !selected && <p className="nic-analytics__muted">That reader couldn&apos;t be found.</p>}
+      {selectedId && !selected && <p className="nic-analytics__muted">That user couldn&apos;t be found.</p>}
       {selected && (
         <>
           <h3>
@@ -421,7 +421,7 @@ async function AdsTab({ payload, publicationId }: { payload: Payload; publicatio
   return (
     <div className="nic-analytics__card">
       <p className="nic-analytics__muted">
-        &ldquo;Impressions&rdquo; counts issue sends this ad was placed in, not reader-level opens — Mailchimp
+        &ldquo;Impressions&rdquo; counts issue sends this ad was placed in, not user-level opens — Mailchimp
         doesn&rsquo;t give us a per-recipient delivery count the way SES does, so both providers are counted the
         same way here: once per send.
       </p>

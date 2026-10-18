@@ -28,14 +28,14 @@ const snapshot = (
   >[0])
 
 it('snapshots the account address and ignores supplied suppression addresses', async () => {
-  findByID.mockResolvedValue({ id: 3, email: ' Reader@Example.invalid ' })
+  findByID.mockResolvedValue({ id: 3, email: ' User@Example.invalid ' })
   expect(await snapshot({ user: 3, recipientEmail: 'wrong@example.invalid' })).toMatchObject({
-    recipientEmail: 'reader@example.invalid',
+    recipientEmail: 'user@example.invalid',
   })
   expect(findByID).toHaveBeenCalledWith(expect.objectContaining({ id: 3, req }))
 })
-it('requires a reader for new flags, but lets staff update a deleted reader’s history', async () => {
-  await expect(snapshot({ user: null })).rejects.toThrow('Select a reader')
+it('requires a user for new flags, but lets staff update a deleted user’s history', async () => {
+  await expect(snapshot({ user: null })).rejects.toThrow('Select a user')
   expect(
     await snapshot(
       { notes: 'Followed up', recipientEmail: 'wrong@example.invalid' },
@@ -46,12 +46,12 @@ it('requires a reader for new flags, but lets staff update a deleted reader’s 
   expect(findByID).not.toHaveBeenCalled()
 })
 it('captures the address before an existing relationship is cleared', async () => {
-  findByID.mockResolvedValue({ id: 3, email: 'reader@example.invalid' })
+  findByID.mockResolvedValue({ id: 3, email: 'user@example.invalid' })
   expect(await snapshot({ user: null }, { user: 3 }, 'update')).toMatchObject({
-    recipientEmail: 'reader@example.invalid',
+    recipientEmail: 'user@example.invalid',
   })
 })
-it('preserves the original delivery address when staff edit a flag after the reader changes email', async () => {
+it('preserves the original delivery address when staff edit a flag after the user changes email', async () => {
   expect(
     await snapshot(
       { notes: 'Contacted' },
@@ -88,7 +88,7 @@ it('keeps deleted and following-up recipients suppressed, includes current addre
 it('does not create another flag or clear preferences again during follow-up', async () => {
   find.mockResolvedValueOnce({ docs: [{ id: 3 }] }).mockResolvedValueOnce({ totalDocs: 1 })
   expect(
-    await flagUserByEmail(payload, 'reader@example.invalid', 'cleaned', '2026-10-15'),
+    await flagUserByEmail(payload, 'user@example.invalid', 'cleaned', '2026-10-15'),
   ).toBeNull()
   expect(find.mock.calls[1][0].where.and[1]).toEqual({ status: { in: ['open', 'following up'] } })
   expect(create).not.toHaveBeenCalled()

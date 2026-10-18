@@ -1,11 +1,11 @@
 import type { Access, FieldAccess, PayloadRequest } from 'payload'
 
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { staffHasRole } from '@/access/staffRoles'
 
-async function readerSatisfiesBasePlan(req: PayloadRequest): Promise<boolean> {
+async function userSatisfiesBasePlan(req: PayloadRequest): Promise<boolean> {
   if (req.user?.collection !== 'users') return false
-  const plan = await getReaderPlan(req.user, req.payload)
+  const plan = await getSubscriptionPlan(req.user, req.payload)
   return planSatisfies(plan, 'base')
 }
 
@@ -19,14 +19,14 @@ export const anyoneCanReadTeaser: Access = ({ req }) =>
 
 /**
  * Field-level access for a body/content field (Article.excerpt,
- * Bill.abstract, Bill.fullText): staff always see it; readers need an
+ * Bill.abstract, Bill.fullText): staff always see it; users need an
  * effective Base or Premium plan. Returning false omits the field from the
  * response rather than erroring, which is what "full content checks the
  * plan" means in practice.
  */
 export const canReadFullContent: FieldAccess = async ({ req }) => {
   if (staffHasRole(req.user, 'editor')) return true
-  return readerSatisfiesBasePlan(req)
+  return userSatisfiesBasePlan(req)
 }
 
 /**
@@ -35,13 +35,13 @@ export const canReadFullContent: FieldAccess = async ({ req }) => {
  */
 export const requireBasePlanToRead: Access = async ({ req }) => {
   if (staffHasRole(req.user, 'editor')) return true
-  return readerSatisfiesBasePlan(req)
+  return userSatisfiesBasePlan(req)
 }
 
 /** Versioned subscriber content must not expose drafts through direct API reads. */
 export const requireBasePlanForPublished: Access = async ({ req }) => {
   if (staffHasRole(req.user, 'editor')) return true
-  return (await readerSatisfiesBasePlan(req)) ? { _status: { equals: 'published' } } : false
+  return (await userSatisfiesBasePlan(req)) ? { _status: { equals: 'published' } } : false
 }
 
 /** Only staff (editor role or above) can create, edit or publish excerpts. */

@@ -6,7 +6,7 @@ test('signup, verification, provider matching, reset and replay protection', asy
   request,
 }, info) => {
   const email =
-    'reader-' + info.project.name + '-' + crypto.randomUUID() + '@signup.example.invalid'
+    'user-' + info.project.name + '-' + crypto.randomUUID() + '@signup.example.invalid'
   await page.goto('/signup')
   await page.getByLabel('Work email', { exact: true }).fill(email)
   await page.getByRole('button', { name: 'Send verification code', exact: true }).click()
@@ -29,7 +29,7 @@ test('signup, verification, provider matching, reset and replay protection', asy
   expect(setCookie).toMatch(/samesite=strict/i)
   expect(setCookie).toMatch(/httponly/i)
   await page.getByLabel('First name', { exact: true }).fill('Synthetic')
-  await page.getByLabel('Last name', { exact: true }).fill('Reader')
+  await page.getByLabel('Last name', { exact: true }).fill('User')
   await page.getByLabel('Password', { exact: true }).fill(f.password)
   await page.getByLabel('Confirm password', { exact: true }).fill(f.password)
   await page.getByRole('button', { name: 'Create account', exact: true }).click()
@@ -121,19 +121,19 @@ test('verification attempts expire and five wrong guesses cannot be bypassed', a
 })
 
 test('migrated account sets a password without repeating signup or changing its company and preferences', async ({ browser, request }, info) => {
-  const admin = await roleContext(browser, 'admin'), reader = await browser.newContext({ baseURL: 'http://127.0.0.1:3100' })
+  const admin = await roleContext(browser, 'admin'), user = await browser.newContext({ baseURL: 'http://127.0.0.1:3100' })
   const email = 'migrated-' + info.project.name + '-' + crypto.randomUUID() + '@signup.example.invalid'
   const oldPassword = crypto.randomUUID(), oldSession = await browser.newContext({ baseURL: 'http://127.0.0.1:3100' })
   let id: number | undefined
   try {
     const created = await admin.request.post('/api/users', { data: {
-      email, password: oldPassword, firstName: 'Migrated', lastName: 'Reader', _verified: true,
+      email, password: oldPassword, firstName: 'Migrated', lastName: 'User', _verified: true,
       // Deliberately differs from the Premium domain match: manual assignments must survive.
       accessProvider: f.providers.base, emailPublications: [f.publications['us-news-clippings']], status: 'active',
     } })
     expect(created.status()).toBe(201); id = (await created.json()).doc.id
     expect((await oldSession.request.post('/api/users/login', { data: { email, password: oldPassword } })).status()).toBe(200)
-    const page = await reader.newPage()
+    const page = await user.newPage()
     await page.goto('/signup'); await page.getByLabel('Work email', { exact: true }).fill(email)
     await page.getByRole('button', { name: 'Send verification code', exact: true }).click()
     await expect(page.getByRole('link', { name: 'set a new password', exact: true })).toBeVisible()
@@ -156,11 +156,11 @@ test('migrated account sets a password without repeating signup or changing its 
     await expect(page.getByRole('link', { name: 'Change password', exact: true })).toBeVisible()
     const after = await (await admin.request.get('/api/users/' + id + '?depth=0')).json()
     for (const field of ['id','firstName','lastName','accessProvider','emailPublications','status','_verified']) expect(after[field]).toEqual(before[field])
-    expect((await reader.request.get('/api/datasets/' + f.refs.dataset + '/rows')).status()).toBe(403)
+    expect((await user.request.get('/api/datasets/' + f.refs.dataset + '/rows')).status()).toBe(403)
     expect((await request.post('/api/users/reset-password', { data: { token, password: f.password + '-replay' } })).ok()).toBe(false)
-    expect((await reader.request.post('/api/users/login', { data: { email, password: f.password + '-migrated' } })).status()).toBe(200)
+    expect((await user.request.post('/api/users/login', { data: { email, password: f.password + '-migrated' } })).status()).toBe(200)
     expect((await (await admin.request.get('/api/users?where[email][equals]=' + encodeURIComponent(email))).json()).totalDocs).toBe(1)
-  } finally { if(id) await admin.request.delete('/api/users/' + id); await oldSession.close(); await reader.close(); await admin.close() }
+  } finally { if(id) await admin.request.delete('/api/users/' + id); await oldSession.close(); await user.close(); await admin.close() }
 })
 
 test('reset errors stay recoverable and unknown emails do not reveal accounts', async ({ page, request }) => {
@@ -182,7 +182,7 @@ test('reset errors stay recoverable and unknown emails do not reveal accounts', 
   expect((await request.post('/api/users/reset-password', { data: { token: 'not-a-valid-token', password: f.password } })).ok()).toBe(false)
 })
 
-test('expired reset tokens fail and a suspended reader remains suspended after a reset', async ({ browser, request }, info) => {
+test('expired reset tokens fail and a suspended user remains suspended after a reset', async ({ browser, request }, info) => {
   const { default: pg } = await import('pg'), { testEnvironment } = await import('../support/environment')
   const pool = new pg.Pool({ connectionString: testEnvironment().DATABASE_URI }), admin = await roleContext(browser, 'admin')
   const email = 'expired-reset-' + info.project.name + '-' + crypto.randomUUID() + '@example.invalid'
@@ -204,14 +204,14 @@ test('expired reset tokens fail and a suspended reader remains suspended after a
     expect(freshToken).not.toBe(token)
     expect((await request.post('/api/users/reset-password', { data: { token, password: f.password + '-old-link' } })).status()).toBe(403)
     expect((await request.post('/api/users/reset-password', { data: { token: freshToken, password: f.password + '-suspended' } })).status()).toBe(200)
-    const reader = await (await request.get('/api/users/me')).json()
-    expect(reader.user.status).toBe('suspended')
+    const user = await (await request.get('/api/users/me')).json()
+    expect(user.user.status).toBe('suspended')
     expect((await request.get('/api/datasets/' + f.refs.dataset + '/rows')).status()).toBe(403)
     expect((await (await admin.request.get('/api/users/' + id)).json()).status).toBe('suspended')
   } finally { if(id) await admin.request.delete('/api/users/' + id); await pool.end(); await admin.close() }
 })
 
-test('signup without a matching member company creates pending access rather than a subscription', async ({ page, context, request, browser }, info) => {
+test('signup without a matching subscriber company creates pending access rather than a subscription', async ({ page, context, request, browser }, info) => {
   const email = 'unmatched-' + info.project.name + '-' + crypto.randomUUID() + '@new-company.example.invalid'
   const companyName = 'Synthetic signup company ' + crypto.randomUUID(), admin = await roleContext(browser, 'admin')
   let userId: number | undefined, providerId: number | undefined
@@ -222,7 +222,7 @@ test('signup without a matching member company creates pending access rather tha
     await page.getByLabel('Verification code', { exact: true }).fill(code)
     await page.getByRole('button', { name: 'Verify', exact: true }).click()
     await page.getByLabel('First name', { exact: true }).fill('New')
-    await page.getByLabel('Last name', { exact: true }).fill('Reader')
+    await page.getByLabel('Last name', { exact: true }).fill('User')
     await page.getByLabel('Company name', { exact: true }).fill(companyName)
     await page.getByLabel('Password', { exact: true }).fill(f.password)
     await page.getByLabel('Confirm password', { exact: true }).fill(f.password)

@@ -65,7 +65,7 @@ export default async function GuidesPage() {
                 <GuideCover guide={guide} />
                 <div>
                   <span className="edition-eyebrow">
-                    {guide.requiresPremium ? 'Premium reference' : 'Member reference'}
+                    {guide.requiresPremium ? 'Premium reference' : 'Subscriber reference'}
                   </span>
                   <h2>{guide.title}</h2>
                   <p className="muted">{guide.description}</p>
@@ -79,7 +79,7 @@ export default async function GuidesPage() {
         {canRead && !guides?.docs.length && (
           <div className="edition-empty">
             No guides are available with your current access.{' '}
-            <a href="mailto:membership@nicotine360.org">Contact membership</a> to explore Premium.
+            <a href="mailto:membership@nicotine360.org">Contact us</a> to explore Premium.
           </div>
         )}
       </div>

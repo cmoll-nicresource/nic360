@@ -8,7 +8,7 @@ type Task = {
   category: string
   role: StaffRole
   icon: string
-  audience: 'editorial' | 'members' | 'admin'
+  audience: 'editorial' | 'users' | 'admin'
   daily?: boolean
 }
 export const STAFF_TASKS: readonly Task[] = [
@@ -81,7 +81,7 @@ export const STAFF_TASKS: readonly Task[] = [
   {
     href: '/admin/collections/guides',
     label: 'Guides & resources',
-    description: 'Maintain member reference material.',
+    description: 'Maintain subscriber reference material.',
     category: 'Publishing & resources',
     role: 'editor',
     icon: 'guide',
@@ -117,87 +117,87 @@ export const STAFF_TASKS: readonly Task[] = [
   {
     href: '/admin/collections/access-providers',
     label: 'Manage subscriptions',
-    description: 'Enable, disable or renew company membership access.',
-    category: 'Daily member operations',
+    description: 'Enable, disable or renew access provider subscriptions.',
+    category: 'Daily user operations',
     role: 'gatekeeper',
     icon: 'access',
-    audience: 'members',
+    audience: 'users',
     daily: true,
   },
   {
     href: '/admin/collections/users/create',
     label: 'Register a user',
-    description: 'Create a reader account and assign its membership provider.',
-    category: 'Daily member operations',
+    description: 'Create a user account and assign its access provider.',
+    category: 'Daily user operations',
     role: 'gatekeeper',
     icon: 'people',
-    audience: 'members',
+    audience: 'users',
     daily: true,
   },
   {
     href: '/admin/collections/event-registrations/create',
     label: 'Register an attendee',
     description: 'Add an attendee’s ticket against an event order.',
-    category: 'Daily member operations',
+    category: 'Daily user operations',
     role: 'gatekeeper',
     icon: 'event',
-    audience: 'members',
+    audience: 'users',
     daily: true,
   },
   {
     href: '/admin/collections/orders',
     label: 'Review orders',
     description: 'Review payment status and follow up on incomplete orders.',
-    category: 'Daily member operations',
+    category: 'Daily user operations',
     role: 'gatekeeper',
     icon: 'access',
-    audience: 'members',
+    audience: 'users',
     daily: true,
   },
   {
     href: '/admin/collections/users',
-    label: 'Reader accounts',
+    label: 'User accounts',
     description: 'Find users, update account details and suspend access.',
-    category: 'Membership & events',
+    category: 'Users & events',
     role: 'gatekeeper',
     icon: 'people',
-    audience: 'members',
+    audience: 'users',
   },
   {
     href: '/admin/access-check',
-    label: 'Check reader access',
-    description: 'See a reader’s effective subscription and provider.',
-    category: 'Membership & events',
+    label: 'Check user access',
+    description: 'See a user’s effective subscription and provider.',
+    category: 'Users & events',
     role: 'gatekeeper',
     icon: 'access',
-    audience: 'members',
+    audience: 'users',
   },
   {
     href: '/admin/company-reports',
     label: 'Company usage reports',
     description: 'Review each provider’s users and activity for a date range.',
-    category: 'Membership & events',
+    category: 'Users & events',
     role: 'gatekeeper',
     icon: 'analytics',
-    audience: 'members',
+    audience: 'users',
   },
   {
     href: '/admin/collections/email-flags',
     label: 'Email follow-up',
     description: 'Resolve delivery flags and retained suppressions.',
-    category: 'Membership & events',
+    category: 'Users & events',
     role: 'gatekeeper',
     icon: 'people',
-    audience: 'members',
+    audience: 'users',
   },
   {
     href: '/admin/events',
     label: 'Event management',
     description: 'Manage event registrations, tickets, discounts and attendees.',
-    category: 'Membership & events',
+    category: 'Users & events',
     role: 'editor',
     icon: 'event',
-    audience: 'members',
+    audience: 'users',
   },
   {
     href: '/admin/collections/events',
@@ -252,7 +252,7 @@ export function staffTasksFor(user: PayloadRequest['user']) {
     (task) =>
       staffHasRole(user, task.role) &&
       (user.role === 'admin' ||
-        (user.role === 'gatekeeper' ? task.audience === 'members' : task.audience === 'editorial')),
+        (user.role === 'gatekeeper' ? task.audience === 'users' : task.audience === 'editorial')),
   )
 }
 

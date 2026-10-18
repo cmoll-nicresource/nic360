@@ -2,16 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('next/headers', () => ({ headers: vi.fn() }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
 vi.mock('@/payload.config', () => ({ default: {} }))
-vi.mock('@/access/readerPlan', () => ({
-  getReaderPlan: vi.fn(),
+vi.mock('@/access/subscriptionPlan', () => ({
+  getSubscriptionPlan: vi.fn(),
   planSatisfies: (plan: string, required: string) => plan === 'premium' || plan === required,
 }))
 import { headers } from 'next/headers'
 import { getPayload } from 'payload'
-import { getReaderPlan } from '@/access/readerPlan'
+import { getSubscriptionPlan } from '@/access/subscriptionPlan'
 import { frontendContext } from './frontendContext'
 beforeEach(() => vi.resetAllMocks())
-describe('request-scoped reader context', () => {
+describe('request-scoped user context', () => {
   it('does not initialize the private database when Next suspends static rendering at headers()', async () => {
     vi.mocked(headers).mockRejectedValue(new Error('Dynamic server usage'))
     await expect(frontendContext()).rejects.toThrow('Dynamic server usage')
@@ -22,7 +22,7 @@ describe('request-scoped reader context', () => {
     const auth = vi.fn().mockResolvedValue({ user: { id: 1, collection: 'users' } })
     vi.mocked(headers).mockResolvedValue(requestHeaders as never)
     vi.mocked(getPayload).mockResolvedValue({ auth } as never)
-    vi.mocked(getReaderPlan).mockResolvedValue('base')
+    vi.mocked(getSubscriptionPlan).mockResolvedValue('base')
     const result = await frontendContext()
     expect(auth).toHaveBeenCalledWith({ headers: requestHeaders })
     expect(result).toMatchObject({

@@ -7,7 +7,7 @@ import {
   hasDistinctExcerpt,
   sourceLabel,
 } from './editorial'
-describe('reader presentation', () => {
+describe('user presentation', () => {
   it('uses a branded fallback instead of a one-pixel migration placeholder', () => {
     expect(hasArtwork({ url: '/blank.png', width: 1, height: 1 })).toBe(false)
     expect(hasArtwork({ url: '/cover.png', width: 400, height: 600 })).toBe(true)

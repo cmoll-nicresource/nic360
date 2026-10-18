@@ -3,7 +3,7 @@ import type { AdminViewServerProps, Where } from 'payload'
 import { staffTasksFor } from '@/config/staffWorkspace'
 import {
   canSeeEditorialWorkspace,
-  canSeeMemberWorkspace,
+  canSeeUserWorkspace,
   workspaceRole,
 } from '@/config/workspaceVisibility'
 import { requireWorkspaceRole, TaskIcon, WorkspacePage } from './WorkspaceShell'
@@ -20,7 +20,7 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
     payload = req.payload,
     role = workspaceRole(req.user)
   const editorial = canSeeEditorialWorkspace(req.user),
-    members = canSeeMemberWorkspace(req.user)
+    userOperations = canSeeUserWorkspace(req.user)
   const options = { depth: 0, req, overrideAccess: false as const }
   const attention: Where = {
     or: [
@@ -28,7 +28,7 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
       { and: [{ fulfillmentError: { exists: true } }, { fulfillmentError: { not_equals: '' } }] },
     ],
   }
-  const [drafts, news, bills, readers, orders, flags, alerts] = await Promise.all([
+  const [drafts, news, bills, users, orders, flags, alerts] = await Promise.all([
     editorial
       ? payload.find({
           collection: 'publication-issues',
@@ -57,10 +57,10 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
           ...options,
         })
       : null,
-    members
+    userOperations
       ? payload.find({ collection: 'users', sort: '-createdAt', limit: 5, ...options })
       : null,
-    members
+    userOperations
       ? payload.find({
           collection: 'orders',
           where: attention,
@@ -69,7 +69,7 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
           ...options,
         })
       : null,
-    members
+    userOperations
       ? payload.count({
           collection: 'email-flags',
           where: { status: { not_equals: 'resolved' } },
@@ -89,17 +89,17 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
     role === 'admin'
       ? 'Administration workspace'
       : role === 'gatekeeper'
-        ? 'Membership & events'
+        ? 'Users & events'
         : 'Editorial desk'
   return (
     <WorkspacePage
       title={title}
-      eyebrow={`NICOTINE360 · ${role === 'admin' ? 'ADMIN' : role === 'gatekeeper' ? 'MEMBER OPERATIONS' : 'EDITORIAL'}`}
+      eyebrow={`NICOTINE360 · ${role === 'admin' ? 'ADMIN' : role === 'gatekeeper' ? 'USER OPERATIONS' : 'EDITORIAL'}`}
       description={
         role === 'gatekeeper'
-          ? 'Look after reader access, registrations and orders.'
+          ? 'Look after user access, registrations and orders.'
           : role === 'admin'
-            ? 'Daily publishing and member operations, with administration in one place.'
+            ? 'Daily publishing and user operations, with administration in one place.'
             : 'Enter today’s excerpts, continue your drafts and prepare the next edition.'
       }
       actions={
@@ -166,17 +166,17 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
           </section>
         </section>
       )}
-      {members && (
+      {userOperations && (
         <section className="nic-workspace__section">
           <div className="nic-workspace__section-heading">
-            <h2>Member follow-up</h2>
+            <h2>User follow-up</h2>
             <span>Accounts, delivery and payments</span>
           </div>
           <div className="nic-workspace__stats">
             <Link href="/admin/collections/users">
-              <span>Reader accounts</span>
-              <strong>{readers?.totalDocs.toLocaleString()}</strong>
-              <small>Find or update a reader →</small>
+              <span>User accounts</span>
+              <strong>{users?.totalDocs.toLocaleString()}</strong>
+              <small>Find or update a user →</small>
             </Link>
             <Link href="/admin/collections/orders">
               <span>Orders to review</span>
@@ -225,28 +225,28 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
             </section>
             <section className="nic-workspace__panel">
               <div className="nic-workspace__section-heading">
-                <h2>Recently registered readers</h2>
-                <Link href="/admin/collections/users">All readers →</Link>
+                <h2>Recently registered users</h2>
+                <Link href="/admin/collections/users">All users →</Link>
               </div>
-              {readers?.docs.length ? (
-                readers.docs.map((reader) => (
+              {users?.docs.length ? (
+                users.docs.map((user) => (
                   <Link
-                    href={`/admin/collections/users/${reader.id}`}
+                    href={`/admin/collections/users/${user.id}`}
                     className="nic-workspace__list-row"
-                    key={reader.id}
+                    key={user.id}
                   >
                     <div>
-                      <strong>{reader.email}</strong>
+                      <strong>{user.email}</strong>
                       <small>
-                        {[reader.firstName, reader.lastName].filter(Boolean).join(' ') ||
-                          `Registered ${date(reader.createdAt)}`}
+                        {[user.firstName, user.lastName].filter(Boolean).join(' ') ||
+                          `Registered ${date(user.createdAt)}`}
                       </small>
                     </div>
-                    <span className="nic-workspace__status">{reader.status}</span>
+                    <span className="nic-workspace__status">{user.status}</span>
                   </Link>
                 ))
               ) : (
-                <p className="nic-workspace__empty">New reader accounts will appear here.</p>
+                <p className="nic-workspace__empty">New user accounts will appear here.</p>
               )}
             </section>
           </div>

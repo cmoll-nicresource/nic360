@@ -196,7 +196,7 @@ export function AccessPanel({
   return (
     <div className="edition-access">
       <span className="edition-eyebrow">
-        {premium ? 'PREMIUM INTELLIGENCE' : 'MEMBER INTELLIGENCE'}
+        {premium ? 'PREMIUM INTELLIGENCE' : 'SUBSCRIBER INTELLIGENCE'}
       </span>
       <h2>{title}</h2>
       <p>{description}</p>

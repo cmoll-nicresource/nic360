@@ -4,7 +4,7 @@ Historical review. The October 15 implementation and verification handoff is [fr
 
 Oct 14, 2026 · @Papa
 
-The bones are good (a sensible navy and orange palette, Inter with Source Serif, a clear structure), but the site reads as a prototype because of unstyled form controls, emoji icons, underlined everything, empty-feeling pages and internal wording left visible to readers. Reviewed while logged in as a Premium user on 14 pages plus detail views, at 1440px desktop and 390px phone width, with styles read from the live CSS.
+The bones are good (a sensible navy and orange palette, Inter with Source Serif, a clear structure), but the site reads as a prototype because of unstyled form controls, emoji icons, underlined everything, empty-feeling pages and internal wording left visible to users. Reviewed while logged in as a Premium user on 14 pages plus detail views, at 1440px desktop and 390px phone width, with styles read from the live CSS.
 
 ## Top fixes
 
@@ -13,7 +13,7 @@ If you only do ten things before launch, do these, in this order.
 - [ ] **Style every form control.** Text and date inputs fall back to browser defaults (Arial 13px, 2px inset border, square corners) while the dropdowns beside them are styled, so every filter bar looks half-built. Give inputs, selects, checkboxes and buttons one shared style: Inter 15px, 40px tall, 1px #D8DEE6 border, 8px radius, white fill, a 3px primary-tinted focus ring.
 - [ ] **Replace emoji with one icon set.** The Data page uses literal emoji (money bag, chart, ship, seedling) and the section icons are a mix of styles. Use a single line-icon family (Lucide, Phosphor or Heroicons outline) at 20px in primary blue, inside a 40px tinted square.
 - [ ] **Stop underlining list titles and metadata.** Every list row's title and its grey metadata line are underlined links, which is the single most "1999" signal on the site. Make the whole row the click target, no underline at rest, title turns primary on hover, metadata plain grey.
-- [ ] **Hide internal states and jargon from readers.** "not sent" / "sent" on issues, "row(s)", "Scraped weekly from the USPTO XML feed", "designed outside the CMS", "Staff-maintained reference tables", "Readable by any Base or Premium subscriber", "AG Grid". Full list in Copy below.
+- [ ] **Hide internal states and jargon from users.** "not sent" / "sent" on issues, "row(s)", "Scraped weekly from the USPTO XML feed", "designed outside the CMS", "Staff-maintained reference tables", "Readable by any Base or Premium subscriber", "AG Grid". Full list in Copy below.
 - [ ] **Fix the datasets grid.** Columns stop at about 80% width leaving a white strip, company names truncate ("Philip Morris Internatio..."), only 10 rows show, numbers are left-aligned. Fit columns to width, right-align numbers, give the grid real height, and add the Excel export the pricing card promises.
 - [ ] **Give the guide and event pages content.** The US Tax Guide page is a heading and a single underlined "Download PDF" link in a near-empty card; the event page repeats its own name in a card. These are the pages people will share.
 - [ ] **Make one consistent page width.** Pages use 830px (lists, guides), 1050px (dashboard, dataset) and 590px (home hero text). Pick two: 760px for reading and 1200px for grids and dashboards.
@@ -64,7 +64,7 @@ Keep Inter and Source Serif 4, but give the serif fewer jobs: it should mark edi
 
 - **One weight ladder:** 400 body, 500 nav and buttons, 600 headings. Avoid 700+ except the logo.
 - **Links in running text** keep an underline, but make it subtle: `text-decoration-thickness: 1px; text-underline-offset: 3px;` in a 40% tint, full color on hover.
-- **Dates.** Write them as "Oct 12, 2026" in lists and detail pages instead of "10/12/2026"; it reads as edited rather than database output, and is unambiguous for international members.
+- **Dates.** Write them as "Oct 12, 2026" in lists and detail pages instead of "10/12/2026"; it reads as edited rather than database output, and is unambiguous for international users.
 
 ## Layout and components
 
@@ -120,8 +120,8 @@ The site is "a white bordered box on a grey page" everywhere, and it is the repe
 
 | Page | What to change |
 | --- | --- |
-| Home (logged out) | Widen the hero so the headline sits on two lines, put an image or product screenshot on the right half (see Imagery), and add a proof strip under the hero: member logos if you have permission, or headline numbers such as member companies served, articles indexed, bills tracked and datasets (use your real counts). The six section tiles are text-only; add a one-line sample of what's inside ("Latest: China destroys seized tobacco products…"). The single upcoming-event card is a thin bar; make it a wide card with the event image, dates, city and a "Get tickets" button. In "Two ways to subscribe", make the Premium card the visually heavier one (navy fill or teal top border) and add a "Talk to us" button under each card rather than only a text link. |
-| Home (logged in) | Shows the same marketing hero with "Go to your dashboard". Send logged-in readers straight to the dashboard, or replace the hero with a "Today" strip: latest Daily Executive Summary, newest bills, newest trademarks. |
+| Home (logged out) | Widen the hero so the headline sits on two lines, put an image or product screenshot on the right half (see Imagery), and add a proof strip under the hero: subscriber company logos if you have permission, or headline numbers such as subscribing companies served, articles indexed, bills tracked and datasets (use your real counts). The six section tiles are text-only; add a one-line sample of what's inside ("Latest: China destroys seized tobacco products…"). The single upcoming-event card is a thin bar; make it a wide card with the event image, dates, city and a "Get tickets" button. In "Two ways to subscribe", make the Premium card the visually heavier one (navy fill or teal top border) and add a "Talk to us" button under each card rather than only a text link. |
+| Home (logged in) | Shows the same marketing hero with "Go to your dashboard". Send logged-in users straight to the dashboard, or replace the hero with a "Today" strip: latest Daily Executive Summary, newest bills, newest trademarks. |
 | Login | Fine structurally but the card is 830px wide for two fields. Narrow it to 420px, center it, add the logo above, "Remember me", and a short line on the left or below: "Use your work email; if your company subscribes you're in automatically." The email field shows a heavy black focus ring; use the shared primary focus ring. |
 | Dashboard | Add live counts and "new since your last visit" to each tile, a "Your publications" panel with the latest issue of each one the user subscribes to, and a "Recently viewed" list. The "Plan: Premium" line can move into the avatar menu or a small line under the greeting with the company name. |
 | News | Header band, toolbar filters, rows without underlines, one-line summary under each headline, subject shown as a pill in sentence case, pagination. Show the source name ("BBC") rather than the raw domain ("www.bbc.com"). |
@@ -134,7 +134,7 @@ The site is "a white bordered box on a grey page" everywhere, and it is the repe
 | Dataset grid | See Tables and grids. Also add a chart tab above the grid for the obvious view (market share by company as bars for the selected country), and a country selector rather than a filter icon in the header. |
 | Guides | Only five guides, shown as a bare underlined list. Make them five tall cards with a cover thumbnail (the PDF's first page), the edition date, page count and a "Download PDF" button. |
 | Guide detail (US Tax Guide) | Currently just a title and a "Download PDF" link. Add the cover image, a summary paragraph, "What's inside" (the table of contents), the edition date and file size, a primary "Download PDF (1.3 MB)" button and, for the US guide, the state tax map image you already have. |
-| Publications | Group heading + list works; add the cadence as a pill ("Daily", "Weekly") instead of trailing "· daily", a "Subscribe" toggle on each row so readers don't have to go to Account, and a thumbnail of the email masthead. |
+| Publications | Group heading + list works; add the cadence as a pill ("Daily", "Weekly") instead of trailing "· daily", a "Subscribe" toggle on each row so users don't have to go to Account, and a thumbnail of the email masthead. |
 | Publication issue list | Remove "not sent" / "sent". Title rows by date only ("Monday, October 12, 2026") since the publication name is already the page heading. Group by month. |
 | Issue detail | The trademark report is a 2,900px bulleted list of underlined brand names. Render it like the email: grouped, with mark thumbnails and owner, in a table or cards. Replace "← Back" with a breadcrumb to the publication. |
 | Events | Lists past events oldest-first with the 2027 event last. Split into "Upcoming" (big cards with image, date, city, ticket button) and "Past events" (compact list, newest first, with replay links for registrants). Drop "Thank You!" as a subtitle. |
@@ -155,11 +155,11 @@ The mobile menu and card stacking work; the problems are a table that overflows 
 
 ## Copy that gives the prototype away
 
-These strings are developer or admin language that readers can see today. Each is small, but together they are a large part of the "prototype" feel. Figures and dates in the suggestions are examples; swap in the real ones.
+These strings are developer or admin language that users can see today. Each is small, but together they are a large part of the "prototype" feel. Figures and dates in the suggestions are examples; swap in the real ones.
 
 | Where | Now | Suggested |
 | --- | --- | --- |
-| Issue lists | "10/12/2026 · not sent" | "Oct 12, 2026" (hide send status from readers) |
+| Issue lists | "10/12/2026 · not sent" | "Oct 12, 2026" (hide send status from users) |
 | Trademarks intro | "Scraped weekly from the USPTO XML feed: filings, renewals, cancellations. No public preview — the whole listing requires a Base or Premium subscription." | "New tobacco and nicotine trademark filings, renewals and cancellations from the USPTO, updated every week." |
 | Data intro | "Staff-maintained reference tables." | "Market, tax and trade data, researched and updated by our analysts." |
 | Data list | "· 334 row(s)" | Coverage and freshness: "190 countries · updated Sep 2026" |

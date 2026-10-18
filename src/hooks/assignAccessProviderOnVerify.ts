@@ -3,7 +3,7 @@ import type { CollectionAfterChangeHook } from 'payload'
 import type { User } from '@/payload-types'
 
 /**
- * When a reader verifies their email, check every Access Provider's
+ * When a user verifies their email, check every Access Provider's
  * allowedDomains for their email domain or exact address, and attach the
  * first match. Runs again on every update, but bails immediately once
  * accessProvider is set, so it never overwrites a manual assignment.

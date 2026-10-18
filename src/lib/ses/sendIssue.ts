@@ -2,7 +2,7 @@ import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 import { inPayloadTransaction, transactionDb } from '@/lib/payloadTransaction'
 import { getPublicationRecipients } from '@/lib/publicationRecipients'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { getSuppressedEmails } from '@/lib/suppressionList'
 import { isEmailSafeModeEnabled } from '@/lib/emailSafeMode'
 import { newsletterLiveConfig, createLiveSesClient } from './live'
@@ -57,7 +57,7 @@ export async function queueNewsletter(
       const recipients = await getPublicationRecipients(payload, publicationId)
       if (!recipients.length)
         throw new NewsletterError(
-          'No active, verified, opted-in readers are eligible for this issue.',
+          'No active, verified, opted-in users are eligible for this issue.',
         )
       for (const recipient of recipients)
         await payload.create({
@@ -179,13 +179,13 @@ export async function runNewsletterSend(payload: Payload, issueId: number) {
           user.status !== 'active' ||
           !user._verified ||
           !optedIn ||
-          !planSatisfies(await getReaderPlan(user, payload), 'base') ||
+          !planSatisfies(await getSubscriptionPlan(user, payload), 'base') ||
           (await getSuppressedEmails(payload)).has(delivery.recipientEmail)
         ) {
           await payload.update({
             collection: 'newsletter-deliveries',
             id: delivery.id,
-            data: { status: 'skipped', lastError: 'Reader is no longer eligible or opted in.' },
+            data: { status: 'skipped', lastError: 'User is no longer eligible or opted in.' },
             overrideAccess: true,
           })
           continue

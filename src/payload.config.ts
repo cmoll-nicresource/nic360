@@ -151,7 +151,7 @@ export default buildConfig({
           Component: './components/admin/workspace/StaffTools#AccessCheckView',
           path: '/access-check',
           exact: true,
-          meta: { title: 'Reader access' },
+          meta: { title: 'User access' },
         },
         analytics: {
           Component: './components/admin/workspace/StaffTools#WorkspaceAnalyticsView',

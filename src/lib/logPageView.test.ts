@@ -19,7 +19,7 @@ describe('logPageView', () => {
     })
   })
 
-  it('records a reader visit with their id as the visitor', async () => {
+  it('records a user visit with their id as the visitor', async () => {
     const { payload, create } = fakePayload()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const user = { id: 7, collection: 'users' } as any

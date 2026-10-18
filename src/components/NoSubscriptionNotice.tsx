@@ -5,7 +5,7 @@ import React from 'react'
 import { CHANNELS } from '@/config/channels'
 import { formatDate } from '@/lib/formatDate'
 
-/** Shown to a reader whose company has no active subscription: contact-us + a promoted upcoming event. */
+/** Shown to a user whose company has no active subscription: contact-us + a promoted upcoming event. */
 export async function NoSubscriptionNotice({ payload }: { payload: Awaited<ReturnType<typeof getPayload>> }) {
   const { docs: events } = await payload.find({
     collection: 'events',
@@ -21,9 +21,8 @@ export async function NoSubscriptionNotice({ payload }: { payload: Awaited<Retur
       <div className="notice notice-info">
         <h3 style={{ marginTop: 0 }}>No active subscription yet</h3>
         <p>
-          Your account is set up, but your company doesn&apos;t have an active Nicotine360
-          subscription. Contact us to set one up — pricing is based on membership dues and scales
-          with your company.
+          Your account is set up, but you don&apos;t currently have an active Nicotine360
+          subscription through an access provider. Contact us about subscription options.
         </p>
         <p>
           <a className="btn" href="mailto:membership@nicotine360.org">

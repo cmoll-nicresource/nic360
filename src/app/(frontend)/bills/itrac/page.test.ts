@@ -6,16 +6,16 @@ import { frontendContext } from '@/lib/frontendContext'
 import StateNetITracPage from './page'
 
 afterEach(() => vi.unstubAllEnvs())
-describe('iTrac member page', () => {
+describe('iTrac subscriber page', () => {
   it('never includes the portal URL or an iframe for an ineligible visitor', async () => {
-    vi.stubEnv('STATENET_ITRAC_URL', 'https://portal.example/private-portal?key=member-only')
+    vi.stubEnv('STATENET_ITRAC_URL', 'https://portal.example/private-portal?key=subscriber-only')
     vi.mocked(frontendContext).mockResolvedValue({ canRead: false } as never)
     const html = renderToStaticMarkup(await StateNetITracPage())
     expect(html).not.toContain('private-portal')
     expect(html).not.toContain('<iframe')
     expect(html).toContain('Sign in with a Base or Premium')
   })
-  it('embeds the configured member portal with a title and new-tab fallback', async () => {
+  it('embeds the configured subscriber portal with a title and new-tab fallback', async () => {
     vi.stubEnv('STATENET_ITRAC_URL', 'https://portal.example/itrac?portal=123')
     vi.mocked(frontendContext).mockResolvedValue({ canRead: true } as never)
     const html = renderToStaticMarkup(await StateNetITracPage())

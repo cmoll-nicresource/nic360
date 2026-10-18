@@ -54,7 +54,7 @@ beforeEach(() => {
   sendBulk.mockResolvedValue({ messageCount: 1 })
   vi.mocked(queueNewsletter).mockResolvedValue({ queued: true, jobId: 3 })
   vi.mocked(getPublicationRecipients).mockResolvedValue([
-    { email: 'reader@example.invalid', userId: 8 },
+    { email: 'user@example.invalid', userId: 8 },
   ])
 })
 afterEach(() => vi.unstubAllEnvs())
@@ -71,9 +71,9 @@ it('requires publication before audience delivery, while allowing a test of a dr
   findByID.mockResolvedValue({ ...issue, _status: 'draft' })
   expect((await call({})).status).toBe(409)
   expect(queueNewsletter).not.toHaveBeenCalled()
-  expect((await call({ test: true, testEmail: 'reader@example.invalid' })).status).toBe(200)
+  expect((await call({ test: true, testEmail: 'user@example.invalid' })).status).toBe(200)
   expect(sendBulk).toHaveBeenCalledWith(
-    expect.objectContaining({ test: true, recipients: [{ email: 'reader@example.invalid' }] }),
+    expect.objectContaining({ test: true, recipients: [{ email: 'user@example.invalid' }] }),
   )
   expect(update).not.toHaveBeenCalled()
 })
@@ -92,7 +92,7 @@ it('defaults to SES and queues the snapshot instead of sending in the HTTP reque
 })
 it.each(['excerpt-list', 'pdf-report', 'custom-html'])('uses the issue title for %s test emails despite a historical override', async format => {
   findByID.mockResolvedValue({ ...issue, format, email: { ...issue.email, subject: 'Ignored historical subject' } })
-  expect((await call({ test: true, testEmail: 'reader@example.invalid' })).status).toBe(200)
+  expect((await call({ test: true, testEmail: 'user@example.invalid' })).status).toBe(200)
   expect(sendBulk).toHaveBeenCalledWith(expect.objectContaining({ subject: `[TEST] ${issue.title}` }))
 })
 it('keeps simulation visibly separate from actual delivery and leaves the issue unsent', async () => {
@@ -106,7 +106,7 @@ it('reports the actual safe destination, validates one test address, and leaves 
   expect(
     (await call({ test: true, testEmail: 'two@example.invalid,three@example.invalid' })).status,
   ).toBe(400)
-  const response = await call({ test: true, testEmail: 'reader@example.invalid' })
+  const response = await call({ test: true, testEmail: 'user@example.invalid' })
   expect(await response.json()).toMatchObject({ testEmail: 'safe@example.invalid', mode: 'live' })
   expect(update).not.toHaveBeenCalled()
 })
@@ -114,7 +114,7 @@ it('fails with an actionable configuration error before contacting SES', async (
   vi.mocked(newsletterLiveConfig).mockImplementation(() => {
     throw new Error('SES_CONFIGURATION_SET missing')
   })
-  const response = await call({ test: true, testEmail: 'reader@example.invalid' })
+  const response = await call({ test: true, testEmail: 'user@example.invalid' })
   expect(response.status).toBe(503)
   expect((await response.json()).error).toContain('SES_CONFIGURATION_SET')
   expect(sendBulk).not.toHaveBeenCalled()

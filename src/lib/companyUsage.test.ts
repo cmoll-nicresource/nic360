@@ -26,7 +26,7 @@ describe('company usage reports', () => {
       id: 1,
       email: 'a@example.invalid',
       first_name: 'A',
-      last_name: 'Reader',
+      last_name: 'User',
       status: 'active',
       views: 4,
       pages: 3,
@@ -60,7 +60,7 @@ describe('company usage reports', () => {
       }).lastView,
     ).toBeNull()
   })
-  it('denies readers, editors and anonymous callers before accessing private data', async () => {
+  it('denies users, editors and anonymous callers before accessing private data', async () => {
     const query = vi.fn(),
       payload = { db: { pool: { query } }, findByID: vi.fn() } as unknown as Payload
     for (const user of [
@@ -84,7 +84,7 @@ describe('company usage reports', () => {
       rows: [
         {
           id: 1,
-          email: 'reader@example.invalid',
+          email: 'user@example.invalid',
           status: 'suspended',
           views: 0,
           pages: 0,
@@ -117,7 +117,7 @@ describe('company usage reports', () => {
         {
           id: 1,
           name: '+Formula',
-          email: 'reader@example.invalid',
+          email: 'user@example.invalid',
           status: 'active',
           views: 0,
           pages: 0,

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-vi.mock('./requireReaderPlan', () => ({ requireReaderPlan: vi.fn() }))
-import { requireReaderPlan } from './requireReaderPlan'
+vi.mock('./requireSubscriptionPlan', () => ({ requireSubscriptionPlan: vi.fn() }))
+import { requireSubscriptionPlan } from './requireSubscriptionPlan'
 import { GET } from '@/app/api/datasets/[id]/rows/route'
 const find = vi.fn()
 const findByID = vi.fn()
@@ -13,13 +13,13 @@ const request = (page = '1') =>
   })
 describe('paginated dataset rows', () => {
   it('enforces Premium before returning data or querying a dataset', async () => {
-    vi.mocked(requireReaderPlan).mockRejectedValue(new Response('Forbidden', { status: 403 }))
+    vi.mocked(requireSubscriptionPlan).mockRejectedValue(new Response('Forbidden', { status: 403 }))
     expect((await request()).status).toBe(403)
-    expect(requireReaderPlan).toHaveBeenCalledWith('premium')
+    expect(requireSubscriptionPlan).toHaveBeenCalledWith('premium')
     expect(find).not.toHaveBeenCalled()
   })
   it('returns stable numbered pages and complete counts so viewers can pass 10,000 rows', async () => {
-    vi.mocked(requireReaderPlan).mockResolvedValue({ payload: { find, findByID } } as never)
+    vi.mocked(requireSubscriptionPlan).mockResolvedValue({ payload: { find, findByID } } as never)
     findByID.mockResolvedValue({
       id: 3,
       columns: [{ key: 'value', label: 'Value', type: 'number' }],
@@ -42,7 +42,7 @@ describe('paginated dataset rows', () => {
     )
   })
   it.each(['0', '-1', '1.5', 'NaN'])('rejects invalid page %s', async (page) => {
-    vi.mocked(requireReaderPlan).mockResolvedValue({ payload: { find, findByID } } as never)
+    vi.mocked(requireSubscriptionPlan).mockResolvedValue({ payload: { find, findByID } } as never)
     expect((await request(page)).status).toBe(400)
     expect(findByID).not.toHaveBeenCalled()
   })

@@ -460,7 +460,7 @@ nav.topnav .nav-right .btn {
   margin: 22px 0;
   line-height: 1.9;
 }
-/* Member briefing and date-grouped news. */
+/* Subscriber briefing and date-grouped news. */
 .edition-welcome {
   display: flex;
   justify-content: space-between;
@@ -477,14 +477,14 @@ nav.topnav .nav-right .btn {
   margin: 0;
   font-size: 14px;
 }
-.edition-membership {
+.edition-subscription {
   color: var(--nrc-primary);
   font-size: 12px;
   font-weight: 600;
   text-align: right;
   white-space: nowrap;
 }
-.edition-membership span {
+.edition-subscription span {
   display: block;
   color: var(--nrc-muted);
   font-weight: 400;
@@ -643,13 +643,13 @@ nav.topnav .nav-right .btn {
   margin: 24px 0 0;
   color: var(--nrc-primary);
 }
-.edition-member-note {
+.edition-subscription-note {
   background: #e8eff5;
   padding: 24px;
   margin-top: 26px;
   font-size: 14px;
 }
-.edition-member-note p {
+.edition-subscription-note p {
   color: var(--nrc-muted);
 }
 .edition-update {
@@ -1795,7 +1795,7 @@ nav.topnav .nav-right .btn {
     flex-direction: column;
     gap: 16px;
   }
-  .edition-membership {
+  .edition-subscription {
     text-align: left;
   }
   .edition-shortcuts {

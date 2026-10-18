@@ -62,5 +62,5 @@ export function workspaceRole(user: PayloadRequest['user']) {
 }
 export const canSeeEditorialWorkspace = (user: PayloadRequest['user']) =>
   workspaceRole(user) === 'editor' || staffHasRole(user, 'admin')
-export const canSeeMemberWorkspace = (user: PayloadRequest['user']) =>
+export const canSeeUserWorkspace = (user: PayloadRequest['user']) =>
   staffHasRole(user, 'gatekeeper')

@@ -1,12 +1,12 @@
 import type { Payload } from 'payload'
 
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { getSuppressedEmails } from '@/lib/suppressionList'
 import type { SesRecipient } from '@/lib/ses'
 
 /**
  * Computes who should receive a publication *right now*, straight from our
- * own data — no persisted, synced audience state to keep correct. Readers
+ * own data — no persisted, synced audience state to keep correct. Users
  * who opted in (`emailPublications`), are still plan-eligible, and aren't
  * suppressed (bounced/complained/unsubscribed).
  */
@@ -38,7 +38,7 @@ export async function getPublicationRecipients(
     for (const user of users) {
       const email = user.email.trim().toLowerCase()
       if (suppressed.has(email) || seen.has(email)) continue
-      const plan = await getReaderPlan(user, payload)
+      const plan = await getSubscriptionPlan(user, payload)
       if (!planSatisfies(plan, 'base')) continue
       seen.add(email)
       recipients.push({ email, userId: user.id })

@@ -8,7 +8,7 @@ import { EditorialPhoto } from '@/components/frontend/EditorialPhoto'
 import { LegislationNav } from '@/components/frontend/LegislationNav'
 
 import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { ExcerptFilterBar } from '@/components/ExcerptFilterBar'
 import {
   excerptFiltersToQueryString,
@@ -46,7 +46,7 @@ export default async function BillsPage({
   const isStaff = !!user && 'collection' in user && user.collection === 'staff'
   const plan =
     user && 'collection' in user && user.collection === 'users'
-      ? await getReaderPlan(user, payload)
+      ? await getSubscriptionPlan(user, payload)
       : 'none'
   const canReadFull = isStaff || planSatisfies(plan, 'base')
 

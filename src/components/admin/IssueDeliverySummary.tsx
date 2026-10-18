@@ -26,7 +26,7 @@ export function IssueDeliverySummary() {
           <dt>{label}</dt><dd>{new Intl.NumberFormat('en-US').format(value)}</dd>
         </div>
       })}</dl>
-      <p className="nic-issue-delivery__note">Counts are reported email events; opens and clicks are not unique readers. Historical imported figures are retained. Reload to refresh.</p>
+      <p className="nic-issue-delivery__note">Counts are reported email events; opens and clicks are not unique users. Historical imported figures are retained. Reload to refresh.</p>
     </>}
     {user?.collection === 'staff' && (user.role === 'gatekeeper' || user.role === 'admin') && <Link href="/admin/analytics">View publication analytics</Link>}
   </section>

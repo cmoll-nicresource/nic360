@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 
 import { buildCountryNameLookup, resolveCountryColumns } from '@/lib/countryLookup'
-import { requireReaderPlan } from '@/lib/requireReaderPlan'
+import { requireSubscriptionPlan } from '@/lib/requireSubscriptionPlan'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const { payload } = await requireReaderPlan('premium')
+    const { payload } = await requireSubscriptionPlan('premium')
     const rawPage = Number(new URL(request.url).searchParams.get('page') || 1)
     if (!Number.isSafeInteger(rawPage) || rawPage < 1)
       return NextResponse.json({ error: 'Invalid page.' }, { status: 400 })

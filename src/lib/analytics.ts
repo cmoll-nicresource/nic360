@@ -92,7 +92,7 @@ function toHistoryEntry(v: PageView): HistoryEntry {
   return { id: v.id, path: v.path, createdAt: v.createdAt, visitor }
 }
 
-/** One reader's full page-view history, most recent first. */
+/** One user's full page-view history, most recent first. */
 export async function getUserHistory(payload: Payload, userId: number): Promise<HistoryEntry[]> {
   const { docs } = await payload.find({
     collection: 'page-views',

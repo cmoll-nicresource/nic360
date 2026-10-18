@@ -18,16 +18,16 @@ beforeEach(() => {
   vi.mocked(getPayload).mockResolvedValue({ findByID } as unknown as Awaited<
     ReturnType<typeof getPayload>
   >)
-  findByID.mockResolvedValue({ id: 8, email: 'reader@example.invalid' })
+  findByID.mockResolvedValue({ id: 8, email: 'user@example.invalid' })
 })
 afterEach(() => vi.unstubAllEnvs())
 const url = (test = false) =>
-  `https://beta.example.invalid/api/newsletters/unsubscribe?token=${unsubscribeToken(8, 'reader@example.invalid', test)}`
+  `https://beta.example.invalid/api/newsletters/unsubscribe?token=${unsubscribeToken(8, 'user@example.invalid', test)}`
 it('authenticates the address, user ID and test scope; rejects altered and oversized tokens', () => {
-  const token = unsubscribeToken(8, 'Reader@Example.invalid')
+  const token = unsubscribeToken(8, 'User@Example.invalid')
   expect(readUnsubscribeToken(token)).toEqual({
     userId: 8,
-    email: 'reader@example.invalid',
+    email: 'user@example.invalid',
     test: false,
   })
   expect(readUnsubscribeToken('x' + token)).toBeNull()
@@ -46,13 +46,13 @@ it('accepts RFC8058 one-click POST without login and uses the transactional flag
   ).toBe(200)
   expect(flagUserByEmail).toHaveBeenCalledWith(
     expect.anything(),
-    'reader@example.invalid',
+    'user@example.invalid',
     'unsubscribed',
     expect.any(String),
     expect.objectContaining({ transactionID: 'fixture' }),
   )
 })
-it('test links do not change a real reader’s preferences', async () => {
+it('test links do not change a real user’s preferences', async () => {
   expect((await POST(new Request(url(true), { method: 'POST', body: 'confirm=yes' }))).status).toBe(
     200,
   )

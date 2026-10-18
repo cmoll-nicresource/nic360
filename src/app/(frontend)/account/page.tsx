@@ -4,7 +4,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import config from '@/payload.config'
-import { getReaderPlan, planSatisfies, type ReaderPlan } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies, type SubscriptionPlan } from '@/access/subscriptionPlan'
 import { EditProfileForm } from '@/components/EditProfileForm'
 import { sentenceCase } from '@/lib/textCase'
 import { PublicationPreferencesForm } from '@/components/PublicationPreferencesForm'
@@ -12,9 +12,9 @@ import { SiteNav } from '@/components/SiteNav'
 import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
 
-const PLAN_LABEL: Record<ReaderPlan, string> = { none: 'No subscription', base: 'Base', premium: 'Premium' }
+const PLAN_LABEL: Record<SubscriptionPlan, string> = { none: 'No subscription', base: 'Base', premium: 'Premium' }
 
-function PlanBadge({ plan }: { plan: ReaderPlan }) {
+function PlanBadge({ plan }: { plan: SubscriptionPlan }) {
   return <span className={`badge badge-${plan}`}>{PLAN_LABEL[plan]}</span>
 }
 
@@ -33,7 +33,7 @@ export default async function AccountPage() {
         <div className="page">
           <h1>Account</h1>
           <p>
-            You need to be signed in as a reader to see your account. <Link href="/login">Sign in</Link>, or
+            You need to be signed in as a user to see your account. <Link href="/login">Sign in</Link>, or
             staff log in at <Link href={payloadConfig.routes.admin}>/admin</Link> instead.
           </p>
         </div>
@@ -47,7 +47,7 @@ export default async function AccountPage() {
     depth: 1,
   })
 
-  const plan = await getReaderPlan(fullUser, payload)
+  const plan = await getSubscriptionPlan(fullUser, payload)
   const provider =
     fullUser.accessProvider && typeof fullUser.accessProvider === 'object'
       ? fullUser.accessProvider
@@ -86,7 +86,7 @@ export default async function AccountPage() {
         </p>
         <p className="muted">
           {provider
-            ? `Provided by ${provider.name} · ${PLAN_LABEL[provider.plan as ReaderPlan] ?? provider.plan}`
+            ? `Provided by ${provider.name} · ${PLAN_LABEL[provider.plan as SubscriptionPlan] ?? provider.plan}`
             : 'No access provider on file — you can only read events you have registered for.'}
         </p>
       </div>

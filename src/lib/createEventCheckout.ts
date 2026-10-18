@@ -1,7 +1,7 @@
 import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import {
   allocateTicketCents,
   findTicketType,
@@ -103,7 +103,7 @@ export async function createEventCheckout(
       if (used.totalDocs + body.attendees.length > ticket.capacity)
         throw new CheckoutError('Not enough tickets remaining for that ticket type.')
     }
-    const subscriber = planSatisfies(await getReaderPlan(user, payload), 'base')
+    const subscriber = planSatisfies(await getSubscriptionPlan(user, payload), 'base')
     const unitPrice = ticketUnitPrice(ticket, body.attendance, subscriber)
     if (unitPrice == null || !Number.isFinite(unitPrice) || unitPrice < 0)
       throw new CheckoutError('That attendance option is unavailable.')

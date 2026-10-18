@@ -34,7 +34,7 @@ const input = {
   issueId: 3,
   subject: 'Fixture',
   html: '<html><body>Publication body</body></html>',
-  recipients: [{ email: 'reader@example.invalid', userId: 8 }],
+  recipients: [{ email: 'user@example.invalid', userId: 8 }],
 }
 it('blocks live audience delivery in safe mode before contacting SES', async () => {
   await expect(createLiveSesClient().sendBulk(input)).rejects.toThrow('EMAIL_SAFE_MODE')
@@ -68,7 +68,7 @@ it('sends privately to one envelope recipient per call and journals every accept
     onAccepted: accepted,
   })
   expect(send.mock.calls.map((c) => c[0].input.Destinations)).toEqual([
-    ['reader@example.invalid'],
+    ['user@example.invalid'],
     ['second@example.invalid'],
   ])
   expect(accepted).toHaveBeenCalledTimes(2)

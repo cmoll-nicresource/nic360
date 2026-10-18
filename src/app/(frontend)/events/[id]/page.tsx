@@ -22,8 +22,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   })
   const event = docs[0]
   if (!event) notFound()
-  const isReader = user?.collection === 'users'
-  const registered = isReader && (await hasActiveRegistration(payload, user, event.id))
+  const isUser = user?.collection === 'users'
+  const registered = isUser && (await hasActiveRegistration(payload, user, event.id))
   const { docs: sessions } = await payload.find({
     collection: 'sessions',
     where: { and: [{ event: { equals: event.id } }, { _status: { equals: 'published' } }] },
@@ -234,7 +234,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   ? 'Sign in with your registered attendee account to access available session replays.'
                   : 'Registration for this event has closed.'}
               </p>
-            ) : onSale && isReader ? (
+            ) : onSale && isUser ? (
               <EventCheckoutForm
                 eventId={String(event.id)}
                 ticketTypes={event.ticketTypes ?? []}

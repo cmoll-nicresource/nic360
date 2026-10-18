@@ -1,7 +1,7 @@
 /**
  * Buckets a visited path into a site section for the analytics dashboard —
  * mirrors the main nav's groupings (src/components/SiteNav.tsx) so "section"
- * in the reports means the same thing a reader would recognize from the nav.
+ * in the reports means the same thing a user would recognize from the nav.
  * Not stored on PageView; computed on read, so reclassifying a path here
  * applies retroactively to history already logged.
  */

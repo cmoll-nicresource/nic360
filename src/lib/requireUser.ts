@@ -4,8 +4,8 @@ import { getPayload, type Payload } from 'payload'
 import config from '@/payload.config'
 import type { User } from '@/payload-types'
 
-/** For API routes that readers (not staff) call, e.g. buying event tickets. */
-export async function requireReader(): Promise<{ payload: Payload; user: User }> {
+/** For API routes that users (not staff) call, e.g. buying event tickets. */
+export async function requireUser(): Promise<{ payload: Payload; user: User }> {
   const headers = await getHeaders()
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })

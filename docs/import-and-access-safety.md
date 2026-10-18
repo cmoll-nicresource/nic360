@@ -2,7 +2,7 @@
 
 ## Dataset replacement
 
-`src/lib/writeDatasetRows.ts` is the shared trusted import writer for CSV uploads and annual trade refreshes. It locks the parent dataset, computes trade aggregates on that same connection, deletes only the requested scope, inserts in batches of 1,000, and updates import metadata in one Postgres transaction. The total row count is computed from all rows in the database. There is no 20,000-row read cap. Another importer for the same dataset waits for the lock; ordinary readers see the old complete version until commit. An insert or metadata failure rolls everything back. Trade refreshes with no source facts preserve the existing dataset.
+`src/lib/writeDatasetRows.ts` is the shared trusted import writer for CSV uploads and annual trade refreshes. It locks the parent dataset, computes trade aggregates on that same connection, deletes only the requested scope, inserts in batches of 1,000, and updates import metadata in one Postgres transaction. The total row count is computed from all rows in the database. There is no 20,000-row read cap. Another importer for the same dataset waits for the lock; ordinary users see the old complete version until commit. An insert or metadata failure rolls everything back. Trade refreshes with no source facts preserve the existing dataset.
 
 This writer intentionally bypasses row-level Payload hooks; dataset rows have no custom hooks or versions. Staff authorization remains in the import endpoints. Census fact-file commits and PDF generation remain separate stages: this transaction protects each dataset replacement, not the entire Census-to-PDF workflow.
 
@@ -10,7 +10,7 @@ Run `DATASET_INTEGRATION=1 pnpm exec vitest run src/lib/writeDatasetRows.integra
 
 ## Protected PDFs
 
-File reads now inherit permissions from a **published** parent. Staff can review draft/unlinked files. Base readers can read published Base-accessible guides and publication issues; Premium readers can also read Premium guides. Draft-only and unlinked uploads are denied to readers. All parent pages are checked without a fixed result cap. Publication and legacy guide download URLs use the same handler and access checks.
+File reads now inherit permissions from a **published** parent. Staff can review draft/unlinked files. Base users can read published Base-accessible guides and publication issues; Premium users can also read Premium guides. Draft-only and unlinked uploads are denied to users. All parent pages are checked without a fixed result cap. Publication and legacy guide download URLs use the same handler and access checks.
 
 ## Webhooks
 

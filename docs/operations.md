@@ -1,6 +1,6 @@
 # Operational alerts
 
-The persistent Payload app checks operations every five minutes using the `operations` queue. Staff can open **Operational alerts** from the admin workspace or System collections. Reader accounts cannot read or mutate alert records. Alerts and notifications never use the subscriber audience.
+The persistent Payload app checks operations every five minutes using the `operations` queue. Staff can open **Operational alerts** from the admin workspace or System collections. User accounts cannot read or mutate alert records. Alerts and notifications never use the subscriber audience.
 
 ## Checks
 

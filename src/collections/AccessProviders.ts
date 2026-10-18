@@ -13,7 +13,7 @@ export const AccessProviders: CollectionConfig = {
     group: ADMIN_GROUPS.accounts,
     useAsTitle: 'name',
     defaultColumns: ['name', 'plan', 'status', 'licenseExpiresAt'],
-    description: "The employer organizations whose subscriptions members inherit.",
+    description: "Organizations through which users receive subscription access.",
   },
   access: {
     read: staffHasMinRole('editor'),
@@ -68,7 +68,7 @@ export const AccessProviders: CollectionConfig = {
       type: 'array',
       admin: {
         description:
-          'Email domains (itc.in) or exact addresses. A reader who verifies a matching email is attached to this provider automatically.',
+          'Email domains (itc.in) or exact addresses. A user who verifies a matching email is attached to this provider automatically.',
       },
       fields: [
         {

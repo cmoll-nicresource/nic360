@@ -31,7 +31,7 @@ export const EmailFlags: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       admin: {
-        description: 'Required for new flags. Cleared automatically if the reader is deleted.',
+        description: 'Required for new flags. Cleared automatically if the user is deleted.',
       },
     },
     {

@@ -23,7 +23,7 @@ function idOf(ref: unknown): number | undefined {
   return undefined
 }
 
-/** True if `user` (a reader) has an active ticket for `eventId`. Used both as a field-access check and directly by event detail pages. */
+/** Active, paid registration for this specific event, independent of subscription plan. Used by field access and event detail pages. */
 export async function hasActiveRegistration(
   payload: Payload,
   user: PayloadRequest['user'],

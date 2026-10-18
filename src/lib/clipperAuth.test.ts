@@ -32,7 +32,7 @@ it('stores only hashed opaque tokens and spends the locked single-use code', asy
 })
 it.each([
   { challenge: pkceChallenge('wrong'.repeat(10)) }, { credential_version: 'old-password' },
-  { role: 'reader' }, { lock_until: '2999-01-01' }, { redirect_uri: 'https://evil.example' },
+  { role: 'user' }, { lock_until: '2999-01-01' }, { redirect_uri: 'https://evil.example' },
 ])('rejects mismatched or invalidated codes without spending them: %j', async changes => {
   m.query.mockResolvedValue({ rows: [{ ...staff, ...changes }] })
   expect(await exchangeClipperCode(payload, input)).toBeNull()

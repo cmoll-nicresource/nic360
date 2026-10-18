@@ -49,7 +49,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
           <GuideCover guide={guide} />
           <div>
             <p className="edition-eyebrow">
-              NICOTINE360 / {guide.requiresPremium ? 'PREMIUM REFERENCE' : 'MEMBER REFERENCE'}
+              NICOTINE360 / {guide.requiresPremium ? 'PREMIUM REFERENCE' : 'SUBSCRIBER REFERENCE'}
             </p>
             <h1>{guide.title}</h1>
             <p className="edition-deck">{guide.description}</p>

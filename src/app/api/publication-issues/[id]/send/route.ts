@@ -35,7 +35,7 @@ type SendArgs = {
   recover?: boolean
 }
 
-/** Counts this send as one "impression" per ad placed — not reader-level opens; see PublicationAd.stats' description. Skipped for test sends. */
+/** Counts this send as one "impression" per ad placed — not user-level opens; see PublicationAd.stats' description. Skipped for test sends. */
 async function recordAdImpressions(payload: Payload, ads: PublicationAd[], isTest: boolean) {
   if (isTest) return
   await Promise.all(ads.map((ad) => incrementAdImpressions(payload, ad.id)))
@@ -59,7 +59,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!issue) return NextResponse.json({ error: 'Issue not found.' }, { status: 404 })
     if (!isTest && issue._status !== 'published')
       return NextResponse.json(
-        { error: 'Publish this issue before sending it to readers.' },
+        { error: 'Publish this issue before sending it to users.' },
         { status: 409 },
       )
 

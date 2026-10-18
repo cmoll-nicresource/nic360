@@ -8,7 +8,7 @@ import { MIN_USER_SEARCH_LENGTH } from '@/lib/userSearch'
 
 const DEBOUNCE_MS = 300
 
-/** Search-as-you-type reader picker for the Analytics "By user" tab — a plain dropdown doesn't work at 1000+ users. */
+/** Search-as-you-type user picker for the Analytics "By user" tab — a plain dropdown doesn't work at 1000+ users. */
 export function UserSearchPicker({ initialLabel }: { initialLabel?: string }) {
   const [query, setQuery] = useState(initialLabel ?? '')
   const [results, setResults] = useState<SimpleVisitor[]>([])
@@ -52,7 +52,7 @@ export function UserSearchPicker({ initialLabel }: { initialLabel?: string }) {
           setQuery(e.target.value)
           setDismissed(false)
         }}
-        placeholder={`Search readers by name or email (${MIN_USER_SEARCH_LENGTH}+ letters)…`}
+        placeholder={`Search users by name or email (${MIN_USER_SEARCH_LENGTH}+ letters)…`}
         className="nic-analytics__user-search-input"
       />
 

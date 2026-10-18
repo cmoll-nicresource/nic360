@@ -3,12 +3,12 @@ import { NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 
 import { buildCountryNameLookup, resolveCountryColumns } from '@/lib/countryLookup'
-import { requireReaderPlan } from '@/lib/requireReaderPlan'
+import { requireSubscriptionPlan } from '@/lib/requireSubscriptionPlan'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const { payload } = await requireReaderPlan('premium')
+    const { payload } = await requireSubscriptionPlan('premium')
     const format = new URL(request.url).searchParams.get('format') === 'xlsx' ? 'xlsx' : 'csv'
 
     const dataset = await payload

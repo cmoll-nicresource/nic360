@@ -50,7 +50,7 @@ export function SendIssueButtons() {
             ? 'Test recorded in SES outbox; no email was sent.'
             : `SES accepted the test for ${data.testEmail || testEmail}.`
           : data.mode === 'simulated'
-            ? `Preview recorded in SES outbox for ${data.recipientCount ?? 0} eligible readers. No emails sent; issue remains unsent.`
+            ? `Preview recorded in SES outbox for ${data.recipientCount ?? 0} eligible users. No emails sent; issue remains unsent.`
             : data.queued
               ? 'Delivery queued. Watch the issue status and Newsletter deliveries log. Reloading…'
               : `Send completed for ${data.recipientCount ?? 0} recipients. Reloading…`,

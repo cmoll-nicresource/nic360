@@ -13,7 +13,7 @@ function mail(
     timestamp: '2026-10-11T12:00:00.000Z',
     messageId: 'msg-1',
     source: 'news@nicotine360.org',
-    destination: ['reader@example.com'],
+    destination: ['user@example.com'],
     tags: { issueId: ['42'] },
     ...overrides,
   }
@@ -24,12 +24,12 @@ describe('parseSesEvent', () => {
     const event = parseSesEvent({
       eventType: 'Delivery',
       mail: mail(),
-      delivery: { timestamp: '2026-10-11T12:00:01.000Z', recipients: ['reader@example.com'] },
+      delivery: { timestamp: '2026-10-11T12:00:01.000Z', recipients: ['user@example.com'] },
     })
     expect(event).toEqual({
       type: 'Delivery',
       messageId: 'msg-1',
-      emails: ['reader@example.com'],
+      emails: ['user@example.com'],
       issueId: 42,
       occurredAt: '2026-10-11T12:00:01.000Z',
       bounceType: undefined,
@@ -47,7 +47,7 @@ describe('parseSesEvent', () => {
       },
     })
     expect(event?.type).toBe('Open')
-    expect(event?.emails).toEqual(['reader@example.com'])
+    expect(event?.emails).toEqual(['user@example.com'])
     expect(event?.issueId).toBe(42)
   })
 
@@ -58,7 +58,7 @@ describe('parseSesEvent', () => {
       click: { timestamp: '2026-10-11T12:06:00.000Z', link: 'https://nicotine360.org/articles/1' },
     })
     expect(event?.type).toBe('Click')
-    expect(event?.emails).toEqual(['reader@example.com'])
+    expect(event?.emails).toEqual(['user@example.com'])
   })
 
   it('parses a Bounce event, using bounce.bouncedRecipients (can differ from mail.destination)', () => {
@@ -88,12 +88,12 @@ describe('parseSesEvent', () => {
       mail: mail(),
       complaint: {
         timestamp: '2026-10-11T12:00:03.000Z',
-        complainedRecipients: [{ emailAddress: 'reader@example.com' }],
+        complainedRecipients: [{ emailAddress: 'user@example.com' }],
         complaintFeedbackType: 'abuse',
       },
     })
     expect(event?.type).toBe('Complaint')
-    expect(event?.emails).toEqual(['reader@example.com'])
+    expect(event?.emails).toEqual(['user@example.com'])
   })
 
   it('returns null for an unrecognized eventType', () => {
@@ -120,7 +120,7 @@ describe('parseSesEvent', () => {
     const event = parseSesEvent({
       eventType: 'Delivery',
       mail: mail({ tags: {} }),
-      delivery: { recipients: ['reader@example.com'] },
+      delivery: { recipients: ['user@example.com'] },
     })
     expect(event?.issueId).toBeUndefined()
   })

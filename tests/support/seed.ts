@@ -159,10 +159,10 @@ providers.expired = (
     licenseExpiresAt: '2000-01-01',
   })
 ).id
-const readers: Record<string, { id: number; email: string }> = {}
+const users: Record<string, { id: number; email: string }> = {}
 for (const kind of ['none', 'base', 'premium', 'suspended', 'unverified', 'expired']) {
   const doc = await add('users', {
-    email: kind + '@reader.example.invalid',
+    email: kind + '@user.example.invalid',
     password,
     firstName: 'Fixture',
     lastName: kind,
@@ -171,7 +171,7 @@ for (const kind of ['none', 'base', 'premium', 'suspended', 'unverified', 'expir
     accessProvider: providers[kind] ?? providers.premium,
     signup: { completedAt: new Date().toISOString() },
   })
-  readers[kind] = { id: doc.id, email: doc.email }
+  users[kind] = { id: doc.id, email: doc.email }
 }
 const pdf = await readFile('src/lib/ttb/fixtures/cbp-2026-10-13.pdf')
 const files: Record<string, { id: number; filename: string }> = {}
@@ -226,13 +226,13 @@ await volume.query(`INSERT INTO dataset_rows (dataset_id, values)
   FROM generate_series(20, 5019) n`, [refs.dataset])
 await volume.query(`INSERT INTO page_views (visitor_id, path, created_at, updated_at)
   SELECT $1, '/articles/fixture-us', timestamp '2090-10-15 12:00:00', timestamp '2090-10-15 12:00:00'
-  FROM generate_series(1, 15000)`, [readers.premium.id])
+  FROM generate_series(1, 15000)`, [users.premium.id])
 await volume.end()
 await mkdir('.test-artifacts', { recursive: true })
 await writeFile(
   '.test-artifacts/fixtures.json',
   JSON.stringify(
-    { password, staff, readers, providers, refs, articles, publications, files, records },
+    { password, staff, users, providers, refs, articles, publications, files, records },
     null,
     2,
   ),

@@ -526,7 +526,7 @@ nav.topnav .nav-links a:hover::before {
   color: var(--nrc-primary);
 }
 
-/* Logged-in reader's account menu trigger: initials in a circle, in place
+/* Logged-in user's account menu trigger: initials in a circle, in place
    of three separate "Dashboard · Account · Log out" links. */
 .nav-avatar {
   display: flex;

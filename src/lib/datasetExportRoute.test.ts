@@ -1,8 +1,8 @@
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-vi.mock('./requireReaderPlan', () => ({ requireReaderPlan: vi.fn() }))
-import { requireReaderPlan } from './requireReaderPlan'
+vi.mock('./requireSubscriptionPlan', () => ({ requireSubscriptionPlan: vi.fn() }))
+import { requireSubscriptionPlan } from './requireSubscriptionPlan'
 import { GET } from '@/app/api/datasets/[id]/export/route'
 const find = vi.fn()
 const findByID = vi.fn()
@@ -13,7 +13,7 @@ describe('complete dataset downloads', () => {
   it.each(['csv', 'xlsx'])(
     'exports all pages as %s, preserving zero and country labels',
     async (format) => {
-      vi.mocked(requireReaderPlan).mockResolvedValue({ payload: { find, findByID } } as never)
+      vi.mocked(requireSubscriptionPlan).mockResolvedValue({ payload: { find, findByID } } as never)
       findByID.mockResolvedValue({
         id: 3,
         slug: 'qa',
@@ -54,7 +54,7 @@ describe('complete dataset downloads', () => {
       expect(find).toHaveBeenCalledWith(
         expect.objectContaining({ collection: 'dataset-rows', page: 2, sort: 'id' }),
       )
-      expect(requireReaderPlan).toHaveBeenCalledWith('premium')
+      expect(requireSubscriptionPlan).toHaveBeenCalledWith('premium')
     },
   )
 })

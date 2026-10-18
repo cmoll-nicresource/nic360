@@ -103,8 +103,8 @@ export default async function DashboardPage() {
             <h1>Good to see you, {user.firstName}.</h1>
             <p>The latest reporting, policy developments, and intelligence in one place.</p>
           </div>
-          <Link href="/account" className="edition-membership">
-            {plan === 'premium' ? 'Premium' : 'Base'} member <span>Manage your preferences ↗</span>
+          <Link href="/account" className="edition-subscription">
+            {plan === 'premium' ? 'Premium' : 'Base'} subscriber <span>Manage your preferences ↗</span>
           </Link>
         </header>
         <nav className="edition-shortcuts" aria-label="Explore intelligence">

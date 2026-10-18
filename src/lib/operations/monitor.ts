@@ -194,7 +194,7 @@ const escape = (text: string) =>
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
   )
 
-/** Durable deduplication under one cross-instance lock. Alert email never uses the reader audience. */
+/** Durable deduplication under one cross-instance lock. Alert email never uses the user audience. */
 export async function runOperationalMonitor(payload: Payload, now = new Date()) {
   if (process.env.OPERATIONS_MONITOR_ENABLED !== 'true') return { skipped: true }
   const since = new Date(process.env.OPERATIONS_MONITOR_SINCE || '')

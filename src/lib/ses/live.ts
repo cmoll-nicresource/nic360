@@ -56,7 +56,7 @@ export function createLiveSesClient(): SesClient {
           if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(recipient.email))
             throw new Error('Invalid recipient address')
           if (!input.test && (!recipient.userId || !Number.isSafeInteger(recipient.userId)))
-            throw new Error('Audience recipients require a reader account for unsubscribe links')
+            throw new Error('Audience recipients require a user account for unsubscribe links')
           const destination = isEmailSafeModeEnabled()
             ? emailSafeModeRedirectAddress()
             : recipient.email

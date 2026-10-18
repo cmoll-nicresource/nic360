@@ -15,7 +15,7 @@ import { Countries } from '@/collections/Countries'
 import { staffCanWrite } from '@/access/excerptAccess'
 const user = (role: string) => ({ id: 7, role, collection: 'staff' }) as PayloadRequest['user']
 describe('role-specific admin presentation and management', () => {
-  it('hides editorial collections for gatekeepers while keeping member operations visible and permissions intact', () => {
+  it('hides editorial collections for gatekeepers while keeping user operations visible and permissions intact', () => {
     for (const slug of [
       'articles',
       'bills',

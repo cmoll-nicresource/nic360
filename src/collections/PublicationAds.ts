@@ -25,7 +25,7 @@ export const PublicationAds: CollectionConfig = {
       name: 'advertiser',
       type: 'text',
       required: true,
-      admin: { description: "Internal label (the sponsor's name) — not shown to readers." },
+      admin: { description: "Internal label (the sponsor's name) — not shown to users." },
     },
     { name: 'publication', type: 'relationship', relationTo: 'publications', required: true },
     {
@@ -74,7 +74,7 @@ export const PublicationAds: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description:
-          'Filled in automatically. "Impressions" counts issue sends this ad was placed in (not reader-level opens — Mailchimp doesn\'t give us per-recipient delivery counts the way SES does).',
+          'Filled in automatically. "Impressions" counts issue sends this ad was placed in (not user-level opens — Mailchimp doesn\'t give us per-recipient delivery counts the way SES does).',
       },
       fields: [
         { name: 'impressions', type: 'number', defaultValue: 0, admin: { readOnly: true } },

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { Payload } from 'payload'
 
-import { getReaderPlan, planSatisfies } from './readerPlan'
+import { getSubscriptionPlan, planSatisfies } from './subscriptionPlan'
 import type { AccessProvider, User } from '@/payload-types'
 
 function provider(overrides: Partial<AccessProvider>): AccessProvider {
@@ -38,11 +38,11 @@ describe('planSatisfies', () => {
   })
 })
 
-describe('getReaderPlan', () => {
+describe('getSubscriptionPlan', () => {
   it('denies suspended and unverified accounts regardless of provider tier', async () => {
     for (const override of [{ status: 'suspended' as const }, { _verified: false }])
       expect(
-        await getReaderPlan(
+        await getSubscriptionPlan(
           { accessProvider: provider({ status: 'live', plan: 'premium' }), ...override },
           {} as Payload,
         ),
@@ -50,7 +50,7 @@ describe('getReaderPlan', () => {
   })
   it('is none for a user with no access provider', async () => {
     const user = { accessProvider: undefined } as Pick<User, 'accessProvider'>
-    const plan = await getReaderPlan(user, {} as Payload)
+    const plan = await getSubscriptionPlan(user, {} as Payload)
     expect(plan).toBe('none')
   })
 
@@ -62,21 +62,21 @@ describe('getReaderPlan', () => {
         licenseExpiresAt: oneYearFromNow,
       }),
     }
-    expect(await getReaderPlan(user, {} as Payload)).toBe('premium')
+    expect(await getSubscriptionPlan(user, {} as Payload)).toBe('premium')
   })
 
   it('is base for a live, unexpired base provider', async () => {
     const user = {
       accessProvider: provider({ status: 'live', plan: 'base', licenseExpiresAt: oneYearFromNow }),
     }
-    expect(await getReaderPlan(user, {} as Payload)).toBe('base')
+    expect(await getSubscriptionPlan(user, {} as Payload)).toBe('base')
   })
 
   it('is base for a trial provider (trial counts the same as live)', async () => {
     const user = {
       accessProvider: provider({ status: 'trial', plan: 'base', licenseExpiresAt: oneYearFromNow }),
     }
-    expect(await getReaderPlan(user, {} as Payload)).toBe('base')
+    expect(await getSubscriptionPlan(user, {} as Payload)).toBe('base')
   })
 
   it('is none for a pending provider, whatever its plan says', async () => {
@@ -87,28 +87,28 @@ describe('getReaderPlan', () => {
         licenseExpiresAt: oneYearFromNow,
       }),
     }
-    expect(await getReaderPlan(user, {} as Payload)).toBe('none')
+    expect(await getSubscriptionPlan(user, {} as Payload)).toBe('none')
   })
 
   it('is none for a provider with no license expiry set but plan none', async () => {
     const user = {
       accessProvider: provider({ status: 'live', plan: 'none', licenseExpiresAt: oneYearFromNow }),
     }
-    expect(await getReaderPlan(user, {} as Payload)).toBe('none')
+    expect(await getSubscriptionPlan(user, {} as Payload)).toBe('none')
   })
 
   it('is none for an expired license, even if status is live and plan is premium', async () => {
     const user = {
       accessProvider: provider({ status: 'live', plan: 'premium', licenseExpiresAt: oneYearAgo }),
     }
-    expect(await getReaderPlan(user, {} as Payload)).toBe('none')
+    expect(await getSubscriptionPlan(user, {} as Payload)).toBe('none')
   })
 
   it('treats a blank license expiry as not expired', async () => {
     const user = {
       accessProvider: provider({ status: 'live', plan: 'premium', licenseExpiresAt: undefined }),
     }
-    expect(await getReaderPlan(user, {} as Payload)).toBe('premium')
+    expect(await getSubscriptionPlan(user, {} as Payload)).toBe('premium')
   })
 
   it('looks the provider up by id when accessProvider is not already populated', async () => {
@@ -119,7 +119,7 @@ describe('getReaderPlan', () => {
           ? provider({ id: 42, status: 'live', plan: 'base', licenseExpiresAt: oneYearFromNow })
           : null,
     } as unknown as Payload
-    expect(await getReaderPlan(user, fakePayload)).toBe('base')
+    expect(await getSubscriptionPlan(user, fakePayload)).toBe('base')
   })
 
   it('is none when the looked-up provider cannot be found', async () => {
@@ -129,6 +129,6 @@ describe('getReaderPlan', () => {
         throw new Error('not found')
       },
     } as unknown as Payload
-    expect(await getReaderPlan(user, fakePayload)).toBe('none')
+    expect(await getSubscriptionPlan(user, fakePayload)).toBe('none')
   })
 })

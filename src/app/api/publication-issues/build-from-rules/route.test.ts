@@ -23,7 +23,7 @@ it.each([{ format: 'pdf-report' }, { publication: null }, { publication: 'invali
   expect((await POST(request(extra ? { ...input, ...extra } : null))).status).toBe(400)
   expect(m.build).not.toHaveBeenCalled()
 })
-it('does not build for readers or anonymous requests', async () => {
+it('does not build for users or anonymous requests', async () => {
   m.requireStaff.mockRejectedValue(new Response('Forbidden', { status: 403 }))
   expect((await POST(request(input))).status).toBe(403)
   expect(m.findByID).not.toHaveBeenCalled()

@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   if (body.get('List-Unsubscribe') !== 'One-Click' && body.get('confirm') !== 'yes')
     return new Response(page('Please confirm your choice.'), { status: 400, headers })
   if (token.test)
-    return new Response(page('This is a test link. No reader preferences were changed.'), {
+    return new Response(page('This is a test link. No user preferences were changed.'), {
       headers,
     })
   const payload = await getPayload({ config })

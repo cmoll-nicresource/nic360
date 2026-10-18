@@ -11,7 +11,7 @@ export const PageViews: CollectionConfig = {
     useAsTitle: 'path',
     defaultColumns: ['path', 'visitor', 'createdAt'],
     description:
-      'A log of which reader visited which front-end page and when, for first-party traffic reporting (no third-party analytics). Staff visits are not tracked. See /admin/analytics for the dashboard.',
+      'A log of which user visited which front-end page and when, for first-party traffic reporting (no third-party analytics). Staff visits are not tracked. See /admin/analytics for the dashboard.',
   },
   access: {
     // Written only by the server (src/lib/logPageView.ts, overrideAccess: true) — never via the API directly.

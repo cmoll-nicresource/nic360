@@ -1,6 +1,6 @@
 import { APIError, type CollectionBeforeValidateHook } from 'payload'
 
-/** Keep the delivery address after PostgreSQL detaches a deleted reader. */
+/** Keep the delivery address after PostgreSQL detaches a deleted user. */
 export const snapshotEmailFlagRecipient: CollectionBeforeValidateHook = async ({
   data,
   originalDoc,
@@ -11,7 +11,7 @@ export const snapshotEmailFlagRecipient: CollectionBeforeValidateHook = async ({
   const relationship = data.user === undefined ? originalDoc?.user : data.user
   const userId = relationship && typeof relationship === 'object' ? relationship.id : relationship
   if (operation === 'create' && !userId) {
-    throw new APIError('Select a reader when creating an email flag.', 400)
+    throw new APIError('Select a user when creating an email flag.', 400)
   }
   const previousUserId =
     typeof originalDoc?.user === 'object' ? originalDoc.user?.id : originalDoc?.user

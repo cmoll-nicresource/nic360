@@ -37,7 +37,7 @@ describe.skipIf(process.env.LOGIN_BACKFILL_INTEGRATION !== '1')('login backfill 
     expect(Object.keys(backup[0]).sort()).toEqual(['email', 'id', 'last_login_at', 'unchanged_hash'])
     expect((await client.query('SELECT last_login_at FROM users WHERE id=1')).rows[0].last_login_at).toBeNull()
   })
-  it('fills blanks, advances older dates, preserves newer logins and leaves all other reader fields untouched', async () => {
+  it('fills blanks, advances older dates, preserves newer logins and leaves all other user fields untouched', async () => {
     const preview = await backfillUserLogins(client, sources)
     await backfillUserLogins(client, sources, true, preview.beforeHash)
     const rows = (await client.query('SELECT * FROM users ORDER BY id')).rows

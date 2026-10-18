@@ -8,7 +8,7 @@ export function buildCountryNameLookup(countries: CountryLike[]): Map<string, st
 /**
  * Dataset rows store a 'country' column as a bare ISO2 code (see
  * datasetImport.ts — it's resolved against the Countries taxonomy on import,
- * but only the code is kept, for a stable, compact join key). Readers
+ * but only the code is kept, for a stable, compact join key). Users
  * shouldn't see that code, though: this resolves each 'country' column back
  * to the real country name from the taxonomy for display/export, falling
  * back to whatever's stored when it isn't a recognized code (an unmatched

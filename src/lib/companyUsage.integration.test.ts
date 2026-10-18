@@ -3,7 +3,7 @@ import pg from 'pg'
 import { beforeAll, afterAll, describe, it, expect } from 'vitest'
 import { COMPANY_USAGE_SQL } from './companyUsage'
 
-// Temporary tables shadow app tables; no real readers or analytics are changed.
+// Temporary tables shadow app tables; no real users or analytics are changed.
 describe.skipIf(process.env.DATASET_INTEGRATION !== '1')('company usage SQL on Postgres', () => {
   let client: pg.Client
   beforeAll(async () => {
@@ -15,7 +15,7 @@ describe.skipIf(process.env.DATASET_INTEGRATION !== '1')('company usage SQL on P
     await client.connect()
     await client.query(`CREATE TEMP TABLE users(id int primary key,email text,first_name text,last_name text,status text,access_provider_id int);
       CREATE TEMP TABLE page_views(id serial,visitor_id int,path text,created_at timestamptz);
-      INSERT INTO users VALUES (1,'a@example.invalid','A','Reader','active',10),(2,'zero@example.invalid',NULL,NULL,'suspended',10),(3,'other@example.invalid',NULL,NULL,'active',20);
+      INSERT INTO users VALUES (1,'a@example.invalid','A','User','active',10),(2,'zero@example.invalid',NULL,NULL,'suspended',10),(3,'other@example.invalid',NULL,NULL,'active',20);
       INSERT INTO page_views(visitor_id,path,created_at) VALUES
       (1,'/articles/a','2026-03-08T04:59:59.999Z'),(1,'/articles/a','2026-03-08T05:00:00Z'),
       (1,'/articles/a','2026-03-09T03:59:59.999Z'),(1,'/bills/b','2026-03-09T04:00:00Z'),

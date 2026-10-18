@@ -7,7 +7,7 @@ import React from 'react'
 import { SiteNav } from '@/components/SiteNav'
 
 import config from '@/payload.config'
-import { getReaderPlan, planSatisfies } from '@/access/readerPlan'
+import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { formatDate } from '@/lib/formatDate'
 import { StatusBadge } from '@/components/StatusBadge'
 import { trademarkStatusPill } from '@/lib/statusPill'
@@ -22,7 +22,7 @@ export default async function TrademarkDetailPage({ params }: { params: Promise<
   const { user } = await payload.auth({ headers })
 
   const isStaff = !!user && 'collection' in user && user.collection === 'staff'
-  const plan = user && 'collection' in user && user.collection === 'users' ? await getReaderPlan(user, payload) : 'none'
+  const plan = user && 'collection' in user && user.collection === 'users' ? await getSubscriptionPlan(user, payload) : 'none'
   const canRead = isStaff || planSatisfies(plan, 'base')
 
   return (

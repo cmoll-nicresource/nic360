@@ -3,7 +3,7 @@ import pg from 'pg'
 import { afterAll, beforeAll, expect, it, describe } from 'vitest'
 import { migrateEmailFlagSchema } from './emailFlagSchema'
 
-// TEMP tables shadow the real app tables. No real reader records are touched.
+// TEMP tables shadow the real app tables. No real user records are touched.
 describe.skipIf(process.env.DATASET_INTEGRATION !== '1')('email flag deletion on Postgres', () => {
   let client: pg.Client
   beforeAll(async () => {
@@ -25,7 +25,7 @@ describe.skipIf(process.env.DATASET_INTEGRATION !== '1')('email flag deletion on
     await client.query('BEGIN')
     try {
       await client.query(
-        "INSERT INTO users VALUES (1,'Reader@Example.invalid'), (2,'Other@Example.invalid')",
+        "INSERT INTO users VALUES (1,'User@Example.invalid'), (2,'Other@Example.invalid')",
       )
       await client.query(
         "INSERT INTO email_flags VALUES (1,1,'open','cleaned'),(2,2,'resolved','unsubscribed')",
@@ -37,7 +37,7 @@ describe.skipIf(process.env.DATASET_INTEGRATION !== '1')('email flag deletion on
         {
           id: 1,
           user_id: null,
-          recipient_email: 'reader@example.invalid',
+          recipient_email: 'user@example.invalid',
           status: 'open',
           reason: 'cleaned',
         },
