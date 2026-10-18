@@ -45,7 +45,6 @@ export const PublicationIssues: CollectionConfig = {
     components: {
       edit: {
         beforeDocumentControls: [
-          './components/admin/BuildFromRulesButton#BuildFromRulesButton',
           './components/admin/SendIssueButtons#SendIssueButtons',
         ],
       },
@@ -104,6 +103,15 @@ export const PublicationIssues: CollectionConfig = {
       ],
     },
 
+    {
+      name: 'buildSections',
+      type: 'ui',
+      admin: {
+        condition: (data) => data?.format === 'excerpt-list',
+        components: { Field: './components/admin/BuildFromRulesButton#BuildFromRulesButton' },
+      },
+    },
+
     // Excerpt list
     {
       name: 'intro',
@@ -157,6 +165,7 @@ export const PublicationIssues: CollectionConfig = {
     {
       name: 'email',
       type: 'group',
+      admin: { hidden: true },
       fields: [
         {
           name: 'subject',
@@ -228,10 +237,16 @@ export const PublicationIssues: CollectionConfig = {
       },
     },
     {
+      name: 'deliverySummary',
+      type: 'ui',
+      admin: { components: { Field: './components/admin/IssueDeliverySummary#IssueDeliverySummary' } },
+    },
+    {
       name: 'stats',
       label: 'Delivery stats',
       type: 'group',
       admin: {
+        hidden: true,
         description:
           'Engagement counts from verified SES events. Historical imported statistics are retained. See /admin/analytics for aggregate reporting.',
       },

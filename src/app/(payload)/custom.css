@@ -329,6 +329,24 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
 .nic-issue-preview button[aria-pressed="true"] { border-color: var(--theme-text); font-weight: bold; }
 .nic-issue-preview__canvas { width: 100%; margin: 12px auto 0; background: white; }
 .nic-issue-preview iframe { display: block; width: 100%; height: 680px; border: 0; }
+.nic-issue-build { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; max-width: 360px; }
+.nic-issue-build button { align-self: flex-start; padding: 9px 15px; border: 1px solid var(--theme-elevation-800); border-radius: 6px; background: var(--theme-elevation-800); color: var(--theme-elevation-0); font: inherit; font-weight: 600; cursor: pointer; }
+.nic-issue-build button:disabled { opacity: .55; cursor: default; }
+.nic-issue-build small, .nic-issue-delivery__note { color: var(--theme-elevation-650); }
+.nic-issue-build p { margin: 0; font-size: 13px; }
+.nic-issue-delivery { margin: 24px 0; padding: 24px; border: 1px solid var(--theme-elevation-200); border-radius: 12px; background: var(--theme-elevation-0); }
+.nic-issue-delivery header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.nic-issue-delivery h2 { margin: 4px 0 0; font-size: 21px; }
+.nic-issue-delivery__eyebrow { margin: 0; color: var(--theme-elevation-650); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+.nic-issue-delivery__status { padding: 6px 11px; border-radius: 100px; background: var(--theme-elevation-100); font-size: 12px; font-weight: 600; }
+.nic-issue-delivery__status--failed, .nic-issue-delivery__metric--attention { color: var(--theme-error-600); }
+.nic-issue-delivery__status--sent { background: var(--theme-success-100); color: var(--theme-success-650); }
+.nic-issue-delivery__metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 24px 0 16px; }
+.nic-issue-delivery__metrics > div { padding: 16px; background: var(--theme-elevation-50); border: 1px solid var(--theme-elevation-100); border-radius: 8px; }
+.nic-issue-delivery dt { color: var(--theme-elevation-650); font-size: 12px; }
+.nic-issue-delivery dd { margin: 8px 0 0; font-size: clamp(20px, 2.2vw, 30px); font-weight: 650; font-variant-numeric: tabular-nums; }
+.nic-issue-delivery__note { font-size: 12px; line-height: 1.6; }
+@media (max-width: 600px) { .nic-issue-delivery { padding: 18px; } .nic-issue-delivery__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .nic-company-report__filters { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; padding: 24px; background: var(--nic-tint); border-radius: 12px; }
 .nic-company-report__filters label { display: grid; gap: 8px; min-width: 160px; max-width: 100%; }
 .nic-company-report__filters label:first-child { flex: 1; min-width: min(280px, 100%); }
