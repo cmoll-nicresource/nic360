@@ -15,7 +15,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
         <Link href={'/admin/login?redirect=' + encodeURIComponent('/extension/connect?' + new URLSearchParams(input).toString())}>Sign in to Nicotine360</Link></>
       : <><p>Connect as <strong>{user?.collection === 'staff' ? user.name : ''}</strong>.</p>
         <p>This browser can create draft news excerpts, read the location list, and view recent clips. Review and publish excerpts in the staff workspace.</p>
-        <p>The connection lasts 12 hours. You can disconnect it earlier from Connected browsers in your workspace. Your password stays on Nicotine360.</p>
+        <p>The connection lasts 12 hours. You can disconnect it earlier in extension options. Your password stays on Nicotine360.</p>
         <ConnectApproval input={input} /></>}
   </section>
 }

@@ -7,8 +7,9 @@ const connectInput = () => {
   const verifier = randomBytes(32).toString('base64url')
   return { verifier, redirect_uri: CLIPPER_REDIRECT, state: randomBytes(32).toString('base64url'), code_challenge: createHash('sha256').update(verifier).digest('base64url') }
 }
-test('staff approval issues a single-use limited credential; imports stay drafts and revocation is immediate', async ({ browser, request }) => {
-  const editor = await roleContext(browser, 'editor'), other = await roleContext(browser, 'admin')
+for (const role of ['editor', 'admin'])
+test('staff approval issues a single-use limited credential; imports stay drafts and revocation is immediate: ' + role, async ({ browser, request }) => {
+  const editor = await roleContext(browser, role), other = await roleContext(browser, role === 'admin' ? 'editor' : 'admin')
   const input = connectInput()
   const approval = await editor.request.post('/api/extension/authorize', { headers: { Origin: site }, data: input })
   expect(approval.status()).toBe(200)
@@ -49,9 +50,14 @@ test('staff approval issues a single-use limited credential; imports stay drafts
     const record = list.connections.find((x: { id: string }) => x.id === connectionId)
     expect(record).toBeTruthy(); expect(JSON.stringify(record)).not.toMatch(/token|credential_version/)
     const page = await editor.newPage(); await page.goto('/admin/connected-browsers')
-    await expect(page.getByRole('heading', { name: 'Connected browsers', exact: true })).toBeVisible()
-    await page.locator('article').filter({ hasText: connectionId.slice(0, 8) }).getByRole('button', { name: 'Disconnect browser' }).click()
-    await expect(page.locator('article').filter({ hasText: connectionId.slice(0, 8) })).toContainText('Disconnected')
+    if (role === 'admin') {
+      await expect(page.getByRole('heading', { name: 'Connected browsers', exact: true })).toBeVisible()
+      await page.locator('article').filter({ hasText: connectionId.slice(0, 8) }).getByRole('button', { name: 'Disconnect browser' }).click()
+      await expect(page.locator('article').filter({ hasText: connectionId.slice(0, 8) })).toContainText('Disconnected')
+    } else {
+      await expect(page.getByRole('heading', { name: 'Connected browsers', exact: true })).toBeHidden()
+      expect((await editor.request.post('/api/extension/connections', { headers: { Origin: site }, data: { id: connectionId } })).status()).toBe(200)
+    }
     expect((await request.get('/api/extension/locations', { headers })).status()).toBe(401)
   } finally {
     if (id) expect((await editor.request.delete('/api/articles/' + id)).status()).toBe(200)

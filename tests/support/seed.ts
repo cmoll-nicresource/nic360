@@ -67,7 +67,7 @@ for (const name of [
   'E-Liquid',
 ])
   refs[name] = (await add('products', { name })).id
-refs.subject = (await add('subjects', { name: 'Regulation' })).id
+refs.subject = (await add('subjects', { name: 'Regulation', legacyId: 'synthetic-old-subject' })).id
 refs.source = (await add('sources', { name: 'Synthetic test news' })).id
 const publications = await seedPublications(payload)
 // Rehearse imported configuration errors, then run the actual repeatable repair.
@@ -210,6 +210,7 @@ refs.event = (
   })
 ).id
 const issue = await add('publication-issues', {
+  legacyId: 'synthetic-old-issue',
   publication: publications['us-news-clippings'],
   issueDate: '2090-10-16T12:00:00Z',
   format: 'excerpt-list',

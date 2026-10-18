@@ -230,6 +230,11 @@ export const PublicationIssues: CollectionConfig = {
       name: 'legacyId',
       type: 'text',
       index: true,
+      access: {
+        read: staffHasMinRole('admin'),
+        create: staffHasMinRole('admin'),
+        update: staffHasMinRole('admin'),
+      },
       admin: {
         position: 'sidebar',
         description:

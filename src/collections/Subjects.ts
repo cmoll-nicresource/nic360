@@ -36,6 +36,11 @@ export const Subjects: CollectionConfig = {
       name: 'legacyId',
       type: 'text',
       index: true,
+      access: {
+        read: staffHasMinRole('admin'),
+        create: staffHasMinRole('admin'),
+        update: staffHasMinRole('admin'),
+      },
       admin: {
         position: 'sidebar',
         description: "Old site's taxonomies.id, for matching excerpt_indices during migration.",

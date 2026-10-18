@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { PayloadRequest } from 'payload'
 import { staffTasksFor } from '@/config/staffWorkspace'
+import { staffHasRole } from '@/access/staffRoles'
 
 export function WorkspaceNav({ user }: { user?: PayloadRequest['user'] }) {
   const tasks = staffTasksFor(user ?? null)
@@ -27,7 +28,9 @@ export function WorkspaceNav({ user }: { user?: PayloadRequest['user'] }) {
             {task.label}
           </Link>
         ))}
-      <Link href="/admin/connected-browsers" className="nic-workspace-nav__link">Connected browsers</Link>
+      {staffHasRole(user ?? null, 'admin') && (
+        <Link href="/admin/connected-browsers" className="nic-workspace-nav__link">Connected browsers</Link>
+      )}
       <Link href="/" className="nic-workspace-nav__site">
         View public site <span aria-hidden="true">↗</span>
       </Link>

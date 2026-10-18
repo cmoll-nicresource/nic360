@@ -1,6 +1,6 @@
 # Staff workspace
 
-Updated October 17, 2026. `/admin` presents daily work according to the signed-in staff role.
+Updated October 18, 2026. `/admin` presents daily work according to the signed-in staff role.
 
 | Role | Daily actions | Secondary work |
 | --- | --- | --- |
@@ -14,12 +14,14 @@ Only admins can open taxonomy management screens or create, update or delete sec
 
 Only admins can browse and manage staff accounts. Other staff retain access to their own account profile, without permission to change their role or manage other staff.
 
+Legacy Id fields on issues and subjects are readable and editable only by admins, including through the API. Existing migration identifiers are retained.
+
 The collection visibility wrapper composes existing collection visibility rules. The admin route explicitly rejects authenticated non-admin access to taxonomy and staff collection screens. Collection access rules independently protect writes and staff records through the API.
 
 The role-specific workspace change requires no database migration. Automated checks cover role-specific tasks and dashboard queries, taxonomy permissions, staff self-access and collection visibility.
 
 ## Connected browsers
 
-All staff can open `/admin/connected-browsers` from the sidebar to review and disconnect their own News Clipper connections. This does not grant access to other staff accounts or their connections. The list shows connection IDs, creation/expiry and last-use times. Connections expire after 12 hours; website sign-out alone does not revoke them.
+Only admins see the Connected browsers sidebar link or can open `/admin/connected-browsers`. The page still lists only the signed-in admin's own connections, with connection IDs, creation/expiry and last-use times. Editors can continue connecting and importing through News Clipper, and all staff can disconnect their own browser in the extension's options. Connections expire after 12 hours; website sign-out alone does not revoke them.
 
 Editors connect from the extension's options through normal website staff sign-in and explicit approval. No endpoint or password is entered in the extension. See [News Clipper](./news-clipper.md) for installation, the one-time 2.2 upgrade, limited credential scope and its separate additive database schema.

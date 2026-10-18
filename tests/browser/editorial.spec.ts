@@ -7,6 +7,7 @@ test('daily editor workflow: excerpt, dated issue, build and unsent preview', as
   await signIn(context.request, 'editor')
   await page.goto('/admin')
   await expect(page.getByRole('heading', { name: 'Editorial desk', level: 1 })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Connected browsers', exact: true })).toHaveCount(0)
   await page.locator('a.nic-workspace__task').filter({hasText:'Add a news excerpt'}).click()
   await page
     .locator('#field-title')
@@ -21,6 +22,7 @@ test('daily editor workflow: excerpt, dated issue, build and unsent preview', as
     article = await (await context.request.get('/api/articles/' + articleId + '?draft=true')).json()
   expect(JSON.stringify(article.excerpt)).toContain('browser-entered full excerpt')
   await page.goto('/admin/collections/publication-issues/create')
+  await expect(page.locator('#field-legacyId')).toBeHidden()
   const combo = page.getByRole('combobox').first()
   await combo.fill('US News Clippings')
   await page.getByText('US News Clippings', { exact: true }).last().click()
@@ -74,14 +76,23 @@ for (const role of ['gatekeeper', 'admin'])
         level: 1,
       }),
     ).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Connected browsers', exact: true })).toHaveCount(role === 'admin' ? 1 : 0)
+    if (role === 'gatekeeper') {
+      expect((await page.goto('/admin/connected-browsers'))?.status()).toBe(404)
+      await page.goto('/admin')
+    }
     if (role === 'gatekeeper') {
       await expect(page.getByRole('link', { name: /Add a news excerpt/ })).toHaveCount(0)
       await expect(page.locator('a.nic-workspace__task').filter({hasText:'Manage subscriptions'})).toBeVisible()
     }
     const response=await page.goto('/admin/collections/subjects')
-    if (role === 'admin')
+    if (role === 'admin') {
       await expect(page.getByRole('heading', { name: 'Subjects', exact: true })).toBeVisible()
-    else expect(response?.status()).toBe(404)
+      await page.goto('/admin/collections/subjects/' + f.refs.subject)
+      await expect(page.locator('#field-legacyId')).toHaveValue('synthetic-old-subject')
+      await page.goto('/admin/collections/publication-issues/' + f.refs.issue)
+      await expect(page.locator('#field-legacyId')).toHaveValue('synthetic-old-issue')
+    } else expect(response?.status()).toBe(404)
     await page.goto('/admin/account')
     await expect(page.locator('#field-email')).toHaveValue(f.staff[role].email)
   })

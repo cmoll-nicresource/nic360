@@ -108,6 +108,12 @@ for (const role of [
         ).status() === 200,
       ).toBe(['gatekeeper', 'admin'].includes(role))
       expect((await api.get('/api/subjects?limit=1')).status()).toBe(200)
+      const subject = await (await api.get('/api/subjects/' + f.refs.subject)).json()
+      expect(subject.legacyId).toBe(role === 'admin' ? 'synthetic-old-subject' : undefined)
+      if (staff) {
+        const issue = await (await api.get('/api/publication-issues/' + f.refs.issue + '?draft=true&depth=0')).json()
+        expect(issue.legacyId).toBe(role === 'admin' ? 'synthetic-old-issue' : undefined)
+      }
       const taxonomy = await api.post('/api/subjects', {
         data: { name: 'Permission ' + role + ' ' + crypto.randomUUID() },
       })
