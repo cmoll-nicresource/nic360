@@ -5,6 +5,42 @@ import { lexicalFromText } from '../../src/lib/lexical'
 const marks: Record<string, number> = {}
 const bills: Record<string, number> = {}
 let draftEvent: number, draftSession: number
+
+test('users default to latest login with blank dates last, including filtered pagination', async ({ browser }) => {
+  const admin = await roleContext(browser, 'admin'), ids: number[] = []
+  const prefix = 'login-sort-' + crypto.randomUUID()
+  const dates = [null, '2090-01-01T00:00:00.000Z', null, '2090-03-01T00:00:00.000Z', '2090-02-01T00:00:00.000Z']
+  try {
+    for (let index = 0; index < dates.length; index++) {
+      const response = await admin.request.post('/api/users', { data: { email: `${prefix}-${index}@example.invalid`, password: f.password, _verified: true, status: 'active', lastLoginAt: dates[index] } })
+      expect(response.status()).toBe(201)
+      ids.push((await response.json()).doc.id)
+    }
+    const found: number[] = []
+    for (let page = 1; page <= 3; page++) {
+      const response = await admin.request.get(`/api/users?where[email][contains]=${prefix}&limit=2&page=${page}`)
+      expect(response.status()).toBe(200)
+      const data = await response.json()
+      expect(data.totalDocs).toBe(5)
+      found.push(...data.docs.map((user: { id: number }) => user.id))
+    }
+    expect(found.slice(0, 3)).toEqual([ids[3], ids[4], ids[1]])
+    expect(new Set(found.slice(3))).toEqual(new Set([ids[0], ids[2]]))
+    const unlimited = await (await admin.request.get(`/api/users?where[email][contains]=${prefix}&limit=0`)).json()
+    expect(unlimited.docs).toHaveLength(5)
+    expect(unlimited.docs.slice(0, 3).map((user: { id: number }) => user.id)).toEqual([ids[3], ids[4], ids[1]])
+    const page = await admin.newPage()
+    await page.goto(`/admin/collections/users?where[email][contains]=${prefix}`)
+    const links = page.locator('tbody a[href^="/admin/collections/users/"]')
+    await expect(links).toHaveCount(5)
+    expect((await links.allTextContents()).slice(0, 3)).toEqual([`${prefix}-3@example.invalid`, `${prefix}-4@example.invalid`, `${prefix}-1@example.invalid`])
+    const emailSort = await (await admin.request.get(`/api/users?where[email][contains]=${prefix}&sort=email`)).json()
+    expect(emailSort.docs.map((user: { id: number }) => user.id)).toEqual(ids)
+  } finally {
+    for (const id of ids) await admin.request.delete('/api/users/' + id)
+    await admin.close()
+  }
+})
 test.beforeAll(async ({ request }) => {
   await signIn(request, 'editor')
   const event = await request.post('/api/events', { data: { name: 'Permission draft conference', channel: 'infocus', startsAt: '2090-10-01T12:00:00Z', endDate: '2090-10-02T12:00:00Z', _status: 'draft' } })

@@ -28,6 +28,8 @@ Find/Create a publication opens **issues**. Publication settings remains a separ
 
 Article, bill and publication issue lists default to newest first by source date, bill date and issue date respectively. Staff can still choose another sort; Payload retains individual saved list preferences.
 
+Users default to most recent Last login first, with users who have never logged in placed after dated users. The native list keeps all readers, filters, access rules and pagination; selecting another column sort remains available.
+
 Events links are selected from actual records: the most recently completed event, the next upcoming event, and any event underway. The sidebar and Past events list use the staff calendar in America/New_York; each event dashboard formats its dates and countdown in the event's own timezone. Create new event is editorial/admin work; gatekeepers continue using attendee operations. Past events is filtered and paginated, and All events keeps the full archive reachable.
 
 Additional links preserve existing workflows: Publication settings, All guides/events, reader access checks, Email follow-up, Company usage, Connected browsers and Media library. There is no separate duplicate collection menu below these groups.

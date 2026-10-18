@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { assignAccessProviderOnVerify } from '@/hooks/assignAccessProviderOnVerify'
 import { setLastLoginAt } from '@/hooks/setLastLoginAt'
+import { sortUsersByLogin } from '@/hooks/sortUsersByLogin'
 import { enforceReaderResetPassword } from '@/hooks/enforceReaderResetPassword'
 import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
@@ -10,6 +11,7 @@ import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Users: CollectionConfig = {
   slug: 'users',
+  defaultSort: '-lastLoginAt',
   labels: {
     singular: 'User',
     plural: 'Users',
@@ -55,6 +57,7 @@ export const Users: CollectionConfig = {
     beforeOperation: [enforceReaderResetPassword],
     afterChange: [assignAccessProviderOnVerify, syncMailchimpOnUserChange],
     afterLogin: [setLastLoginAt],
+    afterOperation: [sortUsersByLogin],
   },
   fields: [
     {
