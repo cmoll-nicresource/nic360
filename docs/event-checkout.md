@@ -2,6 +2,12 @@
 
 October 16, 2026. Checkout hardening is deployed and **real hosted Stripe sandbox payment, signed webhook delivery, colleague invitations, discounts, declines, cancellation, expiration and concurrent duplicate handling are verified on beta**. The dedicated Nic360 Beta sandbox and beta-only credentials do not change the existing site's live Stripe integration. `STRIPE_MODE=test` and `EMAIL_SAFE_MODE=on` remain enabled.
 
+## Ticket pricing
+
+Tickets are always available for registration while the event is current or upcoming, subject to capacity and configured attendance options. There are no sale-opening or honor-system modes. The public event page displays both non-subscriber and subscriber prices before sign-in, including the savings where applicable. Each ticket type supports separate in-person and virtual prices; a blank subscriber price uses the non-subscriber rate. A blank non-subscriber price means that attendance option is unavailable. Checkout determines eligibility from the buyer’s effective Base/Premium subscription on the server and applies that rate to the order, including colleague tickets.
+
+The old `onSale` and `honorSystem` database fields are retained only for compatibility with existing databases. They are hidden from staff and API reads, cannot be edited through normal collection APIs, and are ignored by display and checkout logic. No destructive database migration or existing-price rewrite is needed.
+
 ## Behavior
 
 - Active, verified users can buy for themselves and colleagues. Input is normalized/validated, duplicate attendee emails are rejected, and each checkout supports up to 50 attendees.

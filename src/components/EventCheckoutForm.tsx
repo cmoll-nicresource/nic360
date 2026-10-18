@@ -2,23 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { ticketUnitPrice } from '@/lib/eventCheckout'
+import type { Event } from '@/payload-types'
 
-type TicketType = {
-  name: string
-  honorSystem?: boolean | null
-  onSale?: boolean | null
-  capacity?: number | null
-  inPerson?: { price?: number | null; subscriberPrice?: number | null } | null
-  virtual?: { price?: number | null; subscriberPrice?: number | null } | null
-}
+type TicketType = NonNullable<Event['ticketTypes']>[number]
 
 type Attendee = { name: string; email: string }
 
-function priceFor(tt: TicketType, attendance: 'in-person' | 'virtual', isSubscriber: boolean): number | null {
-  const bucket = attendance === 'in-person' ? tt.inPerson : tt.virtual
-  if (!bucket || bucket.price == null) return null
-  return isSubscriber ? (bucket.subscriberPrice ?? bucket.price) : bucket.price
-}
 
 export function EventCheckoutForm({
   eventId,
@@ -34,16 +24,15 @@ export function EventCheckoutForm({
   buyerEmail: string
 }) {
   const router = useRouter()
-  const onSaleTypes = ticketTypes.filter((t) => t.onSale !== false)
-  const [ticketTypeName, setTicketTypeName] = useState(onSaleTypes[0]?.name ?? '')
-  const [attendance, setAttendance] = useState<'in-person' | 'virtual'>('in-person')
+  const [ticketTypeName, setTicketTypeName] = useState(ticketTypes[0]?.name ?? '')
+  const [attendance, setAttendance] = useState<'in-person' | 'virtual'>(ticketTypes[0]?.inPerson?.price != null ? 'in-person' : 'virtual')
   const [discountCode, setDiscountCode] = useState('')
   const [attendees, setAttendees] = useState<Attendee[]>([{ name: buyerName, email: buyerEmail }])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const selectedType = onSaleTypes.find((t) => t.name === ticketTypeName)
-  const unitPrice = selectedType ? priceFor(selectedType, attendance, isSubscriber) : null
+  const selectedType = ticketTypes.find((t) => t.name === ticketTypeName)
+  const unitPrice = selectedType ? ticketUnitPrice(selectedType, attendance, isSubscriber) : null
   const estimatedTotal = unitPrice != null ? unitPrice * attendees.length : null
 
   function updateAttendee(i: number, field: keyof Attendee, value: string) {
@@ -87,26 +76,21 @@ export function EventCheckoutForm({
     }
   }
 
-  if (onSaleTypes.length === 0) {
-    return (
-      <p className="muted">
-        Ticket sales haven&apos;t opened yet.{' '}
-        <a href={`mailto:membership@nicotine360.org?subject=${encodeURIComponent('Notify me when tickets open')}`}>
-          Get notified →
-        </a>
-      </p>
-    )
-  }
+  if (ticketTypes.length === 0) return <p className="muted">No ticket options are configured. Contact the event team for assistance.</p>
 
   return (
     <form onSubmit={handleSubmit} className="card">
       <label style={{ display: 'block', marginBottom: 8 }}>
         Ticket type
-        <select value={ticketTypeName} onChange={(e) => setTicketTypeName(e.target.value)} style={{ display: 'block', marginTop: 4 }}>
-          {onSaleTypes.map((t) => (
+        <select value={ticketTypeName} onChange={(e) => {
+          setTicketTypeName(e.target.value)
+          const next = ticketTypes.find(t => t.name === e.target.value)
+          if (next && ticketUnitPrice(next, attendance, isSubscriber) == null)
+            setAttendance(next.inPerson?.price != null ? 'in-person' : 'virtual')
+        }} style={{ display: 'block', marginTop: 4 }}>
+          {ticketTypes.map((t) => (
             <option key={t.name} value={t.name}>
               {t.name}
-              {t.honorSystem ? ' (self-declared eligibility)' : ''}
             </option>
           ))}
         </select>
@@ -115,8 +99,8 @@ export function EventCheckoutForm({
       <label style={{ display: 'block', marginBottom: 8 }}>
         Attendance
         <select value={attendance} onChange={(e) => setAttendance(e.target.value as 'in-person' | 'virtual')} style={{ display: 'block', marginTop: 4 }}>
-          <option value="in-person">In person</option>
-          <option value="virtual">Virtual</option>
+          {selectedType?.inPerson?.price != null && <option value="in-person">In person</option>}
+          {selectedType?.virtual?.price != null && <option value="virtual">Virtual</option>}
         </select>
       </label>
 
@@ -157,7 +141,7 @@ export function EventCheckoutForm({
       <p className="excerpt-meta">
         {unitPrice == null
           ? 'Not available for this attendance mode.'
-          : `${unitPrice === 0 ? 'Free' : `$${unitPrice.toFixed(2)}`} per ticket${isSubscriber ? ' (subscriber price)' : ''} · Estimated total: ${
+          : `${unitPrice === 0 ? 'Free' : `$${unitPrice.toFixed(2)}`} per ticket${isSubscriber ? ' (subscriber price)' : ' (non-subscriber price)'} · Estimated total: ${
               estimatedTotal === 0 ? 'Free' : `$${estimatedTotal?.toFixed(2)}`
             } before any discount code`}
       </p>

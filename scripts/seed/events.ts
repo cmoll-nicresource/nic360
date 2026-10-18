@@ -79,15 +79,12 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
       ticketTypes: [
         {
           name: 'General Admission',
-          onSale: true,
           capacity: 200,
           inPerson: { price: 1200, subscriberPrice: 900 },
           virtual: { price: 400, subscriberPrice: 300 },
         },
         {
           name: 'Academia',
-          honorSystem: true,
-          onSale: true,
           inPerson: { price: 300 },
           virtual: { price: 100 },
         },
@@ -119,7 +116,6 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
       ticketTypes: [
         {
           name: 'General Admission',
-          onSale: true,
           capacity: 150,
           inPerson: { price: 900, subscriberPrice: 700 },
           virtual: { price: 350, subscriberPrice: 250 },
@@ -146,7 +142,6 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
       ticketTypes: [
         {
           name: 'Webinar Access',
-          onSale: true,
           virtual: { price: 0 },
         },
       ],

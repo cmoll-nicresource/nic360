@@ -205,7 +205,7 @@ refs.event = (
     channel: 'infocus',
     startsAt: '2090-10-01T12:00:00Z',
     endDate: '2090-10-02T12:00:00Z',
-    ticketTypes: [{ name: 'General', price: 0, onSale: true }],
+    ticketTypes: [{ name: 'General', inPerson: { price: 0 } }],
     _status: 'published',
   })
 ).id

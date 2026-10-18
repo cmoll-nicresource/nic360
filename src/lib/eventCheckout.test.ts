@@ -5,7 +5,6 @@ import type { DiscountCode, Event } from '@/payload-types'
 
 const generalAdmission = {
   name: 'General Admission',
-  onSale: true,
   capacity: 200,
   inPerson: { price: 1200, subscriberPrice: 900 },
   virtual: { price: 400, subscriberPrice: 300 },
@@ -13,7 +12,6 @@ const generalAdmission = {
 
 const virtualOnly = {
   name: 'Webinar Access',
-  onSale: true,
   virtual: { price: 0 },
 }
 

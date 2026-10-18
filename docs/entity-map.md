@@ -319,11 +319,11 @@ Pricing varies by ticket type, by attendance (in person or virtual), by whether 
 | Field | Type | Example / notes |
 |---|---|---|
 | `name` | text | *General Admission*, *Public Health*, *Academia* |
-| `honorSystem` | checkbox | buyer self-declares eligibility (Public Health, Academia); no check is made |
-| `inPerson.price` / `inPerson.subscriberPrice` | number / number, optional | blank = no in-person option (e.g. InFocus); blank subscriber price = same as standard |
+| `inPerson.price` / `inPerson.subscriberPrice` | number / number, optional | blank = no in-person option (e.g. InFocus); blank subscriber price = same as non-subscriber price |
 | `virtual.price` / `virtual.subscriberPrice` | number / number, optional | every type has its own virtual price |
 | `capacity` | number, optional | |
-| `onSale` | checkbox | |
+
+Tickets are always offered for current/upcoming events, subject to capacity and configured attendance options. Both subscriber and non-subscriber prices are advertised publicly. Legacy sale/eligibility fields are hidden and ignored; see [event checkout](./event-checkout.md).
 
 The subscriber price applies when the buyer's access provider has an active Base or Premium plan. Kept as an array on the event, since prices are set per event.
 

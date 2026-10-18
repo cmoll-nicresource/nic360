@@ -2225,3 +2225,11 @@ nav.topnav button.nav-toggle-btn svg {
     padding: 26px;
   }
 }
+.event-ticket-prices { margin: 1.5rem 0; }
+.event-ticket-prices__option { border-top: 1px solid var(--nrc-border); padding: 1rem 0; }
+.event-ticket-prices__option h4 { margin: 0 0 .75rem; overflow-wrap: anywhere; }
+.event-ticket-prices__option dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 0; }
+.event-ticket-prices__option dt { font-size: .8rem; }
+.event-ticket-prices__option dd { margin: .25rem 0 0; font-size: 1.35rem; font-weight: 700; }
+.event-ticket-prices__subscriber { color: #16675c; }
+.event-ticket-prices__savings { font-size: .85rem; font-weight: 600; color: #16675c; margin-bottom: 0; }

@@ -85,8 +85,7 @@ export async function createEventCheckout(
       .catch(() => null)
     if (!event) throw new CheckoutError('Event not found.', 404)
     const ticket = findTicketType(event, body.ticketTypeName)
-    if (!ticket || ticket.onSale === false)
-      throw new CheckoutError('That ticket type is not on sale.')
+    if (!ticket) throw new CheckoutError('That ticket type is unavailable.')
     if (ticket.capacity != null) {
       const used = await payload.count({
         collection: 'event-registrations',

@@ -7,11 +7,12 @@ import { frontendContext } from '@/lib/frontendContext'
 import { CHANNELS } from '@/config/channels'
 import { hasActiveRegistration } from '@/access/eventAccess'
 import { EventCheckoutForm } from '@/components/EventCheckoutForm'
+import { EventTicketPrices } from '@/components/EventTicketPrices'
 import { formatDate } from '@/lib/formatDate'
 export const dynamic = 'force-dynamic'
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { payload, user, canRead, now } = await frontendContext()
+  const { payload, user, plan, now } = await frontendContext()
   const { docs } = await payload.find({
     collection: 'events',
     where: { and: [{ id: { equals: id } }, { _status: { equals: 'published' } }] },
@@ -35,7 +36,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   })
   const channel = CHANNELS[event.channel]
   const past = new Date(event.endDate).getTime() < Date.parse(now)
-  const onSale = !past && event.ticketTypes?.some((t) => t.onSale)
+  const registrationAvailable = !past && !!event.ticketTypes?.length
   return (
     <>
       <SiteNav />
@@ -57,7 +58,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </p>
             {event.venue?.address && <p>{event.venue.address}</p>}
             <div className="edition-actions">
-              {onSale && (
+              {registrationAvailable && (
                 <a href="#tickets" className="btn btn-accent">
                   {registered ? 'View registration options' : 'Registration & tickets'}
                 </a>
@@ -218,6 +219,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               {formatDate(event.startsAt)}
               {event.venue?.address ? ` · ${event.venue.address}` : ''}
             </p>
+            {!past && <EventTicketPrices ticketTypes={event.ticketTypes ?? []} />}
             {event.hasLivestream &&
               (registered ? (
                 <Link href={`/events/${event.id}/livestream`} className="btn">
@@ -234,15 +236,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   ? 'Sign in with your registered attendee account to access available session replays.'
                   : 'Registration for this event has closed.'}
               </p>
-            ) : onSale && isUser ? (
+            ) : registrationAvailable && isUser ? (
               <EventCheckoutForm
                 eventId={String(event.id)}
                 ticketTypes={event.ticketTypes ?? []}
-                isSubscriber={canRead}
+                isSubscriber={plan === 'base' || plan === 'premium'}
                 buyerName={`${user.firstName || ''} ${user.lastName || ''}`.trim()}
                 buyerEmail={user.email || ''}
               />
-            ) : onSale ? (
+            ) : registrationAvailable ? (
               <>
                 <p>Sign in or create an account to choose your ticket.</p>
                 <Link className="btn" href="/login">

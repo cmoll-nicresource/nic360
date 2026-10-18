@@ -742,9 +742,12 @@ export interface Event {
     | {
         name: string;
         /**
-         * Buyer self-declares eligibility (Public Health, Academia); no check is made.
+         * Deprecated compatibility field; ignored by ticketing.
          */
         honorSystem?: boolean | null;
+        /**
+         * Deprecated compatibility field; tickets are always available.
+         */
         onSale?: boolean | null;
         capacity?: number | null;
         /**
@@ -753,12 +756,15 @@ export interface Event {
         inPerson?: {
           price?: number | null;
           /**
-           * Blank = same as standard.
+           * Blank = same as non-subscriber price.
            */
           subscriberPrice?: number | null;
         };
         virtual?: {
           price?: number | null;
+          /**
+           * Blank = same as non-subscriber price.
+           */
           subscriberPrice?: number | null;
         };
         id?: string | null;

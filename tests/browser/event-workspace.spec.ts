@@ -45,7 +45,7 @@ test('event dashboard scopes its program, edits, registrations, counts and role-
   try {
     const speaker = await add('speakers', { name: 'Dashboard speaker ' + unique })
     const sponsor = await add('sponsors', { name: 'Dashboard sponsor ' + unique, description: lexicalFromText('Synthetic dashboard sponsor.') })
-    const event = await add('events', { name: 'Dashboard event ' + unique, channel: 'atnf', startsAt: '2099-04-10T14:00:00Z', endDate: '2099-04-11T00:00:00Z', timezone: 'America/New_York', speakers: [speaker.id], sponsors: [sponsor.id], ticketTypes: [{ name: 'General', price: 0, onSale: true }], _status: 'draft' })
+    const event = await add('events', { name: 'Dashboard event ' + unique, channel: 'atnf', startsAt: '2099-04-10T14:00:00Z', endDate: '2099-04-11T00:00:00Z', timezone: 'America/New_York', speakers: [speaker.id], sponsors: [sponsor.id], ticketTypes: [{ name: 'General', inPerson: { price: 0 } }], _status: 'draft' })
     const order = await add('orders', { buyer: f.users.premium.id, event: event.id, subtotal: 0, total: 0, status: 'paid' })
     await add('event-registrations', { event: event.id, order: order.id, attendee: f.users.premium.id, attendeeName: 'Active dashboard attendee', attendeeEmail: 'active@example.invalid', ticketType: 'General', attendance: 'in-person', amountPaid: 0, status: 'active' })
     await add('event-registrations', { event: event.id, order: order.id, attendeeName: 'Cancelled dashboard attendee', attendeeEmail: 'cancelled@example.invalid', ticketType: 'General', attendance: 'virtual', amountPaid: 0, status: 'cancelled' })

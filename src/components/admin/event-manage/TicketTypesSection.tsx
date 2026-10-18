@@ -9,8 +9,6 @@ type TicketType = NonNullable<Event['ticketTypes']>[number]
 
 const BLANK: TicketType = {
   name: '',
-  honorSystem: false,
-  onSale: true,
   capacity: null,
   inPerson: { price: null, subscriberPrice: null },
   virtual: { price: null, subscriberPrice: null },
@@ -54,6 +52,7 @@ export function TicketTypesSection({ event }: { event: Event }) {
   return (
     <div className="card">
       <h2 style={{ marginTop: 0 }}>Ticket types</h2>
+      <p className="muted">Tickets are always available for registration. Set non-subscriber and subscriber prices for each attendance option. A blank subscriber price uses the non-subscriber price.</p>
       {error && <p style={{ color: '#9a3434' }}>{error}</p>}
 
       {rows.length === 0 && <p className="muted">No ticket types yet.</p>}
@@ -64,18 +63,6 @@ export function TicketTypesSection({ event }: { event: Event }) {
             <input value={t.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="General Admission" />
           </div>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 10 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-              <input type="checkbox" checked={!!t.onSale} onChange={(e) => update(i, { onSale: e.target.checked })} />
-              On sale
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-              <input
-                type="checkbox"
-                checked={!!t.honorSystem}
-                onChange={(e) => update(i, { honorSystem: e.target.checked })}
-              />
-              Honor system
-            </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
               Capacity
               <input
@@ -94,14 +81,14 @@ export function TicketTypesSection({ event }: { event: Event }) {
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   type="number"
-                  placeholder="Price"
-                  style={{ width: 90 }}
+                  placeholder="Non-subscriber price" aria-label="Non-subscriber price" min="0" step="0.01"
+                  style={{ width: 150 }}
                   value={t.inPerson?.price ?? ''}
                   onChange={(e) => update(i, { inPerson: { ...t.inPerson, price: numOrNull(e.target.value) } })}
                 />
                 <input
                   type="number"
-                  placeholder="Subscriber price"
+                  placeholder="Subscriber price" aria-label="Subscriber price" min="0" step="0.01"
                   style={{ width: 120 }}
                   value={t.inPerson?.subscriberPrice ?? ''}
                   onChange={(e) =>
@@ -117,14 +104,14 @@ export function TicketTypesSection({ event }: { event: Event }) {
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   type="number"
-                  placeholder="Price"
-                  style={{ width: 90 }}
+                  placeholder="Non-subscriber price" aria-label="Non-subscriber price" min="0" step="0.01"
+                  style={{ width: 150 }}
                   value={t.virtual?.price ?? ''}
                   onChange={(e) => update(i, { virtual: { ...t.virtual, price: numOrNull(e.target.value) } })}
                 />
                 <input
                   type="number"
-                  placeholder="Subscriber price"
+                  placeholder="Subscriber price" aria-label="Subscriber price" min="0" step="0.01"
                   style={{ width: 120 }}
                   value={t.virtual?.subscriberPrice ?? ''}
                   onChange={(e) =>

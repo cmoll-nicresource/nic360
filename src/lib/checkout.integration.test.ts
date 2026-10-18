@@ -35,7 +35,7 @@ describe.skipIf(process.env.CHECKOUT_INTEGRATION !== '1')(
           startsAt: '2099-01-01T12:00:00Z',
           endDate: '2099-01-02T00:00:00Z',
           ticketTypes: [
-            { name: 'General', onSale: true, capacity, inPerson: { price }, virtual: { price: 0 } },
+            { name: 'General', capacity, inPerson: { price }, virtual: { price: 0 } },
           ],
         },
         overrideAccess: true,
@@ -326,7 +326,7 @@ describe.skipIf(process.env.CHECKOUT_INTEGRATION !== '1')(
         id: ev.id,
         data: {
           ticketTypes: [
-            { name: 'General', onSale: true, inPerson: { price: 10, subscriberPrice: 6 } },
+            { name: 'General', onSale: false, honorSystem: true, inPerson: { price: 10, subscriberPrice: 6 } },
           ],
         },
       })
@@ -338,6 +338,9 @@ describe.skipIf(process.env.CHECKOUT_INTEGRATION !== '1')(
         input([email()], discount.code),
       )
       expect((await payload.findByID({ collection: 'orders', id: result.orderId })).total).toBe(4.5)
+      // Legacy sale/eligibility flags cannot block tickets or grant subscriber pricing.
+      const standard = await createEventCheckout(payload, buyer, ev.id, input([email()]))
+      expect((await payload.findByID({ collection: 'orders', id: standard.orderId })).total).toBe(10)
       await expect(
         createEventCheckout(payload, buyer, ev.id, input([email()], discount.code)),
       ).rejects.toThrow('0 use(s)')
