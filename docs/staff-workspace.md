@@ -26,6 +26,8 @@ The sidebar replaces Payload's automatic collection list with News, Bills, Publi
 
 Find/Create a publication opens **issues**. Publication settings remains a separate link for recurring titles and rules. Newsletter Deliveries is now labeled **Publication Deliveries**; its collection/API slug remains `newsletter-deliveries`. Guides are loaded from the actual guide records, including drafts, and link directly to their edit screens. All guides remains available for creating and finding resources.
 
+Article, bill and publication issue lists default to newest first by source date, bill date and issue date respectively. Staff can still choose another sort; Payload retains individual saved list preferences.
+
 Events links are selected from actual records: the most recently completed event, the next upcoming event, and any event underway. The sidebar and Past events list use the staff calendar in America/New_York; each event dashboard formats its dates and countdown in the event's own timezone. Create new event is editorial/admin work; gatekeepers continue using attendee operations. Past events is filtered and paginated, and All events keeps the full archive reachable.
 
 Additional links preserve existing workflows: Publication settings, All guides/events, reader access checks, Email follow-up, Company usage, Connected browsers and Media library. There is no separate duplicate collection menu below these groups.

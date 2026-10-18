@@ -8,6 +8,7 @@ import { buildSearchTextHook } from '@/hooks/buildSearchText'
 
 export const Bills: CollectionConfig = {
   slug: 'bills',
+  defaultSort: '-billDate',
   labels: { singular: 'Legislation', plural: 'Legislation' },
   admin: {
     group: ADMIN_GROUPS.tracking,

@@ -37,6 +37,7 @@ const protectNewsletterState: CollectionBeforeChangeHook = async ({
 
 export const PublicationIssues: CollectionConfig = {
   slug: 'publication-issues',
+  defaultSort: '-issueDate',
   labels: { singular: 'Issue', plural: 'Issues' },
   admin: {
     group: ADMIN_GROUPS.publishing,

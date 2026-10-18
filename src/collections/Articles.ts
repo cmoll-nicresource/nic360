@@ -8,6 +8,7 @@ import { buildSearchTextHook } from '@/hooks/buildSearchText'
 
 export const Articles: CollectionConfig = {
   slug: 'articles',
+  defaultSort: '-sourceDate',
   labels: { singular: 'News Item', plural: 'News' },
   admin: {
     group: ADMIN_GROUPS.tracking,
