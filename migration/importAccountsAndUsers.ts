@@ -53,6 +53,7 @@ import zlib from 'zlib'
 import { getPayload } from 'payload'
 
 import config from '../src/payload.config'
+import { latestLegacyLogin } from '../src/lib/legacyUserLogins'
 
 const DUMP_PATH = path.join(process.cwd(), 'old-db', 'truecms.sql.gz')
 const OUT_DIR = path.join(process.cwd(), 'migration', 'data')
@@ -79,26 +80,31 @@ type OldUser = {
   salutation: string
   status: string
   signInCount: string
+  lastLoginAt?: string
 }
 
 const NULL = '\\N'
 const clean = (v: string) => (v === NULL ? undefined : v)
 
 /** Streams the dump once, calling onRow for every data row of the named table's COPY block. */
-async function streamTable(tableName: string, onRow: (fields: string[]) => void): Promise<void> {
+async function streamTable(tableName: string, onRow: (fields: string[], columns: string[]) => void): Promise<void> {
   const copyPrefix = `COPY public.${tableName} (`
   let inBlock = false
+  let columns: string[] = []
   const rl = readline.createInterface({
     input: fs.createReadStream(DUMP_PATH).pipe(zlib.createGunzip()),
     crlfDelay: Infinity,
   })
   for await (const line of rl) {
     if (!inBlock) {
-      if (line.startsWith(copyPrefix)) inBlock = true
+      if (line.startsWith(copyPrefix)) {
+        inBlock = true
+        columns = line.slice(line.indexOf('(') + 1, line.indexOf(')')).split(', ')
+      }
       continue
     }
     if (line === '\\.') break
-    onRow(line.split('\t'))
+    onRow(line.split('\t'), columns)
   }
   rl.close()
 }
@@ -176,7 +182,7 @@ async function main() {
 
   console.log('Pass 3/3: reading users, filtering to Active (or Blocked-with-signin), excluding internal domains...')
   const users: OldUser[] = []
-  await streamTable('users', (f) => {
+  await streamTable('users', (f, columns) => {
     const id = f[0]
     if (!chosenAccountIdByUser.has(id)) return
     const email = f[1]
@@ -196,6 +202,7 @@ async function main() {
         salutation: f[21],
         status,
         signInCount,
+        lastLoginAt: latestLegacyLogin(f[columns.indexOf('current_sign_in_at')], f[columns.indexOf('last_sign_in_at')]),
       })
     }
   })
@@ -265,10 +272,12 @@ async function main() {
     })
     if (existing.docs.length > 0) {
       const { password, ...updateData } = data
+      if (u.lastLoginAt && (!existing.docs[0].lastLoginAt || u.lastLoginAt > existing.docs[0].lastLoginAt))
+        updateData.lastLoginAt = u.lastLoginAt
       await payload.update({ collection: 'users', id: existing.docs[0].id, data: updateData, overrideAccess: true })
       updatedUsers++
     } else {
-      await payload.create({ collection: 'users', data, overrideAccess: true })
+      await payload.create({ collection: 'users', data: { ...data, lastLoginAt: u.lastLoginAt }, overrideAccess: true })
       createdUsers++
     }
   }

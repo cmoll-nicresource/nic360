@@ -1,6 +1,6 @@
 # Reader signup and migration password transition
 
-Updated October 17, 2026. Reader accounts use `/login`, `/signup`, `/forgot-password` and `/account`. Staff use the separate `/admin` sign-in.
+Updated October 18, 2026. Reader accounts use `/login`, `/signup`, `/forgot-password` and `/account`. Staff use the separate `/admin` sign-in.
 
 ## Existing readers after migration
 
@@ -12,6 +12,14 @@ An existing reader should:
 2. Enter the email address used on the previous site.
 3. Open the newest reset email and choose a password of at least eight characters. Links last one hour and are single-use; requesting another invalidates the earlier link.
 4. Continue to their account. The reset signs them in and invalidates previous sessions. Their company assignment, subscription eligibility, profile and publication preferences stay attached to the same account.
+
+### Historical last login
+
+On October 18, 2026, historical last-login dates were recovered from the original dump. The legacy database has `current_sign_in_at` (most recent), `last_sign_in_at` (previous) and `sign_in_count`; the newest valid sign-in timestamp is used. Naive Rails timestamps are interpreted as UTC and truncated to the CMS's millisecond precision. Missing, invalid and future values are never replaced with migration/confirmation dates.
+
+The original account/domain/status import rules identify 626 eligible readers. Of those, 337 have historical login dates and all 337 matched beta readers by exact normalized email. **336 blank beta dates were filled; one newer beta login was preserved.** The local development copy received 337 missing dates. A second preview in both environments proposed zero updates. The remaining 289 eligible legacy readers have no historical sign-in timestamp.
+
+`migration/backfillUserLogins.ts` previews by default; `--plan-only` prepares a private source plan and `--apply` commits a local backfill. The SQL repair locks/rechecks matching readers, snapshots original dates before writing, preserves equal/newer dates, rejects ambiguous identities or a stale preview, and verifies checksums of every other reader field. Private before/after snapshots and execution summaries remain in ignored `migration/data` and `tmp` directories. Beta was updated over temporary private Railway SSH, and the key was revoked after verification. No passwords, account status, memberships, consent, sessions or update timestamps changed; no email hooks ran. The original reader importer now also carries forward historical dates while preserving newer logins on reruns. Do not rerun the full importer solely to repair login dates.
 
 The sign-in page explains this transition, and `/account` includes **Change password** for later use. A verified migrated/staff-created account is directed to recovery when entered in signup; it does not need a second account or a repeated profile form. An unfinished new signup with a verification challenge can still restart.
 
