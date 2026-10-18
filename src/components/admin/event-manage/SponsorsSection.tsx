@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import Link from 'next/link'
 
 import type { Event, Sponsor } from '@/payload-types'
 
@@ -44,7 +45,7 @@ export function SponsorsSection({ event, allSponsors }: { event: Event; allSpons
           key={s.id}
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--nrc-border)' }}
         >
-          <span style={{ flex: 1 }}>{s.name}</span>
+          <span style={{ flex: 1 }}><Link href={`/admin/collections/sponsors/${s.id}`} aria-label={`Edit sponsor ${s.name}`}>{s.name}</Link></span>
           <button
             type="button"
             className="btn-secondary btn"

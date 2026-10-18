@@ -209,6 +209,7 @@ refs.event = (
     _status: 'published',
   })
 ).id
+refs.pastEvent = (await add('events', { name: 'Fixture past conference', channel: 'infocus', startsAt: '2000-10-01T12:00:00Z', endDate: '2000-10-02T00:00:00Z', _status: 'published' })).id
 const issue = await add('publication-issues', {
   legacyId: 'synthetic-old-issue',
   publication: publications['us-news-clippings'],

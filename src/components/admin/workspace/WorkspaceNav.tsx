@@ -1,11 +1,16 @@
-import Link from 'next/link'
-import type { PayloadRequest } from 'payload'
-import { staffTasksFor } from '@/config/staffWorkspace'
-import { staffHasRole } from '@/access/staffRoles'
+import { Link } from '@payloadcms/ui'
+import type { Payload, PayloadRequest, ServerProps } from 'payload'
+import { DefaultNav } from '@payloadcms/next/rsc'
+import { getWorkspaceMenu } from '@/lib/workspaceMenu'
 
-export function WorkspaceNav({ user }: { user?: PayloadRequest['user'] }) {
-  const tasks = staffTasksFor(user ?? null)
-  if (!tasks.length) return null
+/** Keep Payload's mobile toggle, account controls and logout, replacing its flat collection links. */
+export function WorkspaceNavigation(props: ServerProps & { req?: PayloadRequest }) {
+  return <DefaultNav {...props} visibleEntities={{ collections: [], globals: [] }} />
+}
+
+export async function WorkspaceNav({ user, payload }: { user?: PayloadRequest['user']; payload: Payload }) {
+  const groups = await getWorkspaceMenu(payload, user ?? null)
+  if (!groups.length) return null
   return (
     <div className="nic-workspace-nav">
       <Link
@@ -20,25 +25,15 @@ export function WorkspaceNav({ user }: { user?: PayloadRequest['user'] }) {
       <Link className="nic-workspace-nav__home" href="/admin">
         Workspace overview <span aria-hidden="true">↗</span>
       </Link>
-      <p className="nic-workspace-nav__label">Daily actions</p>
-      {tasks
-        .filter((task) => task.daily)
-        .map((task) => (
-          <Link key={task.href} href={task.href} className="nic-workspace-nav__link">
-            {task.label}
-          </Link>
-        ))}
-      {staffHasRole(user ?? null, 'admin') && (
-        <Link href="/admin/connected-browsers" className="nic-workspace-nav__link">Connected browsers</Link>
-      )}
+      {groups.map(group => (
+        <section key={group.label} aria-label={group.label} className="nic-workspace-nav__group">
+          <h2 className="nic-workspace-nav__label">{group.label}</h2>
+          {group.links.map(link => <Link key={link.href} href={link.href} prefetch={false} className="nic-workspace-nav__link">{link.label}</Link>)}
+        </section>
+      ))}
       <Link href="/" className="nic-workspace-nav__site">
         View public site <span aria-hidden="true">↗</span>
       </Link>
-      <p className="nic-workspace-nav__label">
-        {user?.collection === 'staff' && user.role === 'gatekeeper'
-          ? 'Membership & events'
-          : 'Collections'}
-      </p>
     </div>
   )
 }

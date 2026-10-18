@@ -203,8 +203,13 @@ export async function DatasetImportView(props: AdminViewServerProps) {
 
 export async function EventsWorkspaceView(props: AdminViewServerProps) {
   const req = requireWorkspaceRole(props)
+  const pastOnly = props.searchParams?.period === 'past'
+  const page = Math.max(1, Math.floor(Number(props.searchParams?.page) || 1))
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
   const events = await req.payload.find({
     collection: 'events',
+    ...(pastOnly ? { where: { endDate: { less_than: `${today}T00:00:00.000Z` } } } : {}),
+    page,
     limit: 24,
     sort: '-startsAt',
     depth: 0,
@@ -215,7 +220,7 @@ export async function EventsWorkspaceView(props: AdminViewServerProps) {
   return (
     <WorkspaceShell props={props}>
       <WorkspacePage
-        title="Event management"
+        title={pastOnly ? 'Past events' : 'Event management'}
         eyebrow="OPERATIONS"
         description="One place for each event’s program, speakers, sponsors, tickets, and attendees."
         actions={
@@ -255,6 +260,10 @@ export async function EventsWorkspaceView(props: AdminViewServerProps) {
         <p>
           <Link href="/admin/collections/events">Browse all {events.totalDocs} events →</Link>
         </p>
+        <div className="nic-workspace__pagination">
+          {events.hasPrevPage && <Link href={`/admin/events?${pastOnly ? 'period=past&' : ''}page=${page - 1}`}>Previous page</Link>}
+          {events.hasNextPage && <Link href={`/admin/events?${pastOnly ? 'period=past&' : ''}page=${page + 1}`}>Next page</Link>}
+        </div>
       </WorkspacePage>
     </WorkspaceShell>
   )
@@ -279,7 +288,7 @@ export async function ManageEventView(props: AdminViewServerProps) {
   if (!event) notFound()
   const canManageRegistrations = staffHasRole(req.user, 'gatekeeper')
   const options = { req, overrideAccess: false as const }
-  const [sessions, sponsors, speakers, users, codes, registrations, providers, attendeeReport] =
+  const [sessions, sponsors, speakers, codes, registrations, providers, attendeeReport, activeAttendees] =
     await Promise.all([
       payload.find({
         collection: 'sessions',
@@ -287,13 +296,11 @@ export async function ManageEventView(props: AdminViewServerProps) {
         depth: 1,
         limit: 200,
         sort: 'day',
+        draft: true,
         ...options,
       }),
       payload.find({ collection: 'sponsors', limit: 200, sort: 'name', depth: 1, ...options }),
       payload.find({ collection: 'speakers', limit: 200, sort: 'name', depth: 1, ...options }),
-      canManageRegistrations
-        ? payload.find({ collection: 'users', limit: 500, sort: 'email', depth: 0, ...options })
-        : Promise.resolve({ docs: [] }),
       canManageRegistrations
         ? payload.find({
             collection: 'discount-codes',
@@ -324,26 +331,26 @@ export async function ManageEventView(props: AdminViewServerProps) {
           })
         : Promise.resolve({ docs: [] }),
       canManageRegistrations ? getAttendeeReport(payload, event.id) : Promise.resolve([]),
+      canManageRegistrations
+        ? payload.count({ collection: 'event-registrations', where: { and: [{ event: { equals: event.id } }, { status: { equals: 'active' } }] }, ...options })
+        : Promise.resolve(null),
     ])
   return (
     <WorkspaceShell props={props}>
       <WorkspacePage
-        title="Manage event"
+        title={event.name}
         eyebrow="EVENT OPERATIONS"
         description="Manage the complete event without switching between collections."
         actions={<Link href="/admin/events">All events →</Link>}
       >
         <EventManageDashboard
           event={event}
+          sessionCount={sessions.totalDocs}
+          activeAttendeeCount={activeAttendees?.totalDocs ?? null}
+          registrationCount={'totalDocs' in registrations ? registrations.totalDocs as number : 0}
           sessions={sessions.docs}
           allSponsors={sponsors.docs}
           allSpeakers={speakers.docs}
-          allUsers={users.docs.map((u) => ({
-            id: u.id,
-            email: u.email,
-            firstName: u.firstName,
-            lastName: u.lastName,
-          }))}
           discountCodes={codes.docs}
           registrations={registrations.docs}
           accessProviders={providers.docs.map((p) => ({ id: p.id, name: p.name }))}

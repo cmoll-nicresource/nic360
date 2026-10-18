@@ -24,6 +24,7 @@ const TABS = [
   { key: 'pages', label: 'By page' },
   { key: 'sections', label: 'By section' },
   { key: 'publications', label: 'Publications' },
+  { key: 'events', label: 'Events' },
   { key: 'ads', label: 'Ads' },
 ] as const
 
@@ -86,8 +87,31 @@ export function AnalyticsView({
         />
       )}
       {tab === 'ads' && <AdsTab payload={payload} publicationId={firstParam(sp.publicationId)} />}
+      {tab === 'events' && <EventsTab payload={payload} user={user ?? null} />}
     </Gutter>
   )
+}
+
+async function EventsTab({ payload, user }: { payload: Payload; user: PayloadRequest['user'] }) {
+  const options = { user, overrideAccess: false as const }
+  const events = await payload.find({ collection: 'events', sort: '-startsAt', depth: 0, limit: 24, draft: true, ...options })
+  const rows = await Promise.all(events.docs.map(async event => {
+    const [active, virtual] = await Promise.all([
+      payload.count({ collection: 'event-registrations', where: { and: [{ event: { equals: event.id } }, { status: { equals: 'active' } }] }, ...options }),
+      payload.count({ collection: 'event-registrations', where: { and: [{ event: { equals: event.id } }, { status: { equals: 'active' } }, { attendance: { equals: 'virtual' } }] }, ...options }),
+    ])
+    return { event, active: active.totalDocs, virtual: virtual.totalDocs }
+  }))
+  return <section className="nic-analytics__card">
+    <h2>Event attendance</h2>
+    <p>Active registrations, excluding pending and cancelled tickets. Open an event for attendance reports and livestream engagement.</p>
+    <div className="nic-workspace__table-scroll"><table><thead><tr><th>Event</th><th>Active attendees</th><th>In person</th><th>Virtual</th></tr></thead><tbody>
+      {rows.map(({ event, active, virtual }) => <tr key={event.id}><td><Link href={`/admin/events/${event.id}/manage`}>{event.name}</Link></td><td>{active}</td><td>{active - virtual}</td><td>{virtual}</td></tr>)}
+    </tbody></table></div>
+    {!rows.length && <p>No events yet.</p>}
+    {events.hasNextPage && <p>Showing the latest 24 of {events.totalDocs} events.</p>}
+    <Link href="/admin/events">Browse all events</Link>
+  </section>
 }
 
 function firstParam(v: string | string[] | undefined): string | undefined {

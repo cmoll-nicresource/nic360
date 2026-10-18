@@ -33,6 +33,36 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
 .nic-workspace-nav__label { color: var(--nic-muted); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin: 22px 0 10px; }
 .nic-workspace-nav__link { display: block; color: var(--theme-text); padding: 8px 12px; border-radius: 6px; font-size: 13px; }
 .nic-workspace-nav__link:hover { color: var(--nic-accent); background: var(--nic-tint); }
+.nic-workspace-nav__group { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--nic-line); }
+.nic-workspace-nav__group .nic-workspace-nav__label { font-size: 11px; margin: 16px 12px 6px; line-height: 1.6; }
+.nic-workspace-nav__link { overflow-wrap: anywhere; }
+.nic-workspace-nav__link:focus-visible { outline: 2px solid var(--nic-accent); outline-offset: -2px; }
+.nic-event-dashboard__overview { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+.nic-event-dashboard__overview p { color: var(--nic-muted); line-height: 1.7; font-size: 13px; }
+.nic-event-dashboard__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 14px; margin: 0 0 24px; }
+.nic-event-dashboard__facts > div { padding: 20px; border: 1px solid var(--nic-line); border-radius: 10px; background: var(--nic-surface); }
+.nic-event-dashboard__facts dt { font-size: 12px; color: var(--nic-muted); }
+.nic-event-dashboard__facts dd { margin: 10px 0 0; font-size: 30px; color: var(--nic-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+.nic-event-dashboard__sections { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; border-radius: 10px; background: var(--nic-tint); margin-bottom: 28px; }
+.nic-event-dashboard__sections a { padding: 8px 12px; font-size: 13px; border-radius: 6px; background: var(--nic-surface); color: var(--nic-ink); text-decoration: none; }
+.nic-event-dashboard > section { scroll-margin-top: 90px; }
+.nic-event-dashboard__search { display: grid; gap: 8px; font-size: 13px; max-width: 480px; }
+.nic-event-dashboard__search input { padding: 10px 12px; border: 1px solid var(--nic-line); border-radius: 6px; background: var(--theme-input-bg); color: var(--theme-text); }
+.nic-event-dashboard .btn { display: inline-flex; align-items: center; justify-content: center; padding: 9px 13px; border: 1px solid transparent; border-radius: 6px; background: var(--nic-accent); color: var(--nic-surface); font-size: 12px; cursor: pointer; text-decoration: none; }
+.nic-event-dashboard .btn-secondary { border-color: var(--nic-line); background: var(--nic-surface); color: var(--nic-ink); }
+.nic-event-dashboard .btn:disabled { opacity: .5; cursor: default; }
+.nic-event-dashboard .field { display: grid; gap: 7px; margin-bottom: 15px; }
+.nic-event-dashboard .field label { font-size: 12px; font-weight: 600; }
+.nic-event-dashboard input, .nic-event-dashboard select, .nic-event-dashboard textarea { min-width: 0; max-width: 100%; padding: 9px 12px; border: 1px solid var(--nic-line); border-radius: 6px; color: var(--theme-text); background: var(--theme-input-bg); }
+.nic-event-dashboard .muted { color: var(--nic-muted); font-size: 12px; line-height: 1.6; }
+.nic-event-dashboard table { width: 100%; border-collapse: collapse; }
+.nic-event-dashboard td, .nic-event-dashboard th { padding: 10px; text-align: left; border-bottom: 1px solid var(--nic-line); }
+.nic-event-dashboard .card { overflow-x: auto; }
+.nic-event-dashboard .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 22px; }
+.nic-event-dashboard .stat-box { padding: 16px; background: var(--nic-tint); border-radius: 8px; }
+.nic-event-dashboard .stat-box-value { font-size: 24px; font-weight: 650; }
+.nic-event-dashboard .stat-box-label { color: var(--nic-muted); font-size: 12px; margin-top: 6px; }
+.nic-workspace__pagination { display: flex; justify-content: space-between; gap: 20px; }
 .nic-workspace-nav__site { display: flex; justify-content: space-between; color: var(--nic-muted); margin: 22px 12px; font-size: 12px; }
 .nic-workspace { padding-top: 18px; padding-bottom: 70px; color: var(--theme-text); }
 .nic-workspace a { text-underline-offset: 4px; }

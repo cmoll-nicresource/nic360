@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import Link from 'next/link'
 
 import type { Event, Speaker } from '@/payload-types'
 
@@ -45,7 +46,7 @@ export function SpeakersSection({ event, allSpeakers }: { event: Event; allSpeak
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--nrc-border)' }}
         >
           <span style={{ flex: 1 }}>
-            {s.name}
+            <Link href={`/admin/collections/speakers/${s.id}`} aria-label={`Edit speaker ${s.name}`}>{s.name}</Link>
             {(s.role || s.company) && (
               <span className="muted"> — {[s.role, s.company].filter(Boolean).join(', ')}</span>
             )}
@@ -65,6 +66,7 @@ export function SpeakersSection({ event, allSpeakers }: { event: Event; allSpeak
           </button>
         </div>
       ))}
+      <p className="muted">Speaker profiles are shared across events. Editing a profile updates it wherever it appears.</p>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
         <select value={pickId} onChange={(e) => setPickId(e.target.value)} style={{ flex: 1, minWidth: 180 }}>

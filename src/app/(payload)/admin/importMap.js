@@ -29,6 +29,7 @@ import { IssueDeliverySummary as IssueDeliverySummary_d235304900cbadb020bea9a57e
 import { SendIssueButtons as SendIssueButtons_f2e6e440952be4366e071120771276c6 } from '../../../components/admin/SendIssueButtons'
 import { ReAddButton as ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705 } from '../../../components/admin/ReAddButton'
 import { ManageEventLink as ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c } from '../../../components/admin/ManageEventLink'
+import { WorkspaceNavigation as WorkspaceNavigation_74eddeb5ab912fa47a634b4965d750f4 } from '../../../components/admin/workspace/WorkspaceNav'
 import { Icon as Icon_16e62c7e42dfe7700742ba3a13bf8900 } from '../../../components/admin/graphics/Icon'
 import { Logo as Logo_13338d86bf8cb9661b50b401726320cd } from '../../../components/admin/graphics/Logo'
 import { WorkspaceNav as WorkspaceNav_74eddeb5ab912fa47a634b4965d750f4 } from '../../../components/admin/workspace/WorkspaceNav'
@@ -78,6 +79,7 @@ export const importMap = {
   "./components/admin/SendIssueButtons#SendIssueButtons": SendIssueButtons_f2e6e440952be4366e071120771276c6,
   "./components/admin/ReAddButton#ReAddButton": ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705,
   "./components/admin/ManageEventLink#ManageEventLink": ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c,
+  "./components/admin/workspace/WorkspaceNav#WorkspaceNavigation": WorkspaceNavigation_74eddeb5ab912fa47a634b4965d750f4,
   "./components/admin/graphics/Icon#Icon": Icon_16e62c7e42dfe7700742ba3a13bf8900,
   "./components/admin/graphics/Logo#Logo": Logo_13338d86bf8cb9661b50b401726320cd,
   "./components/admin/workspace/WorkspaceNav#WorkspaceNav": WorkspaceNav_74eddeb5ab912fa47a634b4965d750f4,

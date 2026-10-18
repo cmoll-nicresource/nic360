@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import Link from 'next/link'
 
 import type { Event, Session } from '@/payload-types'
 
@@ -21,7 +22,7 @@ function combineDayAndTime(dayIso: string, time: string): string | undefined {
   return day.toISOString()
 }
 
-export function SessionsSection({ event, sessions }: { event: Event; sessions: Session[] }) {
+export function SessionsSection({ event, sessions, totalCount }: { event: Event; sessions: Session[]; totalCount: number }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -39,7 +40,7 @@ export function SessionsSection({ event, sessions }: { event: Event; sessions: S
         const day = days.find((d) => d.date === s.day)
         return (
           <div key={s.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--nrc-border)' }}>
-            <strong>{s.title}</strong>{' '}
+            <strong><Link href={`/admin/collections/sessions/${s.id}`} aria-label={`Edit session ${s.title}`}>{s.title}</Link></strong>{' '}
             <span className="muted">
               — {day ? dayLabel(day.date, day.name) : new Date(s.day).toLocaleDateString()} · {s.type}
               {s.room ? ` · ${s.room}` : ''}
@@ -47,6 +48,7 @@ export function SessionsSection({ event, sessions }: { event: Event; sessions: S
           </div>
         )
       })}
+      <p><Link href={`/admin/collections/sessions?where[event][equals]=${event.id}`}>Browse all {totalCount} agenda sessions</Link></p>
 
       <div style={{ marginTop: 14 }}>
         <button type="button" className="btn" onClick={() => setShowCreate((v) => !v)}>

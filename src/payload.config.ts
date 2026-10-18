@@ -95,6 +95,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     components: {
+      Nav: './components/admin/workspace/WorkspaceNav#WorkspaceNavigation',
       beforeNavLinks: ['./components/admin/workspace/WorkspaceNav#WorkspaceNav'],
       graphics: {
         Logo: './components/admin/graphics/Logo#Logo',

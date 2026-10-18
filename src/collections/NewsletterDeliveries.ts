@@ -4,6 +4,7 @@ import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const NewsletterDeliveries: CollectionConfig = {
   slug: 'newsletter-deliveries',
+  labels: { singular: 'Publication Delivery', plural: 'Publication Deliveries' },
   admin: {
     group: ADMIN_GROUPS.system,
     useAsTitle: 'recipientEmail',

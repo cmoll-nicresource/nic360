@@ -22,10 +22,12 @@ export type SimpleAccessProvider = { id: number; name: string }
 
 export type EventManageDashboardProps = {
   event: Event
+  sessionCount: number
+  activeAttendeeCount: number | null
+  registrationCount: number
   sessions: Session[]
   allSponsors: Sponsor[]
   allSpeakers: Speaker[]
-  allUsers: SimpleUser[]
   discountCodes: DiscountCode[]
   registrations: EventRegistration[]
   accessProviders: SimpleAccessProvider[]

@@ -2,23 +2,26 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import Link from 'next/link'
 
 import type { Event, EventRegistration } from '@/payload-types'
-import type { SimpleUser } from './types'
+import { AttendeeUserPicker } from './AttendeeUserPicker'
 
 export function AttendeesSection({
   event,
   registrations,
-  allUsers,
+  totalCount,
 }: {
   event: Event
   registrations: EventRegistration[]
-  allUsers: SimpleUser[]
+  totalCount: number
 }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<'none' | 'existing' | 'new'>('none')
+  const [search, setSearch] = useState('')
+  const filtered = registrations.filter(r => `${r.attendeeName} ${r.attendeeEmail} ${r.ticketType}`.toLowerCase().includes(search.toLowerCase()))
 
   const ticketTypeNames = (event.ticketTypes ?? []).map((t) => t.name).filter(Boolean)
 
@@ -45,10 +48,15 @@ export function AttendeesSection({
   return (
     <div className="card">
       <h2 style={{ marginTop: 0 }}>Attendees</h2>
+      <label className="nic-event-dashboard__search">Find an attendee
+        <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Name, email or ticket type" />
+      </label>
+      <p><Link href={`/admin/collections/event-registrations?where[event][equals]=${event.id}`}>Search all {totalCount} registrations</Link></p>
+      {totalCount > registrations.length && <p className="muted">Showing the latest {registrations.length} registrations below. Use Search all registrations for the complete list.</p>}
       {error && <p style={{ color: '#9a3434' }}>{error}</p>}
 
       {registrations.length === 0 && <p className="muted">No one is registered for this event yet.</p>}
-      {registrations.map((r) => (
+      {filtered.map((r) => (
         <div
           key={r.id}
           style={{
@@ -61,7 +69,7 @@ export function AttendeesSection({
           }}
         >
           <span style={{ flex: 1 }}>
-            {r.attendeeName} <span className="muted">({r.attendeeEmail})</span> — {r.ticketType}, {r.attendance}
+            <Link href={`/admin/collections/event-registrations/${r.id}`} aria-label={`Edit attendee ${r.attendeeName}`}>{r.attendeeName}</Link> <span className="muted">({r.attendeeEmail})</span> — {r.ticketType}, {r.attendance}
             {r.status === 'cancelled' ? ' · cancelled' : ''}
           </span>
           {r.status === 'active' && (
@@ -100,19 +108,7 @@ export function AttendeesSection({
           }}
           style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--nrc-border)' }}
         >
-          <div className="field">
-            <label>User</label>
-            <select name="userId" required defaultValue="">
-              <option value="" disabled>
-                Choose a user…
-              </option>
-              {allUsers.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {[u.firstName, u.lastName].filter(Boolean).join(' ') || u.email} ({u.email})
-                </option>
-              ))}
-            </select>
-          </div>
+          <AttendeeUserPicker />
           <TicketAndAttendanceFields ticketTypeNames={ticketTypeNames} />
           <button type="submit" className="btn" disabled={busy}>
             {busy ? 'Adding…' : 'Add as attendee'}
