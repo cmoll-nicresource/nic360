@@ -169,9 +169,10 @@ export async function seedPublications(payload: Payload) {
     {
       title: 'Monthly Research Digest',
       slug: 'monthly-research-digest',
-      description: 'A monthly custom-HTML roundup designed outside the CMS.',
-      category: ['news'] as ('news' | 'legislation' | 'trademarks')[],
-      format: 'custom-html' as const,
+      generator: 'monthly-research-digest' as const,
+      description: 'Research articles and abstracts grouped by journal, with authors, publication dates and DOI links.',
+      category: ['research'] as ('news' | 'legislation' | 'trademarks' | 'research')[],
+      format: 'pdf-report' as const,
       frequency: 'monthly' as const,
       mailchimpInterestId: 'sim_interest_monthly_research_digest',
       mailchimpSegmentId: 'sim_segment_monthly_research_digest',

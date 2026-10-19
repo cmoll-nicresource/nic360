@@ -21,7 +21,7 @@ export default async function SearchPage({
     total: number
   }[] = []
   if (query.length >= 2) {
-    const [news, bills, datasets, guides, publications] = await Promise.all([
+    const [news, bills, datasets, guides, publications, research] = await Promise.all([
       payload.find({ collection: 'articles', where: { and: [title, published] }, ...options }),
       payload.find({ collection: 'bills', where: { and: [title, published] }, ...options }),
       payload.find({ collection: 'datasets', where: title, ...options }),
@@ -39,8 +39,10 @@ export default async function SearchPage({
           })
         : null,
       canRead ? payload.find({ collection: 'publications', where: title, ...options }) : null,
+      payload.find({ collection: 'research', where: { and: [title, published] }, ...options }),
     ])
     results.push(
+      { label: 'Industry Research', href: `/research?keyword=${encodeURIComponent(query)}`, total: research.totalDocs, items: research.docs.map(d => ({ title: d.title, href: `/research/${d.id}` })) },
       {
         label: 'News',
         href: `/articles?keyword=${encodeURIComponent(query)}`,

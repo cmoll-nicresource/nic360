@@ -75,6 +75,7 @@ export async function SiteNav() {
         <Link href="/articles" aria-current={pathname.startsWith('/articles') ? 'page' : undefined}>
           News
         </Link>
+        <Link href="/research" aria-current={pathname.startsWith('/research') ? 'page' : undefined}>Industry Research</Link>
         <NavDropdown label="Legislation" active={pathname.startsWith('/bills')}>
           <Link href="/bills">Bill library</Link>
           <Link href="/bills/itrac">StateNet iTrac</Link>

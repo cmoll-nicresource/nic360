@@ -1,0 +1,16 @@
+﻿<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Nic360 Research Clipper</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>Research Clipper</h1><p>Import a journal article as a draft for editorial review.</p>
+<div id="signedOut" class="hidden"><p>Connect through your Nicotine360 staff account. Your password stays on the website.</p><button id="openOptions">Connect to Nicotine360</button></div>
+<p id="loading" role="status">Reading article metadata…</p>
+<form id="clipForm" class="hidden">
+<label for="title">Title</label><input id="title" required maxlength="1000">
+<label for="authors">Authors</label><textarea id="authors" rows="2"></textarea>
+<label for="publishedDate">Published date</label><input id="publishedDate" type="date">
+<label for="doiLink">DOI link</label><input id="doiLink" placeholder="https://doi.org/…">
+<label for="journal">Journal</label><select id="journal"><option value="">Select in CMS later</option></select>
+<p id="journalHint" class="muted"></p>
+<label for="body">Body / abstract</label><textarea id="body" rows="9"></textarea>
+<p class="muted">Review the abstract, author order and publication date. Missing fields stay missing; the browsing date is never substituted.</p>
+<button id="save" type="submit">Save research draft</button></form>
+<p id="result" role="status"></p><p><a id="editLink" class="hidden" target="_blank" rel="noopener noreferrer">Review in CMS ↗</a></p><p><a href="options.html" target="_blank">Connection settings</a></p>
+<script type="module" src="popup.js"></script></body></html>

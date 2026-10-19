@@ -9,7 +9,8 @@ Account labels follow [Users, subscribers and attendees](./terminology.md).
 | Route | Task | Minimum role |
 | --- | --- | --- |
 | `/admin` | Workspace dashboard | Editor |
-| `/admin/connected-browsers` | Review/revoke own News Clipper connections | Editor (all staff roles); own connections only |
+| `/admin/connected-browsers` | Review/revoke own News/Research Clipper connections | Admin; own connections only |
+| `/admin/research-reports` | Generate Monthly Research Digest and download Research Clipper | Editor |
 | `/admin/trade-reports` | Census upload and Trade Barometer generation | Editor |
 | `/admin/trademark-reports` | Live USPTO import and trademark reports | Gatekeeper |
 | `/admin/datasets` | Choose a dataset to import | Editor |

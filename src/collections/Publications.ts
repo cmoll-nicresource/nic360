@@ -58,6 +58,7 @@ export const Publications: CollectionConfig = {
       defaultValue: ['news'],
       options: [
         { label: 'News', value: 'news' },
+        { label: 'Industry Research', value: 'research' },
         { label: 'Legislation', value: 'legislation' },
         { label: 'Trademarks', value: 'trademarks' },
       ],
@@ -95,6 +96,7 @@ export const Publications: CollectionConfig = {
       },
       options: [
         { label: 'Manual', value: 'manual' },
+        { label: 'Monthly Research Digest', value: 'monthly-research-digest' },
         { label: 'Weekly US Trademark Report', value: 'weekly-trademark-report' },
         { label: 'Monthly US Trademark Activity', value: 'monthly-trademark-activity' },
         { label: 'US Tobacco Trade Barometer', value: 'monthly-trade-barometer' },

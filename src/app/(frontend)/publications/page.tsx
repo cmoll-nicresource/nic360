@@ -40,9 +40,9 @@ export default async function PublicationsPage() {
           />
         ) : (
           <>
-            {['news', 'legislation', 'trademarks'].map((category) => {
+            {['news', 'legislation', 'trademarks', 'research'].map((category) => {
               const docs = publications.filter((p) =>
-                p.category?.includes(category as 'news' | 'legislation' | 'trademarks'),
+                p.category?.includes(category as 'news' | 'legislation' | 'trademarks' | 'research'),
               )
               if (!docs.length) return null
               return (
@@ -54,7 +54,7 @@ export default async function PublicationsPage() {
                         ? 'News & analysis'
                         : category === 'legislation'
                           ? 'Policy & legislation'
-                          : 'Trademark intelligence'
+                          : category === 'research' ? 'Industry Research' : 'Trademark intelligence'
                     }
                   />
                   <div className="edition-publication-grid">

@@ -1,3 +1,5 @@
+import { Research } from './collections/Research'
+import { Journals } from './collections/Journals'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { NewsletterDeliveries } from './collections/NewsletterDeliveries'
 import { SesEvents } from './collections/SesEvents'
@@ -102,6 +104,7 @@ export default buildConfig({
         Icon: './components/admin/graphics/Icon#Icon',
       },
       views: {
+        researchReports: { Component: './components/admin/ResearchReportsView#ResearchReportsView', path: '/research-reports', exact: true, meta: { title: 'Monthly Research Digest' } },
         connectedBrowsers: {
           Component: './components/admin/workspace/ConnectedBrowsers#ConnectedBrowsersView',
           path: '/connected-browsers',
@@ -182,6 +185,8 @@ export default buildConfig({
     Locations,
     Sources,
     Articles,
+    Research,
+    Journals,
     Bills,
     Trademarks,
     Countries,

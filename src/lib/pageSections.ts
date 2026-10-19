@@ -8,6 +8,7 @@
 export const SECTIONS = [
   { key: 'home', label: 'Home' },
   { key: 'tracking', label: 'Tracking (News/Legislation/Trademarks)' },
+  { key: 'research', label: 'Industry Research' },
   { key: 'guides', label: 'Guides' },
   { key: 'data', label: 'Data' },
   { key: 'publications', label: 'Publications' },
@@ -22,6 +23,7 @@ export const SECTIONS = [
 export type SectionKey = (typeof SECTIONS)[number]['key']
 
 const PREFIX_TO_SECTION: Array<{ prefix: string; key: SectionKey }> = [
+  { prefix: '/research', key: 'research' },
   { prefix: '/articles', key: 'tracking' },
   { prefix: '/bills', key: 'tracking' },
   { prefix: '/trademarks', key: 'tracking' },

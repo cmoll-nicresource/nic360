@@ -6,13 +6,13 @@ Updated October 18, 2026. `/admin` presents daily work according to the signed-i
 
 | Role | Daily actions | Secondary work |
 | --- | --- | --- |
-| Editor | Add news excerpts, add legislation, create publication issues | Drafts, content libraries, publication definitions, reports and imports |
+| Editor | Add news excerpts, research and legislation; create publication issues | Drafts, content libraries, publication definitions, reports and imports |
 | Gatekeeper | Manage subscriptions, register users, register attendees, review orders | User accounts, access checks, email follow-up and event attendance |
 | Admin | Both workflows | Staff accounts, taxonomy and reference data, analytics and administration |
 
 Gatekeepers do not see editorial dashboard data, task links or navigation. Their existing inherited editorial permissions remain in place; this is a workspace visibility change. Event management puts attendees first and hides program-editing sections for gatekeepers.
 
-Only admins can open taxonomy management screens or create, update or delete sectors, products, subjects, locations, sources and countries. Editors can still read and select existing terms in content forms. Public taxonomy lookups used by user filters remain available.
+Only admins can open taxonomy management screens or create, update or delete sectors, products, subjects, locations, sources, countries and journals. Editors can still read and select existing terms in content forms. Public taxonomy lookups used by user filters remain available.
 
 Only admins can browse and manage staff accounts. Other staff retain access to their own account profile, without permission to change their role or manage other staff.
 
@@ -24,7 +24,7 @@ The role-specific workspace change requires no database migration. Automated che
 
 ## Grouped menu
 
-The sidebar replaces Payload's automatic collection list with News, Bills, Publications, Guides, Data, Taxonomy, Users, Events, Analytics and Admin, in that order. Sections follow the same role restrictions as the daily workspace: gatekeepers see user operations, events and analytics; editors see editorial sections and event programs; admins see everything. The native mobile menu, account controls, logout and form navigation protection remain available.
+The sidebar replaces Payload's automatic collection list with News, Industry Research, Bills, Publications, Guides, Data, Taxonomy, Users, Events, Analytics and Admin, in that order. Industry Research includes Find/Create research and Generate Monthly Research Digest; the generator page also offers the separate Research Clipper download. Sections follow the same role restrictions as the daily workspace: gatekeepers see user operations, events and analytics; editors see editorial sections and event programs; admins see everything. The native mobile menu, account controls, logout and form navigation protection remain available.
 
 Find/Create a publication opens **issues**. Publication settings remains a separate link for recurring titles and rules. Newsletter Deliveries is now labeled **Publication Deliveries**; its collection/API slug remains `newsletter-deliveries`. Guides are loaded from the actual guide records, including drafts, and link directly to their edit screens. All guides remains available for creating and finding resources.
 

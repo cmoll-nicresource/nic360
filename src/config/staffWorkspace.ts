@@ -12,6 +12,7 @@ type Task = {
   daily?: boolean
 }
 export const STAFF_TASKS: readonly Task[] = [
+  { href: '/admin/collections/research/create', label: 'Add research', description: 'Clip or write a journal article for the research desk.', category: 'Today’s editorial work', role: 'editor', icon: 'article', audience: 'editorial', daily: true },
   {
     href: '/admin/collections/articles/create',
     label: 'Add a news excerpt',

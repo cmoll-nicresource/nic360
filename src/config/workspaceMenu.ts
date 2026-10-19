@@ -19,6 +19,7 @@ export function workspaceMenuFor(user: PayloadRequest['user'], data: WorkspaceMe
   const groups: WorkspaceMenuGroup[] = []
   if (editorial) groups.push(
     { label: 'News', links: [collection('articles', 'Find an article'), collection('articles', 'Create an article', true)] },
+    { label: 'Industry Research', links: [collection('research', 'Find research'), collection('research', 'Create research', true), { label: 'Generate Monthly Research Digest', href: '/admin/research-reports' }] },
     { label: 'Bills', links: [collection('bills', 'Find a bill'), collection('bills', 'Create a bill', true)] },
     { label: 'Publications', links: [
       collection('publication-issues', 'Find a publication'), collection('publication-issues', 'Create a publication', true),
@@ -34,7 +35,7 @@ export function workspaceMenuFor(user: PayloadRequest['user'], data: WorkspaceMe
       ...(admin ? [{ label: 'Trademark Imports', href: '/admin/trademark-reports' }] : []),
     ] },
   )
-  if (admin) groups.push({ label: 'Taxonomy', links: ['Sectors', 'Products', 'Subjects', 'Locations', 'Sources', 'Countries'].map(label => collection(label.toLowerCase(), label)) })
+  if (admin) groups.push({ label: 'Taxonomy', links: ['Sectors', 'Products', 'Subjects', 'Locations', 'Sources', 'Countries', 'Journals'].map(label => collection(label.toLowerCase(), label)) })
   if (userOperations) groups.push({ label: 'Users', links: [
     collection('users', 'Find a User'), collection('users', 'Create a User', true),
     collection('access-providers', 'Find an Access Provider'), collection('access-providers', 'Create an Access Provider', true),

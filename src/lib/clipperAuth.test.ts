@@ -1,13 +1,13 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
-import { CLIPPER_ORIGIN, CLIPPER_REDIRECT } from '@/config/extension'
+import { CLIPPER_ORIGIN, CLIPPER_REDIRECT, RESEARCH_CLIPPER_ORIGIN, RESEARCH_CLIPPER_REDIRECT } from '@/config/extension'
 const m = vi.hoisted(() => ({ query: vi.fn(), findByID: vi.fn() }))
 vi.mock('@/lib/ttb/db', () => ({ withTransaction: async (_: unknown, fn: (c: unknown) => unknown) => fn(m) }))
 import { authenticateClipper, exchangeClipperCode, hashClipperSecret, pkceChallenge, validConnectRequest } from './clipperAuth'
 const payload = { db: { pool: m }, findByID: m.findByID } as unknown as Payload
 const verifier = 'v'.repeat(43)
 const input = { code: 'c'.repeat(43), code_verifier: verifier, redirect_uri: CLIPPER_REDIRECT }
-const staff = { id: 'synthetic-id', staff_id: 1, hash: 'password-hash', salt: 'salt', role: 'editor',
+const staff = { label: 'Chrome News Clipper', id: 'synthetic-id', staff_id: 1, hash: 'password-hash', salt: 'salt', role: 'editor',
   credential_version: hashClipperSecret('password-hash:salt'), challenge: pkceChallenge(verifier), redirect_uri: CLIPPER_REDIRECT }
 beforeEach(() => { vi.resetAllMocks(); m.findByID.mockResolvedValue({ id: 1, role: 'editor' }) })
 it('accepts only the exact packaged callback and valid state/PKCE', () => {
@@ -61,4 +61,13 @@ it('checks revocation again before returning a staff identity', async () => {
   m.query.mockResolvedValueOnce({ rows: [staff] }).mockResolvedValueOnce({ rowCount: 0 })
   expect(await authenticateClipper(payload, request('Bearer nic360_clip_' + 't'.repeat(43)))).toBeNull()
   expect(m.findByID).not.toHaveBeenCalled()
+})
+
+it('accepts the separate Research Clipper callback but keeps token scope bound to the registered client', async () => {
+  expect(validConnectRequest({ redirect_uri: RESEARCH_CLIPPER_REDIRECT, state: 's'.repeat(43), code_challenge: pkceChallenge(verifier) })).toBe(true)
+  m.query.mockResolvedValue({ rows: [{ ...staff, label: 'Chrome News Clipper' }] })
+  expect(await authenticateClipper(payload, request('Bearer nic360_clip_' + 't'.repeat(43), RESEARCH_CLIPPER_ORIGIN), 'research')).toBeNull()
+  expect(await authenticateClipper(payload, request('Bearer nic360_clip_' + 't'.repeat(43), RESEARCH_CLIPPER_ORIGIN))).toBeNull()
+  m.query.mockResolvedValueOnce({ rows: [{ ...staff, label: 'Chrome Research Clipper' }] }).mockResolvedValueOnce({ rowCount: 1 })
+  expect(await authenticateClipper(payload, request('Bearer nic360_clip_' + 't'.repeat(43), RESEARCH_CLIPPER_ORIGIN), 'research')).toMatchObject({ role: 'editor', collection: 'staff' })
 })

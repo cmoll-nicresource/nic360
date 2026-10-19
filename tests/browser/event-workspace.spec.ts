@@ -11,8 +11,8 @@ test('grouped workspace menu and live guide/event destinations: ' + role, async 
   if (!await menu.getByRole('link', { name: 'Workspace overview' }).isVisible())
     await page.locator('button.nav-toggler:visible').first().click()
   const labels = role === 'admin'
-    ? ['News', 'Bills', 'Publications', 'Guides', 'Data', 'Taxonomy', 'Users', 'Events', 'Analytics', 'Admin']
-    : role === 'editor' ? ['News', 'Bills', 'Publications', 'Guides', 'Data', 'Events'] : ['Users', 'Events', 'Analytics']
+    ? ['News', 'Industry Research', 'Bills', 'Publications', 'Guides', 'Data', 'Taxonomy', 'Users', 'Events', 'Analytics', 'Admin']
+    : role === 'editor' ? ['News', 'Industry Research', 'Bills', 'Publications', 'Guides', 'Data', 'Events'] : ['Users', 'Events', 'Analytics']
   await expect(menu.locator('h2')).toHaveText(labels)
   await expect(page.locator('.nav-group')).toHaveCount(0)
   await expect(menu.getByRole('link', { name: 'Manage Fixture conference', exact: true })).toHaveAttribute('href', `/admin/events/${f.refs.event}/manage`)

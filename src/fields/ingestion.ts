@@ -1,11 +1,11 @@
-import type { Field } from 'payload'
+import type { GroupField } from 'payload'
 
 /**
  * Lets importers (StateNet, the USPTO feed, the browser extension) upsert
  * by externalId without creating duplicates. Manual entry just leaves this
  * at its default.
  */
-export function ingestionField(): Field {
+export function ingestionField(): GroupField {
   return {
     name: 'ingestion',
     type: 'group',

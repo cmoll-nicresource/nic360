@@ -78,6 +78,8 @@ export interface Config {
     locations: Location;
     sources: Source;
     articles: Article;
+    research: Research;
+    journals: Journal;
     bills: Bill;
     trademarks: Trademark;
     countries: Country;
@@ -145,6 +147,8 @@ export interface Config {
     locations: LocationsSelect<false> | LocationsSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    research: ResearchSelect<false> | ResearchSelect<true>;
+    journals: JournalsSelect<false> | JournalsSelect<true>;
     bills: BillsSelect<false> | BillsSelect<true>;
     trademarks: TrademarksSelect<false> | TrademarksSelect<true>;
     countries: CountriesSelect<false> | CountriesSelect<true>;
@@ -453,13 +457,18 @@ export interface Publication {
   /**
    * Which tracking categories this publication draws from — a publication can belong to more than one (e.g. an executive summary covering news and legislation). Groups this publication in the main nav's Publications dropdown and on the Publications page.
    */
-  category: ('news' | 'legislation' | 'trademarks')[];
+  category: ('news' | 'research' | 'legislation' | 'trademarks')[];
   format: 'excerpt-list' | 'pdf-report' | 'custom-html';
   frequency: 'daily' | 'weekly' | 'monthly';
   /**
    * Manual for every publication except the automated trademark and trade-barometer reports.
    */
-  generator: 'manual' | 'weekly-trademark-report' | 'monthly-trademark-activity' | 'monthly-trade-barometer';
+  generator:
+    | 'manual'
+    | 'monthly-research-digest'
+    | 'weekly-trademark-report'
+    | 'monthly-trademark-activity'
+    | 'monthly-trade-barometer';
   /**
    * Builds use the saved issue date and published excerpts. Clippings are news only; US Clippings covers all products in the US, and Global Clippings requires a non-US location (mixed US/non-US stories qualify). Editors can adjust an issue afterward.
    */
@@ -997,6 +1006,63 @@ export interface Article {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Journal articles and research excerpts. Titles are public; the body and DOI link require a subscription.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "research".
+ */
+export interface Research {
+  id: number;
+  title: string;
+  /**
+   * Keep author order; separate names with semicolons.
+   */
+  authors: string;
+  publishedDate: string;
+  journal: number | Journal;
+  /**
+   * Enter a DOI or https://doi.org/ link.
+   */
+  doiLink?: string | null;
+  body: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  sourceUrl?: string | null;
+  doiKey?: string | null;
+  ingestion?: {
+    source?: ('manual' | 'statenet' | 'uspto' | 'extension' | 'migration') | null;
+    externalId?: string | null;
+    importedAt?: string | null;
+  };
+  searchText?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "journals".
+ */
+export interface Journal {
+  id: number;
+  name: string;
+  homepage?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Legislation tracked via StateNet, summarized and categorized.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1281,6 +1347,7 @@ export interface GuideFile {
  */
 export interface PublicationIssue {
   id: number;
+  researchReportKey?: string | null;
   publication: number | Publication;
   issueDate: string;
   /**
@@ -1822,6 +1889,14 @@ export interface PayloadLockedDocument {
         value: number | Article;
       } | null)
     | ({
+        relationTo: 'research';
+        value: number | Research;
+      } | null)
+    | ({
+        relationTo: 'journals';
+        value: number | Journal;
+      } | null)
+    | ({
         relationTo: 'bills';
         value: number | Bill;
       } | null)
@@ -2179,6 +2254,41 @@ export interface ArticlesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "research_select".
+ */
+export interface ResearchSelect<T extends boolean = true> {
+  title?: T;
+  authors?: T;
+  publishedDate?: T;
+  journal?: T;
+  doiLink?: T;
+  body?: T;
+  sourceUrl?: T;
+  doiKey?: T;
+  ingestion?:
+    | T
+    | {
+        source?: T;
+        externalId?: T;
+        importedAt?: T;
+      };
+  searchText?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "journals_select".
+ */
+export interface JournalsSelect<T extends boolean = true> {
+  name?: T;
+  homepage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bills_select".
  */
 export interface BillsSelect<T extends boolean = true> {
@@ -2433,6 +2543,7 @@ export interface PublicationsSelect<T extends boolean = true> {
  * via the `definition` "publication-issues_select".
  */
 export interface PublicationIssuesSelect<T extends boolean = true> {
+  researchReportKey?: T;
   publication?: T;
   issueDate?: T;
   title?: T;

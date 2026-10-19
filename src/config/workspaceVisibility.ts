@@ -8,6 +8,7 @@ export const TAXONOMY_COLLECTIONS = [
   'locations',
   'sources',
   'countries',
+  'journals',
 ] as const
 export function isAdminManagedCollection(slug: string) {
   return slug === 'staff' || (TAXONOMY_COLLECTIONS as readonly string[]).includes(slug)

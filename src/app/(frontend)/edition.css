@@ -1498,7 +1498,7 @@ nav.topnav .nav-right .btn {
     gap: 32px;
   }
 }
-@media (max-width: 1279px) {
+@media (max-width: 1439px) {
   nav.topnav {
     flex-wrap: wrap;
     padding: 0 20px;

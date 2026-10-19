@@ -1,3 +1,5 @@
+import { createHash, randomBytes, randomUUID } from 'node:crypto'
+import { CLIPPER_CLIENTS } from '../../src/config/extension'
 import { mkdir, writeFile, readFile } from 'node:fs/promises'
 import pg from 'pg'
 import type { CollectionSlug } from 'payload'
@@ -70,6 +72,8 @@ for (const name of [
 refs.subject = (await add('subjects', { name: 'Regulation', legacyId: 'synthetic-old-subject' })).id
 refs.source = (await add('sources', { name: 'Synthetic test news' })).id
 const publications = await seedPublications(payload)
+const { setupResearch } = await import('../../src/lib/research/setup')
+await setupResearch(payload)
 // Rehearse imported configuration errors, then run the actual repeatable repair.
 await payload.update({
   collection: 'publications',
@@ -159,6 +163,14 @@ providers.expired = (
     licenseExpiresAt: '2000-01-01',
   })
 ).id
+const clipper: Record<string, { token: string; origin: string }> = {}
+const credentials = (await payload.db.pool.query('SELECT hash,salt FROM staff WHERE id=$1', [staff.editor.id])).rows[0]
+const digest = (text: string) => createHash('sha256').update(text).digest('hex')
+for (const client of CLIPPER_CLIENTS) {
+  const token = 'nic360_clip_' + randomBytes(32).toString('base64url')
+  await payload.db.pool.query("INSERT INTO clipper.connections(id,staff_id,token_hash,credential_version,label,expires_at) VALUES($1,$2,$3,$4,$5,now()+interval '12 hours')", [randomUUID(),staff.editor.id,digest(token),digest(credentials.hash+':'+credentials.salt),client.label])
+  clipper[client.kind] = { token, origin: client.origin }
+}
 const users: Record<string, { id: number; email: string }> = {}
 for (const kind of ['none', 'base', 'premium', 'suspended', 'unverified', 'expired']) {
   const doc = await add('users', {
@@ -232,7 +244,7 @@ await mkdir('.test-artifacts', { recursive: true })
 await writeFile(
   '.test-artifacts/fixtures.json',
   JSON.stringify(
-    { password, staff, users, providers, refs, articles, publications, files, records },
+    { password, staff, users, providers, refs, articles, publications, files, records, clipper },
     null,
     2,
   ),

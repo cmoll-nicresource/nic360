@@ -4,6 +4,8 @@ Updated October 17, 2026. This is the current work list. The original milestones
 
 ## Completed
 
+- October 19: [Industry Research and Monthly Research Digest](./industry-research.md): public titles and subscriber-protected bodies/DOIs, journal catalog, news-style editorial/public screens, branded monthly PDFs and a separate securely connected Research Clipper. Digest generation creates reviewable drafts; published/sent issues are protected. The supplied historical PDF is a content reference, not an automatic historical import.
+
 - October 17: issue editor simplified: Build from rules is available below Format as soon as Excerpt list is selected, before the first save. It builds into the current form and preserves other unsaved edits; staff review and save explicitly. The Email administrative group is hidden, and delivery counts use a read-only card summary. Regression coverage checks first-save persistence, unsaved dates/format/title, retained email metadata and unchanged delivery counters. See [publication selection](./publication-selection.md).
 
 - October 17: user signup and migration password recovery reviewed, with explicit previous-site guidance, an account Change password link, recoverable reset-request errors and an eight-character reset minimum. Added migrated-profile/company/preference preservation, expired/replaced reset links, session invalidation, suspension and unmatched-company signup regressions. See [account onboarding and launch plan](./account-onboarding.md); user-wide reset/announcement sending and email-safe-mode changes require a separate rollout decision.

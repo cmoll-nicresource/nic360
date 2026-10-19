@@ -3,13 +3,13 @@ import AxeBuilder from '@axe-core/playwright'
 import { signIn, roleContext, fixtures } from '../support/fixtures'
 
 test('editorial header has balanced readable navigation, consistent access actions and a clean live preview', async ({ page, browser }, info) => {
-  for (const width of [390, 768, 1024, 1279, 1280, 1440, 1920]) {
+  for (const width of [390, 768, 1024, 1280, 1439, 1440, 1920]) {
     await page.setViewportSize({ width, height: 1000 })
     await page.goto('/')
     const nav = page.getByRole('navigation', { name: 'Main navigation', exact: true })
     await expect(nav).toHaveCSS('height', '72px')
     const toggle = nav.getByRole('button', { name: 'Open navigation', exact: true })
-    if (width < 1280) await toggle.click()
+    if (width < 1440) await toggle.click()
     else await expect(toggle).toBeHidden()
     const controls = nav.locator('.nav-links > a, .nav-links > .nav-dropdown > button')
     for (const control of await controls.all()) {
@@ -20,7 +20,7 @@ test('editorial header has balanced readable navigation, consistent access actio
     const headerCTA = nav.getByRole('link', { name: 'Get access', exact: true })
     const heroCTA = page.locator('.edition-home-hero').getByRole('link', { name: 'Get access', exact: true })
     expect(await headerCTA.evaluate(el => getComputedStyle(el).backgroundColor)).toBe(await heroCTA.evaluate(el => getComputedStyle(el).backgroundColor))
-    if (width < 1280) await nav.getByRole('button', { name: 'Close navigation', exact: true }).click()
+    if (width < 1440) await nav.getByRole('button', { name: 'Close navigation', exact: true }).click()
     await expect(page.locator('.edition-product-window')).toHaveCSS('transform', 'none')
     await expect(page.locator('.edition-window-chrome, .edition-product-data-lines')).toHaveCount(0)
     const dates = page.locator('.edition-home-news .edition-news-row time')
@@ -34,7 +34,7 @@ test('editorial header has balanced readable navigation, consistent access actio
     const context = await roleContext(browser, role)
     try {
       const signedIn = await context.newPage()
-      await signedIn.setViewportSize({ width: 1280, height: 900 })
+      await signedIn.setViewportSize({ width: 1440, height: 900 })
       await signedIn.goto(role === 'base' ? '/dashboard' : '/')
       const nav = signedIn.getByRole('navigation', { name: 'Main navigation', exact: true })
       await expect(nav).toHaveCSS('height', '72px')

@@ -63,6 +63,7 @@ export const PublicationIssues: CollectionConfig = {
     beforeChange: [protectNewsletterState, preserveIssueStats],
   },
   fields: [
+    { name: 'researchReportKey', type: 'text', unique: true, admin: { hidden: true }, access: { read: () => false } },
     {
       name: 'issuePreview',
       type: 'ui',

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { expect, type Browser, type BrowserContext, type APIRequestContext } from '@playwright/test'
 type Account = { id: number; email: string }
 export const fixtures = JSON.parse(readFileSync('.test-artifacts/fixtures.json', 'utf8')) as {
+  clipper: Record<string, { token: string; origin: string }>
   password: string
   staff: Record<string, Account>
   users: Record<string, Account>

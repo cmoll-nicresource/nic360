@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Nic360 Research Clipper",
+  "version": "1.0.0",
+  "description": "Import journal articles into Nicotine360 as research drafts for editorial review.",
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab",
+    "identity"
+  ],
+  "options_page": "options.html",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self';"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApYH8MfUnDQLOfvVcKsXrHkFdanKCZmZmjMytcJOwVL/77QujDiTpdB56XqsK+7g0alZbnC77BrwQjpU0s57kYQP6i7pEtahiEd3qCUAlfCHnxixhMTwASkOCbgD467iQe74HcBDkKMlqftXvocMl6G7c8SuqHEwaAKzRHDJojNsPExR0SrWxiqiYB+laASfh13aVtdl3NI4KYbBj2sLnnzPhxInw0fjPiprhcPZ4Z7V3qyRdO5/DNInGQ2ZdXtjErIh3/1hHDbwXw/+1yE5MI0M588B/blHYIR8bhna6jjtUFaDI30gIzdg1mDEwF72IOzTSV3qyTNB81AAmH17UZQIDAQAB"
+}
