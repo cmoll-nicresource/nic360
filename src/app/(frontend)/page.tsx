@@ -65,7 +65,7 @@ export default async function HomePage() {
               happening—and what comes next.
             </p>
             <div className="edition-actions">
-              <Link href={isStaff ? '/admin' : '/signup'} className="btn btn-accent">
+              <Link href={isStaff ? '/admin' : '/signup'} className="btn btn-access">
                 {isStaff ? 'Open staff workspace' : 'Get access'}
               </Link>
               <Link href="/articles" className="edition-hero-link">
@@ -77,12 +77,6 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="edition-product-window">
-            <div className="edition-window-chrome">
-              <span />
-              <span />
-              <span />
-              <strong>YOUR VIEW OF THE INDUSTRY</strong>
-            </div>
             <div className="edition-product-brief">
               <p className="edition-eyebrow">ON THE NEWS DESK</p>
               {news.docs[0] ? (
@@ -114,16 +108,13 @@ export default async function HomePage() {
                 {datasets.docs[0] ? (
                   <Link href={`/datasets/${datasets.docs[0].slug}`}>
                     <h3>{datasets.docs[0].title}</h3>
-                    <span className="edition-meta">Charts · Tables · Downloads</span>
+                    <span className="edition-meta">{datasets.docs[0].lastImport?.importedAt
+                      ? `Updated ${formatDate(datasets.docs[0].lastImport.importedAt)}`
+                      : 'Charts · Tables · Downloads'}</span>
                   </Link>
                 ) : (
                   <h3>Market, tax & trade data.</h3>
                 )}
-                <div className="edition-product-data-lines" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </div>
               </div>
             </div>
           </div>

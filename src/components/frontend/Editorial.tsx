@@ -43,6 +43,7 @@ export function NewsRow({ article, summary = false }: { article: Article; summar
     <Link href={`/articles/${article.id}`} className="edition-news-row">
       <div className="edition-meta">
         {sourceLabel(typeof article.source === 'object' ? article.source?.name : null)}
+        <time dateTime={article.sourceDate || article.createdAt}>{formatDate(article.sourceDate || article.createdAt)}</time>
         {subject && <span>{sentenceCase(subject)}</span>}
       </div>
       <h3>{article.title}</h3>

@@ -150,7 +150,7 @@ export async function SiteNav() {
         {!user && (
           <>
             <Link href="/login">Log in</Link>
-            <Link href="/signup" className="btn">
+            <Link href="/signup" className="btn btn-access">
               Get access
             </Link>
           </>

@@ -19,8 +19,8 @@ body {
   letter-spacing: 0.13em;
 }
 .edition-meta {
-  color: var(--nrc-muted);
-  font-size: 12px;
+  color: #4d5d6e;
+  font-size: 13px;
   line-height: 1.6;
 }
 .edition-deck {
@@ -118,17 +118,24 @@ body {
 }
 /* Click-operated menus expose their state to assistive technology. */
 nav.topnav {
-  gap: 22px;
+  height: 72px;
+  gap: clamp(16px, 1.5vw, 28px);
 }
 nav.topnav .brand img {
   width: 155px;
 }
 nav.topnav .nav-links {
-  gap: 19px;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(2px, .5vw, 10px);
 }
 nav.topnav .nav-links > a {
-  font-size: 13px;
-  padding: 20px 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 24px;
+  white-space: nowrap;
+  padding: 24px 6px;
 }
 nav.topnav .nav-links > a[aria-current='page'] {
   color: var(--nrc-primary);
@@ -141,8 +148,10 @@ nav.topnav button.nav-dropdown-label {
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 13px;
-  padding: 20px 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 24px;
+  padding: 24px 6px;
   height: auto;
   min-height: 0;
 }
@@ -179,12 +188,14 @@ nav.topnav .edition-nav-search {
   padding: 10px;
 }
 nav.topnav .nav-right {
-  font-size: 13px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 15px;
   gap: 16px;
 }
 nav.topnav .nav-right .btn {
-  min-height: 36px;
-  padding: 7px 14px;
+  min-height: 40px;
+  padding: 9px 16px;
 }
 /* Live product presentation; decorative rules carry no data. */
 .edition-home-hero {
@@ -192,14 +203,6 @@ nav.topnav .nav-right .btn {
   background: var(--nrc-navy);
   overflow: hidden;
   position: relative;
-}
-.edition-home-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(#ffffff16 1px, transparent 1px);
-  background-size: 24px 24px;
-  pointer-events: none;
 }
 .edition-home-hero-inner {
   position: relative;
@@ -235,7 +238,8 @@ nav.topnav .nav-right .btn {
 }
 .edition-hero-note {
   color: #b8cada;
-  font-size: 11px;
+  font-size: 13px;
+  line-height: 1.6;
   max-width: 44ch;
   margin-top: 24px;
 }
@@ -243,37 +247,16 @@ nav.topnav .nav-right .btn {
   background: #fff;
   border: 1px solid #54738e;
   color: var(--nrc-ink);
-  border-radius: 10px;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 24px 60px #0003;
-  transform: rotate(-1deg);
-}
-.edition-window-chrome {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  padding: 13px 18px;
-  background: #edf2f7;
-  border-bottom: 1px solid var(--nrc-border);
-}
-.edition-window-chrome > span {
-  width: 6px;
-  height: 6px;
-  background: #a7baca;
-  border-radius: 50%;
-}
-.edition-window-chrome strong {
-  margin-left: auto;
-  color: var(--nrc-muted);
-  font-size: 9px;
-  letter-spacing: 0.12em;
+  box-shadow: 0 16px 36px #0002;
 }
 .edition-product-brief {
   padding: 26px;
 }
 .edition-product-window .edition-eyebrow {
   color: var(--nrc-primary);
-  font-size: 9px;
+  font-size: 11px;
 }
 .edition-product-brief h2 {
   font:
@@ -301,22 +284,6 @@ nav.topnav .nav-right .btn {
     600 13px/1.5 var(--font-sans),
     sans-serif;
   margin: 6px 0;
-}
-.edition-product-data-lines {
-  display: grid;
-  gap: 5px;
-  margin-top: 14px;
-}
-.edition-product-data-lines span {
-  display: block;
-  height: 3px;
-  background: #d5e2ed;
-}
-.edition-product-data-lines span:nth-child(2) {
-  width: 80%;
-}
-.edition-product-data-lines span:nth-child(3) {
-  width: 65%;
 }
 .edition-proof-strip {
   border-bottom: 1px solid var(--nrc-border);
@@ -553,7 +520,7 @@ nav.topnav .nav-right .btn {
 }
 .edition-news-row .edition-meta > span {
   color: var(--nrc-primary);
-  font-size: 11px;
+  font-size: 13px;
 }
 .edition-row-arrow {
   position: absolute;
@@ -1531,12 +1498,12 @@ nav.topnav .nav-right .btn {
     gap: 32px;
   }
 }
-@media (max-width: 1100px) {
+@media (max-width: 1279px) {
   nav.topnav {
     flex-wrap: wrap;
     padding: 0 20px;
     height: auto;
-    min-height: 64px;
+    min-height: 72px;
     max-height: 100dvh;
     overflow-y: auto;
   }
@@ -1749,9 +1716,6 @@ nav.topnav .nav-right .btn {
   }
   .edition-product-bottom > div {
     padding: 16px;
-  }
-  .edition-window-chrome strong {
-    font-size: 8px;
   }
   .edition-proof-strip > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2233,3 +2197,7 @@ nav.topnav button.nav-toggle-btn svg {
 .event-ticket-prices__option dd { margin: .25rem 0 0; font-size: 1.35rem; font-weight: 700; }
 .event-ticket-prices__subscriber { color: #16675c; }
 .event-ticket-prices__savings { font-size: .85rem; font-weight: 600; color: #16675c; margin-bottom: 0; }
+
+/* The primary access action uses the same accessible orange across the site. */
+.btn.btn-access { background: var(--nrc-energy-dark); border-color: var(--nrc-energy-dark); color: #fff; }
+.btn.btn-access:hover { background: #ac3617; border-color: #ac3617; color: #fff; }

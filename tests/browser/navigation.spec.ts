@@ -1,6 +1,53 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { signIn } from '../support/fixtures'
+import { signIn, roleContext } from '../support/fixtures'
+
+test('editorial header has balanced readable navigation, consistent access actions and a clean live preview', async ({ page, browser }, info) => {
+  for (const width of [390, 768, 1024, 1279, 1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 1000 })
+    await page.goto('/')
+    const nav = page.getByRole('navigation', { name: 'Main navigation', exact: true })
+    await expect(nav).toHaveCSS('height', '72px')
+    const toggle = nav.getByRole('button', { name: 'Open navigation', exact: true })
+    if (width < 1280) await toggle.click()
+    else await expect(toggle).toBeHidden()
+    const controls = nav.locator('.nav-links > a, .nav-links > .nav-dropdown > button')
+    for (const control of await controls.all()) {
+      await expect(control).toBeVisible()
+      await expect(control).toHaveCSS('font-size', '15px')
+      await expect(control).toHaveCSS('font-weight', '500')
+    }
+    const headerCTA = nav.getByRole('link', { name: 'Get access', exact: true })
+    const heroCTA = page.locator('.edition-home-hero').getByRole('link', { name: 'Get access', exact: true })
+    expect(await headerCTA.evaluate(el => getComputedStyle(el).backgroundColor)).toBe(await heroCTA.evaluate(el => getComputedStyle(el).backgroundColor))
+    if (width < 1280) await nav.getByRole('button', { name: 'Close navigation', exact: true }).click()
+    await expect(page.locator('.edition-product-window')).toHaveCSS('transform', 'none')
+    await expect(page.locator('.edition-window-chrome, .edition-product-data-lines')).toHaveCount(0)
+    const dates = page.locator('.edition-home-news .edition-news-row time')
+    expect(await dates.count()).toBeGreaterThan(0)
+    for (const date of await dates.all()) await expect(date).toHaveAttribute('datetime', /\d{4}-\d{2}-\d{2}/)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
+    if ([390, 1280, 1440].includes(width)) await page.screenshot({ path: `.test-artifacts/home-header-${info.project.name}-${width}.png` })
+  }
+  expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations).toEqual([])
+  for (const role of ['admin', 'base']) {
+    const context = await roleContext(browser, role)
+    try {
+      const signedIn = await context.newPage()
+      await signedIn.setViewportSize({ width: 1280, height: 900 })
+      await signedIn.goto(role === 'base' ? '/dashboard' : '/')
+      const nav = signedIn.getByRole('navigation', { name: 'Main navigation', exact: true })
+      await expect(nav).toHaveCSS('height', '72px')
+      const bounds = await nav.boundingBox()
+      for (const control of await nav.locator('.nav-links > a, .nav-links > .nav-dropdown > button').all()) {
+        const box = await control.boundingBox()
+        expect(box!.y).toBeGreaterThanOrEqual(bounds!.y - 1)
+        expect(box!.y + box!.height).toBeLessThanOrEqual(bounds!.y + bounds!.height + 1)
+      }
+      expect(await signedIn.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
+    } finally { await context.close() }
+  }
+})
 
 test('publications and guides are separate destinations, with iTrac under legislation', async ({ page }) => {
   for (const width of [390, 1024, 1440]) {

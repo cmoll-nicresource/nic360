@@ -2,6 +2,10 @@
 
 October 15, 2026. The front end now emphasizes current reporting, publication editions and research tools. Brand colors and Inter/Source Serif remain; `src/app/(frontend)/edition.css` supplies the editorial layouts after the shared base stylesheet.
 
+## October 19 header and homepage refinement
+
+Inter remains the navigation font, now 15px at a consistent medium weight. The header is 72px tall, with padded links and centered spacing; narrower screens use the existing expandable navigation rather than squeezing the full menu. Header and hero access actions share an orange treatment with sufficient text contrast. The hero uses a straight live-content panel with no faux browser dots, rotation, dot-pattern backdrop or decorative data bars. News rows now show semantic publication dates, and secondary metadata is larger and darker. Serif headings and the existing page structure remain. Browser checks cover narrow phones, tablets, the desktop breakpoint, wide screens, and signed-in user/staff headers.
+
 ## Routes and behavior
 
 - `/`: live product presentation using actual published news, legislation and public dataset metadata; latest reporting, research, reference-library links, upcoming events and company subscription options. Users still go straight to their briefing. External image placeholders have been removed.
@@ -15,7 +19,7 @@ October 15, 2026. The front end now emphasizes current reporting, publication ed
 - `/events` and `/events/:id`: event artwork/channel branding, upcoming and past collections, programme, speakers, venue, sponsors and registration area. Existing ticket checkout and attendee-only replay/livestream rules remain.
 - `/search?q=`: title search across news, legislation, dataset metadata and the user's authorized guide/publication library; at least two characters, at most 160. News and legislation retain their deeper section searches.
 
-Navigation gives Publications and Guides separate top-level menus: publications are recurring dated editions and issue archives, while guides are maintained reference material and downloads. They also have separate homepage sections and clearly named catalog headings. Legislation contains the bill library and StateNet iTrac. Menus use buttons with expanded state, outside-click and Escape handling. Navigation collapses at 1,100px to fit the expanded destination list; the mobile toggle announces its state and resets on route changes. `frontendContext` and `currentEditions` use React request-scoped caching; subscription results are never shared between visitors.
+Navigation gives Publications and Guides separate top-level menus: publications are recurring dated editions and issue archives, while guides are maintained reference material and downloads. They also have separate homepage sections and clearly named catalog headings. Legislation contains the bill library and StateNet iTrac. Menus use buttons with expanded state, outside-click and Escape handling. Navigation collapses below 1,280px to fit the expanded destination list; the mobile toggle announces its state and resets on route changes. `frontendContext` and `currentEditions` use React request-scoped caching; subscription results are never shared between visitors.
 
 The StateNet iTrac page is `/bills/itrac`. It uses the existing legislative Base/Premium/staff access gate and renders an iframe only for eligible visitors. Set `STATENET_ITRAC_URL` to the StateNet-provided HTTPS iframe source, not raw embed HTML. Query parameters are preserved. Missing/invalid configuration shows a bill-library fallback; the destination is never rendered to anonymous, suspended, expired, unverified or no-plan users. The page includes a titled iframe and a new-tab fallback. A synthetic intercepted provider URL is used in browser tests; testing a real portal still requires the supplied URL and confirmation that StateNet permits the beta/launch domains to embed it.
 
