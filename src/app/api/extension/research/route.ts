@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const payload = await getPayload({ config })
   if (!(await authenticateClipper(payload, request, 'research')))
     return Response.json(
-      { error: 'Connect the N360 Industry News Clipper with a staff account.' },
+      { error: 'Connect the N360 Industry Research Clipper with a staff account.' },
       { status: 401, headers },
     )
   const journals = await payload.find({
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const user = await authenticateClipper(payload, request, 'research')
     if (!user)
       return Response.json(
-        { error: 'Connect the N360 Industry News Clipper with a staff account.' },
+        { error: 'Connect the N360 Industry Research Clipper with a staff account.' },
         { status: 401, headers },
       )
     const body = await request.json()

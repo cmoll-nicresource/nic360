@@ -4,7 +4,7 @@ Updated October 19, 2026. This is the current work list. The original milestones
 
 ## Completed
 
-- October 19: [Industry Research and Monthly Research Digest](./industry-research.md): public titles and subscriber-protected bodies/DOIs, journal catalog, news-style editorial/public screens, branded monthly PDFs and a separate securely connected N360 Industry News Clipper. Digest generation creates reviewable drafts; published/sent issues are protected. The supplied historical PDF is a content reference, not an automatic historical import.
+- October 19: [Industry Research and Monthly Research Digest](./industry-research.md): public titles and subscriber-protected bodies/DOIs, journal catalog, news-style editorial/public screens, branded monthly PDFs and a separate securely connected N360 Industry Research Clipper. Digest generation creates reviewable drafts; published/sent issues are protected. The supplied historical PDF is a content reference, not an automatic historical import.
 
 - October 17: issue editor simplified: Build from rules is available below Format as soon as Excerpt list is selected, before the first save. It builds into the current form and preserves other unsaved edits; staff review and save explicitly. The Email administrative group is hidden, and delivery counts use a read-only card summary. Regression coverage checks first-save persistence, unsaved dates/format/title, retained email metadata and unchanged delivery counters. See [publication selection](./publication-selection.md).
 

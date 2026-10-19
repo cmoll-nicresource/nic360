@@ -9,7 +9,7 @@ export const RESEARCH_CLIPPER_REDIRECT = 'https://lbmeppjclkfpiiaieenckfnphnlhnb
 export const CLIPPER_CLIENTS = [
   // Labels are immutable credential scope identifiers; names are the displayed branding.
   { kind: 'news', origin: CLIPPER_ORIGIN, redirect: CLIPPER_REDIRECT, label: 'Chrome News Clipper', name: 'N360 News Clipper' },
-  { kind: 'research', origin: RESEARCH_CLIPPER_ORIGIN, redirect: RESEARCH_CLIPPER_REDIRECT, label: 'Chrome Research Clipper', name: 'N360 Industry News Clipper' },
+  { kind: 'research', origin: RESEARCH_CLIPPER_ORIGIN, redirect: RESEARCH_CLIPPER_REDIRECT, label: 'Chrome Research Clipper', name: 'N360 Industry Research Clipper' },
 ] as const
 
 export function clipperDisplayName(label: string) {
