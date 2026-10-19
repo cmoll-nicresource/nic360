@@ -9,7 +9,7 @@ Account labels follow [Users, subscribers and attendees](./terminology.md).
 | Route | Task | Minimum role |
 | --- | --- | --- |
 | `/admin` | Workspace dashboard | Editor |
-| `/admin/connected-browsers` | Review/revoke own News/N360 Industry Clipper connections | Admin; own connections only |
+| `/admin/connected-browsers` | Review/revoke own N360 News Clipper and N360 Industry Clipper connections | Admin; own connections only |
 | `/admin/research-reports` | Generate Monthly Research Digest and download N360 Industry Clipper | Editor |
 | `/admin/trade-reports` | Census upload and Trade Barometer generation | Editor |
 | `/admin/trademark-reports` | Live USPTO import and trademark reports | Gatekeeper |
