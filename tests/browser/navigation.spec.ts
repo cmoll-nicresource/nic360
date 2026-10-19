@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { signIn, roleContext } from '../support/fixtures'
+import { signIn, roleContext, fixtures } from '../support/fixtures'
 
 test('editorial header has balanced readable navigation, consistent access actions and a clean live preview', async ({ page, browser }, info) => {
   for (const width of [390, 768, 1024, 1279, 1280, 1440, 1920]) {
@@ -58,6 +58,9 @@ test('publications and guides are separate destinations, with iTrac under legisl
     if (await toggle.isVisible()) await toggle.click()
     await expect(nav.getByRole('button', { name: 'Library', exact: true })).toHaveCount(0)
     await nav.getByRole('button', { name: 'Publications', exact: true }).click()
+    for (const slug of Object.keys(fixtures.publications)) {
+      await expect(nav.locator(`.nav-dropdown[data-open="true"] a[href="/publications/${slug}"]`)).toBeVisible()
+    }
     await expect(nav.getByRole('link', { name: 'View all publications' })).toBeVisible()
     await expect(nav.getByRole('link', { name: 'View all guides' })).toHaveCount(0)
     await page.keyboard.press('Escape')

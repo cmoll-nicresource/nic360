@@ -36,16 +36,17 @@ export async function SiteNav() {
           },
         })
       : null,
-    canRead
-      ? payload.find({
-          collection: 'publications',
-          limit: 50,
-          sort: 'title',
-          depth: 0,
-          user,
-          overrideAccess: false,
-        })
-      : null,
+    // Public navigation exposes only catalog labels and destinations, never
+    // subscription settings or issue content. Collection access stays gated.
+    payload.find({
+      collection: 'publications',
+      limit: 0,
+      pagination: false,
+      sort: 'title',
+      depth: 0,
+      select: { title: true, slug: true },
+      overrideAccess: true,
+    }),
     payload.find({
       collection: 'events',
       where: {
@@ -99,7 +100,7 @@ export async function SiteNav() {
           </div>
         </NavDropdown>
         <NavDropdown label="Publications" active={pathname.startsWith('/publications')}>
-          {publications?.docs.map((p) => (
+          {publications.docs.map((p) => (
             <Link key={p.id} href={`/publications/${p.slug}`}>
               {p.title}
             </Link>
