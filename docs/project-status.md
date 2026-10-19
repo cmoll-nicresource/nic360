@@ -1,6 +1,6 @@
 # Current project checklist
 
-Updated October 17, 2026. This is the current work list. The original milestones and dated changelog in CLAUDE.md/entity-map.md are history, not an outstanding-task list.
+Updated October 19, 2026. This is the current work list. The original milestones and dated changelog in CLAUDE.md/entity-map.md are history, not an outstanding-task list.
 
 ## Completed
 

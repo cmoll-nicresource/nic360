@@ -1,8 +1,11 @@
 'use client'
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { previousResearchMonth } from '@/lib/research/period'
+// Preserve the first selection by keeping server-rendered controls disabled until hydration.
+const subscribeToReadiness = () => () => {}
 export function GenerateResearchDigest() {
+  const ready = useSyncExternalStore(subscribeToReadiness, () => true, () => false)
   const [month, setMonth] = useState(() => previousResearchMonth())
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
@@ -48,11 +51,11 @@ export function GenerateResearchDigest() {
           type="month"
           value={month}
           required
-          disabled={busy}
+          disabled={!ready || busy}
           onChange={(e) => setMonth(e.target.value)}
         />
       </div>
-      <button className="btn" disabled={busy}>
+      <button className="btn" disabled={!ready || busy}>
         {busy ? 'Generating…' : 'Generate draft PDF'}
       </button>
       {error && <p role="alert">{error}</p>}
