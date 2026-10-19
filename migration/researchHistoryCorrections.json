@@ -1,0 +1,24 @@
+{
+  "2023-03-036": {
+    "authors": "Lilianna Phan; Kelvin Choi",
+    "evidence": "https://api.crossref.org/works/10.1186/s12889-023-15520-2"
+  },
+  "2023-05-002": {
+    "source_date": "2023-05-04",
+    "url": "https://doi.org/10.1136/tc-2022-057618",
+    "evidence": "https://api.crossref.org/works/10.1136/tc-2022-057618"
+  },
+  "2023-08-017": {
+    "authors": "Qiuhong Wu; Dongchao Zheng; Na Lian; Xuli Zhu; Jun Wu",
+    "evidence": "https://api.crossref.org/works/10.3390/ijms241713183"
+  },
+  "2025-04-054": {
+    "source_date": "2025-04-24",
+    "url": "https://doi.org/10.3390/cancers17091430",
+    "evidence": "https://api.crossref.org/works/10.3390/cancers17091430"
+  },
+  "2023-11-032": {
+    "omitInFavorOf": "2023-11-033",
+    "evidence": "Same DOI, authors and abstract as 2023-11-033; copied title from 2023-11-029. Retain the entry matching the cigarillo abstract and DOI."
+  }
+}

@@ -22,6 +22,20 @@ Regenerating a month updates its existing unsent draft rather than creating anot
 
 The existing `monthly-research-digest` publication is reconfigured in place. Its ID, subscriber preferences and historical issue content are preserved.
 
+## Historical research import
+
+October 19, 2026: imported **1,925 unique published research articles** into beta and the local development database from **Research Digest Combined 2023-03 to 2026-10.jsonl**. Its 1,945 entries cover 44 digest issues; 20 repeated DOI entries were consolidated. Added 107 historical journals, matching existing journals across case and `(BMC)` variations and explicit known aliases. Existing journals and beta's two editor-created drafts were preserved.
+
+Original titles, author order, publication dates, DOI/source links and full abstract text are retained, with separate abstract section paragraphs and Unicode scientific characters. Missing authors in two entries and dates in two others were resolved against Crossref; the two publisher-only links were normalized to their verified DOIs. One repeated DOI entry had a copied title from a different article: retained the matching title/abstract entry instead. Evidence and specific corrections are in [`researchHistoryCorrections.json`](../migration/researchHistoryCorrections.json). Other supplied metadata was not independently reverified against every publisher.
+
+The import does not create historical publication issues, PDFs or deliveries. Articles can be browsed and used by the existing calendar-month digest generator, which selects by article publication date, not the issue month in the original export. Original digest occurrence IDs remain in the private import receipt, including repeated appearances. Titles remain public; body, DOI and original-source links retain subscription protection.
+
+For this export, `node --import tsx migration/importResearchHistory.ts <export.jsonl>` performs every insert inside a transaction and rolls it back. Review the returned counts and `beforeHash`, then repeat with `--apply --expected-before=<beforeHash>`. Application stops if existing research, versions or journal records have changed since preview. DOI, source URL and migration identifiers prevent repeat insertion; identity/title conflicts stop the transaction rather than overwrite editorial content. A published CMS version and body search text are written with each article, without starting Payload, background jobs or email.
+
+Recovery snapshots, original export, full plan and created-record/occurrence receipts are stored under ignored `migration/data/research-history-*`; keep these private and retain them with the database archives. Beta receipts are `research-history-beta-preview.json`, `research-history-beta-apply.json` and `research-history-beta-verify.json`. Any rollback must use the apply receipt's exact created article IDs and journal IDs, check for subsequent edits/references first, remove only the corresponding article versions/articles, and preserve pre-existing rows. Do not delete all records marked `migration`.
+
+Verification compared every beta article's metadata, body, journal, status, search text and latest CMS version against the import plan, checked pre-existing rows against the recovery snapshot, and confirmed a repeat run creates zero records. Local repeat preview likewise skips all 1,925 articles. Thirteen automated transformation tests cover duplicate identities, title conflicts, invalid/missing metadata, explicit corrections, journal aliases, Unicode and paragraph formatting. Live anonymous API and browser checks confirmed the 1,925 public titles, protected article content, both original drafts' privacy, and desktop/mobile rendering. Temporary beta SSH access was removed afterward.
+
 ## N360 Industry Research Clipper
 
 Download the ZIP from the generator page, or use the tracked [`research-ext`](../research-ext/README.md) folder. Extract to a permanent folder, open `chrome://extensions`, enable Developer mode, and choose **Load unpacked**. Install this alongside N360 News Clipper. Website deployment does not install or update Chrome extensions.
