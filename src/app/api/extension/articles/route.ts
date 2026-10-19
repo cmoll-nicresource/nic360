@@ -64,7 +64,7 @@ export async function GET(request: Request) {
 }
 
 /**
- * Creates a draft Article from the Nic360 News Clipper browser extension
+ * Creates a draft Article from the N360 News Clipper browser extension
  * (tma-ext/). Saved as a draft because the extension can't supply the
  * subject/product indexing is reviewed manually before publishing.
  */

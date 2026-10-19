@@ -6,7 +6,7 @@ Use **Industry Research → Create research** in `/admin`. The public library is
 
 Fields are Title, Authors (in order, separated by semicolons), Published date, Journal, DOI link and Body. Journal is the additional selector needed to reproduce the supplied digest's grouping. Admins manage the journal catalog under Taxonomy; editors select existing journals. The initial 91 entries come from the supplied **Monthly Digest links.xlsx**. Existing entries are preserved by the setup process.
 
-Common run-in abstract labels (Background, Methods, Results/Findings, Conclusions and journal-specific multiword labels) appear in separate paragraphs. This is applied on read for existing articles and on save for new content, preserving inline formatting and scientific text. Reopen the editor to refresh existing content; regenerate a saved PDF to update its layout. This change is in the CMS and does not require reinstalling Research Clipper.
+Common run-in abstract labels (Background, Methods, Results/Findings, Conclusions and journal-specific multiword labels) appear in separate paragraphs. This is applied on read for existing articles and on save for new content, preserving inline formatting and scientific text. Reopen the editor to refresh existing content; regenerate a saved PDF to update its layout. This change is in the CMS and does not require reinstalling N360 Industry Clipper.
 
 Titles, authors, dates and journal names are public. Body, DOI and the hidden original source URL require an effective Base/Premium subscription or staff access. Drafts are staff-only. Gatekeepers do not see editorial workspace navigation; existing inherited staff API permissions are unchanged. Public searches never query private body text.
 
@@ -22,9 +22,9 @@ Regenerating a month updates its existing unsent draft rather than creating anot
 
 The existing `monthly-research-digest` publication is reconfigured in place. Its ID, subscriber preferences and historical issue content are preserved.
 
-## Research Clipper
+## N360 Industry Clipper
 
-Download the ZIP from the generator page, or use the tracked [`research-ext`](../research-ext/README.md) folder. Extract to a permanent folder, open `chrome://extensions`, enable Developer mode, and choose **Load unpacked**. This is a separate extension; the existing News Clipper is unchanged. Website deployment does not install or update Chrome extensions.
+Download the ZIP from the generator page, or use the tracked [`research-ext`](../research-ext/README.md) folder. Extract to a permanent folder, open `chrome://extensions`, enable Developer mode, and choose **Load unpacked**. Install this alongside N360 News Clipper. Website deployment does not install or update Chrome extensions.
 
 Connect through the website's staff sign-in and approval screen. The packaged extension connects only to `https://beta.nicotine360.org`, with a fixed Chrome ID `lbmeppjclkfpiiaieenckfnphnlhnbge`. It stores a revocable, 12-hour clipper credential locally, rather than a staff password or JWT. Research and News credentials cannot be substituted for one another. Disconnect in extension options or revoke through the admin's Connected browsers screen.
 
@@ -34,7 +34,7 @@ Extraction supports scholarly citation metadata, Schema.org JSON-LD and visible 
 
 Metadata references: [Google Scholar citation tags](https://scholar.google.com/intl/en/scholar/inclusion.html) and [Schema.org ScholarlyArticle](https://schema.org/ScholarlyArticle).
 
-After changing extension source, rebuild `assets/extensions/nic360-research-clipper.zip` with `scripts/packageResearchExtension.ps1`; preserve the manifest key/registered ID. Keep shared connection-security fixes synchronized with News Clipper.
+After changing extension source, rebuild `assets/extensions/n360-industry-clipper.zip` with `scripts/packageResearchExtension.ps1`; preserve the manifest key/registered ID. Keep shared connection-security fixes synchronized with N360 News Clipper.
 
 ## Database setup and checks
 

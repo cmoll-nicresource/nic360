@@ -5,20 +5,20 @@ export async function GET() {
   try {
     await requireStaff('editor')
     const bytes = await fs.readFile(
-      path.join(process.cwd(), 'assets/extensions/nic360-research-clipper.zip'),
+      path.join(process.cwd(), 'assets/extensions/n360-industry-clipper.zip'),
     )
     return new Response(new Uint8Array(bytes), {
       headers: {
         'content-type': 'application/zip',
         'content-disposition':
-          'attachment; filename="nic360-research-clipper.zip"',
+          'attachment; filename="n360-industry-clipper.zip"',
         'cache-control': 'private, no-store',
       },
     })
   } catch (error) {
     if (error instanceof Response) return error
     return Response.json(
-      { error: 'The Research Clipper download is unavailable.' },
+      { error: 'The N360 Industry Clipper download is unavailable.' },
       { status: 503 },
     )
   }

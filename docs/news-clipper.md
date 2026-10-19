@@ -1,4 +1,4 @@
-﻿# Editor news clipper
+﻿# N360 News Clipper
 
 The standalone Manifest V3 extension lives in `tma-ext/`, a separate Git repository excluded from the website build. Preserve its pre-existing work; do not push to its unrelated upstream. Website deployment does not update an installed extension.
 
@@ -41,3 +41,8 @@ CMS unit tests cover metadata, fixed callback/origin validation, PKCE, hashing, 
 - [GitHub Checks run 39053988964](https://github.com/cmoll-nicresource/nic360/actions/runs/39053988964) passed, including 522 offline tests, the enabled PostgreSQL integrations and the 99-check browser matrix. The ten standalone extension tests also passed.
 - The packaged extension was loaded in a disposable real Chromium profile against beta. Website staff sign-in, explicit approval, the Chrome identity callback, PKCE exchange, draft import, duplicate detection, website revocation and clearing the revoked credential all passed. The temporary draft, source, staff account, browser profile and Railway SSH key were removed.
 - Local distribution artifact: `dist/nic360-news-clipper-2.2.0.zip`; SHA-256 `B1D5EA30749D8507751A57F386103930880475BA3EA65BBED2B7E8A4295525B1`. The unpacked folder is `dist/nic360-news-clipper-2.2.0/`. These artifacts are ignored by Git; the website repository does not distribute or auto-update the extension. Preserve the manifest public key when preparing future packages.
+
+
+### Current branded package — October 19, 2026
+
+N360 News Clipper 2.2.1 uses the supplied 16/32/48/128px icons. Download the current ZIP at `/api/admin/news-extension` while signed in as staff. Extract it to the installation folder and use **Reload** in `chrome://extensions`; the stable Chrome ID and existing connection are preserved. N360 Industry Clipper 1.0.1 is available at `/api/admin/research-extension`. Packaging commands are in `scripts/packageClipperExtensions.ps1`; the News source remains in the separate `tma-ext` repository.

@@ -4,9 +4,9 @@ Current completed work and next steps: [project checklist](docs/project-status.m
 
 Scheduled backups and the October 16 isolated restore rehearsal are documented in [backup and recovery](docs/backup-recovery.md).
 
-[Industry Research and Monthly Research Digest](docs/industry-research.md) covers research articles, subscriber access, journal-grouped monthly PDFs and the separate Research Clipper installation.
+[Industry Research and Monthly Research Digest](docs/industry-research.md) covers research articles, subscriber access, journal-grouped monthly PDFs and the separate N360 Industry Clipper installation.
 
-Editor Chrome extension setup, the one-time 2.2 upgrade, website sign-in and browser revocation are documented in [News Clipper](docs/news-clipper.md). The extension is packaged separately from website deployment.
+Editor Chrome extension setup, the one-time 2.2 upgrade, website sign-in and browser revocation are documented in [N360 News Clipper](docs/news-clipper.md). Website deployment does not update installed extensions; download the current ZIP and reload the extracted installation folder.
 
 User signup, changing passwords and the migrated-account launch plan are documented in [account onboarding](docs/account-onboarding.md). Old-site passwords were not migrated; existing users use the same email address to set a new password.
 

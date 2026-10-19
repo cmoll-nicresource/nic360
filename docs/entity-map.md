@@ -76,7 +76,7 @@ Migration correction (October 16): the old curated news excerpt is `short_abstra
 
 ### Browser extension (`tma-ext/`)
 
-The standalone MV3 News Clipper creates draft Articles with reviewed metadata. Version 2.2 connects through website staff sign-in and explicit approval, using a single-use PKCE code and revocable 12-hour opaque credential stored only on the device. It cannot authenticate against the full CMS API. Staff manage their own connections at `/admin/connected-browsers`. See [news clipper](./news-clipper.md) for routes, security boundaries, schema migrations, upgrade instructions and tests.
+The standalone MV3 N360 News Clipper creates draft Articles with reviewed metadata. Version 2.2 connects through website staff sign-in and explicit approval, using a single-use PKCE code and revocable 12-hour opaque credential stored only on the device. It cannot authenticate against the full CMS API. Staff manage their own connections at `/admin/connected-browsers`. See [N360 News Clipper](./news-clipper.md) for routes, security boundaries, schema migrations, upgrade instructions and tests.
 
 ## Bill
 

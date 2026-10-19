@@ -989,7 +989,7 @@ export interface Article {
   primarySubject?: (number | null) | Subject;
   subjects?: (number | Subject)[] | null;
   /**
-   * Captured by the news clipper and kept when the excerpt is edited. Image URLs reference the publisher’s original image.
+   * Captured by N360 News Clipper and kept when the excerpt is edited. Image URLs reference the publisher’s original image.
    */
   socialPreview?: {
     description?: string | null;

@@ -24,7 +24,7 @@ The role-specific workspace change requires no database migration. Automated che
 
 ## Grouped menu
 
-The sidebar replaces Payload's automatic collection list with News, Industry Research, Bills, Publications, Guides, Data, Taxonomy, Users, Events, Analytics and Admin, in that order. Industry Research includes Find/Create research and Generate Monthly Research Digest; the generator page also offers the separate Research Clipper download. Sections follow the same role restrictions as the daily workspace: gatekeepers see user operations, events and analytics; editors see editorial sections and event programs; admins see everything. The native mobile menu, account controls, logout and form navigation protection remain available.
+The sidebar replaces Payload's automatic collection list with News, Industry Research, Bills, Publications, Guides, Data, Taxonomy, Users, Events, Analytics and Admin, in that order. Industry Research includes Find/Create research and Generate Monthly Research Digest; the generator page also offers the separate N360 Industry Clipper download. Sections follow the same role restrictions as the daily workspace: gatekeepers see user operations, events and analytics; editors see editorial sections and event programs; admins see everything. The native mobile menu, account controls, logout and form navigation protection remain available.
 
 Find/Create a publication opens **issues**. Publication settings remains a separate link for recurring titles and rules. Newsletter Deliveries is now labeled **Publication Deliveries**; its collection/API slug remains `newsletter-deliveries`. Guides are loaded from the actual guide records, including drafts, and link directly to their edit screens. All guides remains available for creating and finding resources.
 
@@ -48,6 +48,6 @@ Analytics → Events summarizes active in-person/virtual registrations for the l
 
 ## Connected browsers
 
-Only admins see the Connected browsers sidebar link or can open `/admin/connected-browsers`. The page still lists only the signed-in admin's own connections, with connection IDs, creation/expiry and last-use times. Editors can continue connecting and importing through News Clipper, and all staff can disconnect their own browser in the extension's options. Connections expire after 12 hours; website sign-out alone does not revoke them.
+Only admins see the Connected browsers sidebar link or can open `/admin/connected-browsers`. The page still lists only the signed-in admin's own connections, with connection IDs, creation/expiry and last-use times. Editors can continue connecting and importing through N360 News Clipper, and all staff can disconnect their own browser in the extension's options. Connections expire after 12 hours; website sign-out alone does not revoke them.
 
-Editors connect from the extension's options through normal website staff sign-in and explicit approval. No endpoint or password is entered in the extension. See [News Clipper](./news-clipper.md) for installation, the one-time 2.2 upgrade, limited credential scope and its separate additive database schema.
+Editors connect from the extension's options through normal website staff sign-in and explicit approval. No endpoint or password is entered in the extension. See [N360 News Clipper](./news-clipper.md) for installation, the one-time 2.2 upgrade, limited credential scope and its separate additive database schema.

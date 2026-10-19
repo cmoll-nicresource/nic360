@@ -23,7 +23,7 @@ export function ConnectedBrowserList() {
     } catch (e) { setError((e as Error).message) } finally { setBusy('') }
   }
   return <div>{error && <p role="alert">{error}</p>}{!rows && !error && <p>Loading connections…</p>}
-    {rows?.length === 0 && <p>No browsers connected. Open News Clipper’s options in Chrome and choose Connect to Nicotine360.</p>}
+    {rows?.length === 0 && <p>No browsers connected. Open N360 News Clipper or N360 Industry Clipper options in Chrome and choose Connect to Nicotine360.</p>}
     {rows?.map(row => {
       const status = row.revoked_at ? 'Disconnected' : !row.unexpired ? 'Expired' : 'Connected'
       return <article key={row.id} className="nic-workspace__panel" style={{ padding: 24, marginBottom: 16 }}>

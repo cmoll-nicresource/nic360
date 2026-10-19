@@ -1,4 +1,4 @@
-import { RESEARCH_CLIPPER_REDIRECT } from '@/config/extension'
+import { CLIPPER_CLIENTS, RESEARCH_CLIPPER_REDIRECT } from '@/config/extension'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { frontendContext } from '@/lib/frontendContext'
@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Connect browser clipper | Nicotine36
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const input = await searchParams
   const research = input.redirect_uri === RESEARCH_CLIPPER_REDIRECT
-  const clipperName = research ? 'Research Clipper' : 'News Clipper'
+  const clipperName = CLIPPER_CLIENTS.find(client => client.kind === (research ? 'research' : 'news'))!.name
   const { user, isStaff } = await frontendContext()
   return <section aria-label={`Connect ${clipperName}`} className="card" style={{ maxWidth: 600, margin: '64px auto', padding: 32 }}>
     <p>Nicotine360 · Staff tools</p><h1>Connect {clipperName}</h1>
