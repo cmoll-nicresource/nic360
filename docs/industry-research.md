@@ -6,6 +6,8 @@ Use **Industry Research → Create research** in `/admin`. The public library is
 
 Fields are Title, Authors (in order, separated by semicolons), Published date, Journal, DOI link and Body. Journal is the additional selector needed to reproduce the supplied digest's grouping. Admins manage the journal catalog under Taxonomy; editors select existing journals. The initial 91 entries come from the supplied **Monthly Digest links.xlsx**. Existing entries are preserved by the setup process.
 
+Common run-in abstract labels (Background, Methods, Results/Findings, Conclusions and journal-specific multiword labels) appear in separate paragraphs. This is applied on read for existing articles and on save for new content, preserving inline formatting and scientific text. Reopen the editor to refresh existing content; regenerate a saved PDF to update its layout. This change is in the CMS and does not require reinstalling Research Clipper.
+
 Titles, authors, dates and journal names are public. Body, DOI and the hidden original source URL require an effective Base/Premium subscription or staff access. Drafts are staff-only. Gatekeepers do not see editorial workspace navigation; existing inherited staff API permissions are unchanged. Public searches never query private body text.
 
 ## Monthly PDF

@@ -162,7 +162,7 @@ test('Research Clipper credentials create reviewable drafts, detect duplicates a
       data = {
         title: 'Journal clip ' + marker,
         authors: 'First; Second',
-        body: 'Abstract imported for editorial review.',
+        body: 'Background The abstract is imported for editorial review.\n\nFindings The study observed a change.\n\nConclusions The results need review.',
         publishedDate: '2026-05-09',
         doiLink: '10.1234/' + marker,
         sourceUrl: 'https://www.mdpi.com/1234/' + marker,
@@ -182,6 +182,19 @@ test('Research Clipper credentials create reviewable drafts, detect duplicates a
     expect(doc._status).toBe('draft')
     expect(doc.publishedDate).toContain('2026-05-09')
     expect(doc.doiLink).toBe('https://doi.org/' + data.doiLink)
+    expect(
+      doc.body.root.children.map(
+        (paragraph: { children: { text: string }[] }) =>
+          paragraph.children.map((node) => node.text).join(''),
+      ),
+    ).toEqual([
+      'Background',
+      'The abstract is imported for editorial review.',
+      'Findings',
+      'The study observed a change.',
+      'Conclusions',
+      'The results need review.',
+    ])
     const duplicate = await request.post('/api/extension/research', {
       headers,
       data: {

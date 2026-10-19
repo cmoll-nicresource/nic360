@@ -9,6 +9,7 @@ import { ADMIN_GROUPS } from '@/config/adminGroups'
 import { ingestionField } from '@/fields/ingestion'
 import { buildSearchTextHook } from '@/hooks/buildSearchText'
 import { normalizeDoi } from '@/lib/research/doi'
+import { formatAbstractHeadings } from '@/lib/research/abstractHeadings'
 
 export const Research: CollectionConfig = {
   slug: 'research',
@@ -84,6 +85,10 @@ export const Research: CollectionConfig = {
       type: 'richText',
       required: true,
       access: { read: canReadFullContent },
+      hooks: {
+        beforeValidate: [({ value }) => formatAbstractHeadings(value)],
+        afterRead: [({ value }) => formatAbstractHeadings(value)],
+      },
     },
     {
       name: 'sourceUrl',
