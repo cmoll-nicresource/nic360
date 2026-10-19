@@ -16,9 +16,9 @@ export function ResearchReportsView(props: AdminViewServerProps) {
         actions={
           <a
             href="/api/admin/research-extension"
-            download="n360-industry-clipper.zip"
+            download="n360-industry-news-clipper.zip"
           >
-            Download N360 Industry Clipper ↗
+            Download N360 Industry News Clipper ↗
           </a>
         }
       >

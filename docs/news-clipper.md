@@ -45,4 +45,4 @@ CMS unit tests cover metadata, fixed callback/origin validation, PKCE, hashing, 
 
 ### Current branded package — October 19, 2026
 
-N360 News Clipper 2.2.1 uses the supplied 16/32/48/128px icons. Download the current ZIP at `/api/admin/news-extension` while signed in as staff. Extract it to the installation folder and use **Reload** in `chrome://extensions`; the stable Chrome ID and existing connection are preserved. N360 Industry Clipper 1.0.1 is available at `/api/admin/research-extension`. Packaging commands are in `scripts/packageClipperExtensions.ps1`; the News source remains in the separate `tma-ext` repository.
+N360 News Clipper 2.2.1 uses the supplied 16/32/48/128px icons. Download the current ZIP at `/api/admin/news-extension` while signed in as staff. Extract it to the installation folder and use **Reload** in `chrome://extensions`; the stable Chrome ID and existing connection are preserved. N360 Industry News Clipper 1.0.2 is available at `/api/admin/research-extension`. Packaging commands are in `scripts/packageClipperExtensions.ps1`; the News source remains in the separate `tma-ext` repository.

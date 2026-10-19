@@ -129,7 +129,7 @@ test('research mirrors news permissions and editorial workflow without exposing 
   }
 })
 
-test('N360 Industry Clipper credentials create reviewable drafts, detect duplicates and cannot be substituted for N360 News Clipper credentials', async ({
+test('N360 Industry News Clipper credentials create reviewable drafts, detect duplicates and cannot be substituted for N360 News Clipper credentials', async ({
   browser,
   request,
 }) => {
@@ -382,7 +382,7 @@ test('journal metadata extraction handles citation tags, structured abstracts, J
   expect(missing.warnings.length).toBeGreaterThan(0)
 })
 
-test('packaged N360 Industry Clipper loads as its registered Chrome identity without staff passwords', async ({}, info) => {
+test('packaged N360 Industry News Clipper loads as its registered Chrome identity without staff passwords', async ({}, info) => {
   test.skip(
     info.project.name !== 'chromium',
     'Chrome extension runtime is specific to Chromium.',
@@ -404,7 +404,7 @@ test('packaged N360 Industry Clipper loads as its registered Chrome identity wit
     await page.goto(`chrome-extension://${RESEARCH_CLIPPER_ID}/options.html`)
     await expect(
       page.getByRole('heading', {
-        name: 'N360 Industry Clipper',
+        name: 'N360 Industry News Clipper',
         exact: true,
       }),
     ).toBeVisible()

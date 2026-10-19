@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "N360 Industry Clipper",
-  "version": "1.0.1",
-  "description": "N360 Industry Clipper imports journal articles into Nicotine360 as drafts for editorial review.",
+  "name": "N360 Industry News Clipper",
+  "version": "1.0.2",
+  "description": "N360 Industry News Clipper imports journal articles into Nicotine360 as drafts for editorial review.",
   "permissions": [
     "storage",
     "scripting",
@@ -18,7 +18,7 @@
       "48": "images/research-extension-48.png",
       "128": "images/research-extension-128.png"
     },
-    "default_title": "N360 Industry Clipper"
+    "default_title": "N360 Industry News Clipper"
   },
   "icons": {
     "16": "images/research-extension-16.png",

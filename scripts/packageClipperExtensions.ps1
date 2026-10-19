@@ -4,7 +4,7 @@ if (-not $assetRoot.StartsWith($projectRoot + [System.IO.Path]::DirectorySeparat
 New-Item -ItemType Directory -Force -Path $assetRoot | Out-Null
 foreach ($package in @(
   @{ Folder = 'tma-ext'; Prefix = 'news-extension'; Name = 'n360-news-clipper'; Files = @('manifest.json','README.md','contentScript.js','locationMatching.js','shared.js','options.html','options.js','popup.html','popup.js','sidepanel.html','sidepanel.js','styles') },
-  @{ Folder = 'research-ext'; Prefix = 'research-extension'; Name = 'n360-industry-clipper'; Files = @('manifest.json','README.md','contentScript.js','journals.json','shared.js','options.html','options.js','popup.html','popup.js','style.css') }
+  @{ Folder = 'research-ext'; Prefix = 'research-extension'; Name = 'n360-industry-news-clipper'; Files = @('manifest.json','README.md','contentScript.js','journals.json','shared.js','options.html','options.js','popup.html','popup.js','style.css') }
 )) {
   $extensionRoot = [System.IO.Path]::GetFullPath((Join-Path $projectRoot $package.Folder))
   if (-not $extensionRoot.StartsWith($projectRoot + [System.IO.Path]::DirectorySeparatorChar)) { throw 'Unexpected extension path' }

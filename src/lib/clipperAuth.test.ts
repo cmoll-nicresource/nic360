@@ -63,7 +63,7 @@ it('checks revocation again before returning a staff identity', async () => {
   expect(m.findByID).not.toHaveBeenCalled()
 })
 
-it('accepts the separate N360 Industry Clipper callback but keeps token scope bound to the registered client', async () => {
+it('accepts the separate N360 Industry News Clipper callback but keeps token scope bound to the registered client', async () => {
   expect(validConnectRequest({ redirect_uri: RESEARCH_CLIPPER_REDIRECT, state: 's'.repeat(43), code_challenge: pkceChallenge(verifier) })).toBe(true)
   m.query.mockResolvedValue({ rows: [{ ...staff, label: 'Chrome News Clipper' }] })
   expect(await authenticateClipper(payload, request('Bearer nic360_clip_' + 't'.repeat(43), RESEARCH_CLIPPER_ORIGIN), 'research')).toBeNull()
