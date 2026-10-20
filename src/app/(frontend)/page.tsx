@@ -10,7 +10,7 @@ export default async function HomePage() {
   const { payload, user, isStaff } = await frontendContext()
   if (user?.collection === 'users') redirect('/dashboard')
   const published = { _status: { equals: 'published' as const } }
-  const [news, bills, datasets, events, articlesCount, billsCount, trademarksCount] =
+  const [news, bills, datasets, events, articlesCount, billsCount, trademarksCount, researchCount] =
     await Promise.all([
       payload.find({
         collection: 'articles',
@@ -48,6 +48,7 @@ export default async function HomePage() {
       payload.count({ collection: 'articles', where: published, overrideAccess: false }),
       payload.count({ collection: 'bills', where: published, overrideAccess: false }),
       payload.count({ collection: 'trademarks', where: published, overrideAccess: true }),
+      payload.count({ collection: 'research', where: published, overrideAccess: false }),
     ])
   return (
     <>
@@ -126,16 +127,13 @@ export default async function HomePage() {
             [articlesCount.totalDocs, 'articles indexed'],
             [billsCount.totalDocs, 'bills tracked'],
             [trademarksCount.totalDocs, 'trademark filings'],
+            [researchCount.totalDocs, 'research papers indexed'],
           ].map(([count, label]) => (
             <p key={label}>
               <strong>{Number(count).toLocaleString()}</strong>
               <span>{label}</span>
             </p>
           ))}
-          <p>
-            <strong>One perspective.</strong>
-            <span>News, policy, markets & trade.</span>
-          </p>
         </div>
       </div>
       <div className="page-wide">
