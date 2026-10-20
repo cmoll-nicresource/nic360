@@ -4,6 +4,8 @@ Updated October 19, 2026. This is the current work list. The original milestones
 
 ## Completed
 
+- October 19: [admin analytics charts](./analytics.md): date-filtered daily/weekly/monthly traffic, per-user/page/section trends, section/page/user rankings, publication engagement cohorts and weighted rates, event registration trends and ad click rankings. PostgreSQL aggregates replace truncated dashboard traffic samples. Accessible chart data and keyboard controls, timezone/large-volume SQL regressions and desktop/phone browser coverage are included.
+
 - October 19: [historical Industry Research import](./industry-research.md#historical-research-import): 1,925 unique published articles from 1,945 exported entries across March 2023–October 2026 digest issues, available on beta and locally. Consolidated 20 repeated DOI records, resolved four incomplete citations, added 107 historical journals, preserved existing drafts, verified all saved records/versions and confirmed safe reruns. No publication generation or sending occurred.
 
 - October 19: [Industry Research and Monthly Research Digest](./industry-research.md): public titles and subscriber-protected bodies/DOIs, journal catalog, news-style editorial/public screens, branded monthly PDFs and a separate securely connected N360 Industry Research Clipper. Digest generation creates reviewable drafts; published/sent issues are protected. The supplied historical PDF is a content reference, not an automatic historical import.

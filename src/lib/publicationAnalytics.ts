@@ -35,17 +35,25 @@ export async function searchPublicationIssueStats(
   const and: Where[] = [{ 'email.status': { equals: 'sent' } }]
   if (filters.publicationId) and.push({ publication: { equals: filters.publicationId } })
   if (filters.dateFrom) and.push({ issueDate: { greater_than_equal: filters.dateFrom } })
-  if (filters.dateTo) and.push({ issueDate: { less_than_equal: filters.dateTo } })
+  if (filters.dateTo) and.push({ issueDate: { less_than: new Date(Date.parse(filters.dateTo.slice(0,10)) + 86400000).toISOString() } })
   if (filters.keyword) and.push({ title: { contains: filters.keyword } })
 
-  const { docs } = await payload.find({
+  const docs = []
+  let page = 1
+  while (true) {
+  const result = await payload.find({
     collection: 'publication-issues',
     where: { and },
     depth: 1,
     sort: '-issueDate',
     limit: 1000,
+    page,
     overrideAccess: true,
   })
+  docs.push(...result.docs)
+  if (!result.hasNextPage) break
+  page++
+  }
 
   return docs.map((issue) => {
     const recipientCount = issue.stats?.recipientCount ?? 0

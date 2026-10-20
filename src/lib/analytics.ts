@@ -126,8 +126,6 @@ export async function getSectionHistory(payload: Payload, section: SectionKey): 
 
 /** Distinct paths that have at least one recorded view, sorted by view count. */
 export async function getKnownPaths(payload: Payload): Promise<{ path: string; count: number }[]> {
-  const views = await fetchRecentViews(payload)
-  const counts = new Map<string, number>()
-  for (const v of views) counts.set(v.path, (counts.get(v.path) ?? 0) + 1)
-  return [...counts.entries()].map(([path, count]) => ({ path, count })).sort((a, b) => b.count - a.count)
+  const result = await payload.db.pool.query<{path:string;count:number}>('SELECT path,count(*)::int AS count FROM public.page_views GROUP BY path ORDER BY count(*) DESC,path LIMIT 500')
+  return result.rows
 }

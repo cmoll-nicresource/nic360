@@ -5,18 +5,14 @@ import React from 'react'
 
 import { staffHasRole } from '@/access/staffRoles'
 import { searchAdStats, summarizeAdStats } from '@/lib/adAnalytics'
-import {
-  getKnownPaths,
-  getOverviewStats,
-  getPageHistory,
-  getSectionHistory,
-  getUserHistory,
-  visitorLabel,
-} from '@/lib/analytics'
+import { getKnownPaths, visitorLabel } from '@/lib/analytics'
+import { analyticsRange, getTrafficTrends, getRegistrationTrends, publicationTrends, type AnalyticsRange } from '@/lib/analyticsTrends'
 import { SECTIONS } from '@/lib/pageSections'
 import { searchPublicationIssueStats, summarizePublicationStats } from '@/lib/publicationAnalytics'
 import { AdminHistoryTable } from './AdminHistoryTable'
 import { UserSearchPicker } from './UserSearchPicker'
+import { TrendChart } from './TrendChart'
+import { RankingChart } from './RankingChart'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
@@ -53,6 +49,11 @@ export function AnalyticsView({
 
   const sp = searchParams ?? {}
   const tab: Tab = TABS.some((t) => t.key === sp.tab) ? (sp.tab as Tab) : 'overview'
+  let range: AnalyticsRange
+  try { range = analyticsRange(firstParam(sp.dateFrom), firstParam(sp.dateTo), firstParam(sp.grain)) }
+  catch { return <Gutter><h1>Analytics</h1><p role="alert">Choose valid dates in order, covering no more than 366 days.</p><Link href={`/admin/analytics?tab=${tab}`}>Reset dates</Link></Gutter> }
+  const rangeQuery = new URLSearchParams({dateFrom:range.from,dateTo:range.to,grain:range.grain}).toString()
+  const context = {payload,user:user ?? null,range}
 
   return (
     <Gutter className="nic-analytics">
@@ -65,7 +66,7 @@ export function AnalyticsView({
         {TABS.map((t) => (
           <Link
             key={t.key}
-            href={`/admin/analytics?tab=${t.key}`}
+            href={`/admin/analytics?tab=${t.key}&${rangeQuery}`}
             className={`nic-analytics__tab ${tab === t.key ? 'nic-analytics__tab--active' : ''}`}
           >
             {t.label}
@@ -73,26 +74,37 @@ export function AnalyticsView({
         ))}
       </div>
 
-      {tab === 'overview' && <OverviewTab payload={payload} />}
-      {tab === 'users' && <UsersTab payload={payload} userId={firstParam(sp.userId)} />}
-      {tab === 'pages' && <PagesTab payload={payload} path={firstParam(sp.path)} />}
-      {tab === 'sections' && <SectionsTab payload={payload} section={firstParam(sp.section)} />}
+      {tab !== 'ads' && <form method="GET" className="nic-analytics__picker nic-analytics__range">
+        <input type="hidden" name="tab" value={tab}/>
+        {['userId','path','section','publicationId','keyword','eventId'].map(key=>firstParam(sp[key])?<input key={key} type="hidden" name={key} value={firstParam(sp[key])}/>:null)}
+        <label>From<input type="date" name="dateFrom" defaultValue={range.from} required/></label>
+        <label>Through<input type="date" name="dateTo" defaultValue={range.to} required/></label>
+        <label>Group by<select name="grain" defaultValue={range.grain}><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select></label>
+        <button type="submit">Update charts</button>
+        <p className="nic-analytics__muted">Traffic and registration dates use Eastern time. Publications use the saved issue date. Weeks start Monday; edge periods may be partial.</p>
+      </form>}
+
+      {tab === 'overview' && <OverviewTab {...context} />}
+      {tab === 'users' && <UsersTab {...context} userId={firstParam(sp.userId)} />}
+      {tab === 'pages' && <PagesTab {...context} path={firstParam(sp.path)} />}
+      {tab === 'sections' && <SectionsTab {...context} section={firstParam(sp.section)} />}
       {tab === 'publications' && (
         <PublicationsTab
           payload={payload}
+          range={range}
           publicationId={firstParam(sp.publicationId)}
-          dateFrom={firstParam(sp.dateFrom)}
-          dateTo={firstParam(sp.dateTo)}
+          dateFrom={range.from}
+          dateTo={range.to}
           keyword={firstParam(sp.keyword)}
         />
       )}
       {tab === 'ads' && <AdsTab payload={payload} publicationId={firstParam(sp.publicationId)} />}
-      {tab === 'events' && <EventsTab payload={payload} user={user ?? null} />}
+      {tab === 'events' && <EventsTab {...context} eventId={firstParam(sp.eventId)} />}
     </Gutter>
   )
 }
 
-async function EventsTab({ payload, user }: { payload: Payload; user: PayloadRequest['user'] }) {
+async function EventsTab({ payload, user, range, eventId }: ViewContext & {eventId?:string}) {
   const options = { user, overrideAccess: false as const }
   const events = await payload.find({ collection: 'events', sort: '-startsAt', depth: 0, limit: 24, draft: true, ...options })
   const rows = await Promise.all(events.docs.map(async event => {
@@ -102,181 +114,73 @@ async function EventsTab({ payload, user }: { payload: Payload; user: PayloadReq
     ])
     return { event, active: active.totalDocs, virtual: virtual.totalDocs }
   }))
-  return <section className="nic-analytics__card">
+  const selectedId = eventId && /^\d+$/.test(eventId) && Number.isSafeInteger(Number(eventId)) && Number(eventId)>0 ? Number(eventId) : undefined
+  const points = await getRegistrationTrends(payload,user,range,selectedId)
+  return <><form method="GET" className="nic-analytics__picker"><RangeFields range={range}/><input type="hidden" name="tab" value="events"/><label>Event<select name="eventId" defaultValue={selectedId??''}><option value="">All events</option>{events.docs.map(event=><option key={event.id} value={event.id}>{event.name}</option>)}</select></label><button type="submit">Show registrations</button></form>
+    <TrendChart title="Event registrations over time" description="Currently active tickets, grouped by their original registration date. Pending and cancelled tickets are excluded; this is not a historical attendance or payment ledger." points={points} labels={['In person','Virtual']} grain={range.grain}/>
+    <section className="nic-analytics__card">
     <h2>Event attendance</h2>
-    <p>Active registrations, excluding pending and cancelled tickets. Open an event for attendance reports and livestream engagement.</p>
+    <p>Current all-time totals, excluding pending and cancelled tickets. Open an event for attendance reports and livestream engagement.</p>
     <div className="nic-workspace__table-scroll"><table><thead><tr><th>Event</th><th>Active attendees</th><th>In person</th><th>Virtual</th></tr></thead><tbody>
       {rows.map(({ event, active, virtual }) => <tr key={event.id}><td><Link href={`/admin/events/${event.id}/manage`}>{event.name}</Link></td><td>{active}</td><td>{active - virtual}</td><td>{virtual}</td></tr>)}
     </tbody></table></div>
     {!rows.length && <p>No events yet.</p>}
     {events.hasNextPage && <p>Showing the latest 24 of {events.totalDocs} events.</p>}
     <Link href="/admin/events">Browse all events</Link>
-  </section>
+  </section></>
 }
 
 function firstParam(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v
 }
 
-async function OverviewTab({ payload }: { payload: Payload }) {
-  const stats = await getOverviewStats(payload)
+type ViewContext = { payload:Payload; user:PayloadRequest['user']; range:AnalyticsRange }
 
-  return (
-    <>
-      <div className="nic-analytics__stat-row">
-        <div className="nic-analytics__card nic-analytics__stat">
-          <div className="nic-analytics__muted">Total page views (all time)</div>
-          <div className="nic-analytics__stat-value">{stats.totalViews}</div>
-        </div>
-        <div className="nic-analytics__card nic-analytics__stat">
-          <div className="nic-analytics__muted">Views in the last 30 days</div>
-          <div className="nic-analytics__stat-value">{stats.recentViews}</div>
-        </div>
-        <div className="nic-analytics__card nic-analytics__stat">
-          <div className="nic-analytics__muted">Unique signed-in visitors (30 days)</div>
-          <div className="nic-analytics__stat-value">{stats.uniqueVisitors}</div>
-        </div>
-      </div>
-
-      <div className="nic-analytics__grid">
-        <div className="nic-analytics__card">
-          <h3>Top sections (30 days)</h3>
-          {stats.topSections.length === 0 && <p className="nic-analytics__muted">No data yet.</p>}
-          {stats.topSections.map((s) => (
-            <RankRow
-              key={s.key}
-              href={`/admin/analytics?tab=sections&section=${s.key}`}
-              label={SECTIONS.find((x) => x.key === s.key)?.label ?? s.key}
-              count={s.count}
-            />
-          ))}
-        </div>
-        <div className="nic-analytics__card">
-          <h3>Top pages (30 days)</h3>
-          {stats.topPaths.length === 0 && <p className="nic-analytics__muted">No data yet.</p>}
-          {stats.topPaths.map((p) => (
-            <RankRow key={p.path} href={`/admin/analytics?tab=pages&path=${encodeURIComponent(p.path)}`} label={p.path} count={p.count} />
-          ))}
-        </div>
-        <div className="nic-analytics__card">
-          <h3>Most active users (30 days)</h3>
-          {stats.topUsers.length === 0 && <p className="nic-analytics__muted">No data yet.</p>}
-          {stats.topUsers.map((u) => (
-            <RankRow
-              key={u.visitor.id}
-              href={`/admin/analytics?tab=users&userId=${u.visitor.id}`}
-              label={visitorLabel(u.visitor)}
-              count={u.count}
-            />
-          ))}
-        </div>
-      </div>
-    </>
-  )
+function RangeFields({range}:{range:AnalyticsRange}) {
+  return <><input type="hidden" name="dateFrom" value={range.from}/><input type="hidden" name="dateTo" value={range.to}/><input type="hidden" name="grain" value={range.grain}/></>
 }
 
-function RankRow({ href, label, count }: { href: string; label: string; count: number }) {
-  return (
-    <Link href={href} className="nic-analytics__rank-row">
-      <span className="nic-analytics__rank-label">{label}</span>
-      <span className="nic-analytics__pill">{count}</span>
-    </Link>
-  )
-}
-
-async function UsersTab({ payload, userId }: { payload: Payload; userId?: string }) {
-  const selectedId = userId ? Number(userId) : undefined
-  const selected = selectedId
-    ? await payload
-        .findByID({ collection: 'users', id: selectedId, depth: 0, overrideAccess: true })
-        .catch(() => null)
-    : null
-  const history = selectedId ? await getUserHistory(payload, selectedId) : []
-
-  return (
-    <div className="nic-analytics__card">
-      <UserSearchPicker initialLabel={selected ? visitorLabel(selected) : undefined} />
-
-      {selectedId && !selected && <p className="nic-analytics__muted">That user couldn&apos;t be found.</p>}
-      {selected && (
-        <>
-          <h3>
-            {visitorLabel(selected)}
-            <span className="nic-analytics__muted"> — {history.length} page view(s)</span>
-          </h3>
-          <AdminHistoryTable entries={history} showVisitor={false} />
-        </>
-      )}
+function TrafficPanel({report,range,title='Site activity over time'}:{report:Awaited<ReturnType<typeof getTrafficTrends>>;range:AnalyticsRange;title?:string}) {
+  const days=(Date.parse(range.to)-Date.parse(range.from))/86400000+1
+  return <>
+    <div className="nic-analytics__stat-row">
+      {[['Page views',report.views.toLocaleString('en-US')],['Distinct signed-in users',report.visitors.toLocaleString('en-US')],['Average views per day',(report.views/days).toLocaleString('en-US',{maximumFractionDigits:1})]].map(([label,value])=><div key={label} className="nic-analytics__card nic-analytics__stat"><div className="nic-analytics__muted">{label} · selected dates</div><div className="nic-analytics__stat-value">{value}</div></div>)}
     </div>
-  )
+    <TrendChart title={title} description="Page views include signed-out visits. Users are counted once per period when signed in; period user counts must not be added together to get a range total. Staff visits are excluded." points={report.points} labels={['Page views','Signed-in users']} grain={range.grain}/>
+  </>
 }
 
-async function PagesTab({ payload, path }: { payload: Payload; path?: string }) {
-  const knownPaths = await getKnownPaths(payload)
-  const history = path ? await getPageHistory(payload, path) : []
-
-  return (
-    <div className="nic-analytics__card">
-      <form method="GET" className="nic-analytics__picker">
-        <input type="hidden" name="tab" value="pages" />
-        <select name="path" defaultValue={path ?? ''}>
-          <option value="" disabled>
-            Choose a page…
-          </option>
-          {knownPaths.map((p) => (
-            <option key={p.path} value={p.path}>
-              {p.path} ({p.count})
-            </option>
-          ))}
-        </select>
-        <button type="submit">View visitors</button>
-      </form>
-
-      {path && (
-        <>
-          <h3>
-            {path}
-            <span className="nic-analytics__muted"> — {history.length} page view(s)</span>
-          </h3>
-          <AdminHistoryTable entries={history} showPath={false} />
-        </>
-      )}
-    </div>
-  )
+async function OverviewTab({payload,user,range}:ViewContext) {
+  const report=await getTrafficTrends(payload,user,range)
+  const query=new URLSearchParams({dateFrom:range.from,dateTo:range.to,grain:range.grain}).toString()
+  return <><TrafficPanel report={report} range={range}/><div className="nic-analytics__grid">
+    <RankingChart title="Views by section" rows={report.sections.map(row=>({label:SECTIONS.find(section=>section.key===row.key)?.label??row.key,count:row.count,href:'/admin/analytics?tab=sections&section='+row.key+'&'+query}))}/>
+    <RankingChart title="Most visited pages" rows={report.paths.map(row=>({label:row.path,count:row.count,href:'/admin/analytics?tab=pages&path='+encodeURIComponent(row.path)+'&'+query}))}/>
+    <RankingChart title="Most active signed-in users" rows={report.users.map(row=>({label:visitorLabel(row.visitor),count:row.count,href:'/admin/analytics?tab=users&userId='+row.visitor.id+'&'+query}))}/>
+  </div></>
 }
 
-async function SectionsTab({ payload, section }: { payload: Payload; section?: string }) {
-  const known = SECTIONS.some((s) => s.key === section) ? (section as (typeof SECTIONS)[number]['key']) : undefined
-  const history = known ? await getSectionHistory(payload, known) : []
+function RecentHistory({report,showVisitor=true,showPath=true}:{report:Awaited<ReturnType<typeof getTrafficTrends>>;showVisitor?:boolean;showPath?:boolean}) {
+  return <div className="nic-analytics__card"><h3>Recent visits in this date range</h3><p className="nic-analytics__muted">Showing {report.history.length.toLocaleString('en-US')} of {report.views.toLocaleString('en-US')} visits; the table shows at most 1,000. Charts include every matching visit.</p><AdminHistoryTable entries={report.history} showVisitor={showVisitor} showPath={showPath}/></div>
+}
 
-  return (
-    <div className="nic-analytics__card">
-      <form method="GET" className="nic-analytics__picker">
-        <input type="hidden" name="tab" value="sections" />
-        <select name="section" defaultValue={known ?? ''}>
-          <option value="" disabled>
-            Choose a section…
-          </option>
-          {SECTIONS.map((s) => (
-            <option key={s.key} value={s.key}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-        <button type="submit">View history</button>
-      </form>
+async function UsersTab({payload,user,range,userId}:ViewContext & {userId?:string}) {
+  const selectedId=userId && /^\d+$/.test(userId)&&Number.isSafeInteger(Number(userId))&&Number(userId)>0?Number(userId):undefined
+  const selected=selectedId ? await payload.findByID({collection:'users',id:selectedId,depth:0,overrideAccess:true}).catch(()=>null):null
+  const rangeQuery=new URLSearchParams({dateFrom:range.from,dateTo:range.to,grain:range.grain}).toString()
+  const report=await getTrafficTrends(payload,user,range,selected?{userId:selected.id}:{})
+  return <><div className="nic-analytics__card"><h2>{selected?visitorLabel(selected):'User activity'}</h2><UserSearchPicker initialLabel={selected?visitorLabel(selected):undefined} rangeQuery={rangeQuery}/>{userId&&!selected&&<p role="alert">That user could not be found. Showing overall activity.</p>}</div><TrafficPanel report={report} range={range} title={selected?'Selected user activity over time':'User activity over time'}/>{selected&&<RecentHistory report={report} showVisitor={false}/>}</>
+}
 
-      {known && (
-        <>
-          <h3>
-            {SECTIONS.find((s) => s.key === known)?.label}
-            <span className="nic-analytics__muted"> — {history.length} page view(s)</span>
-          </h3>
-          <AdminHistoryTable entries={history} />
-        </>
-      )}
-    </div>
-  )
+async function PagesTab({payload,user,range,path}:ViewContext & {path?:string}) {
+  const [knownPaths,report]=await Promise.all([getKnownPaths(payload),getTrafficTrends(payload,user,range,path?{path}:{})])
+  return <><form method="GET" className="nic-analytics__picker"><input type="hidden" name="tab" value="pages"/><RangeFields range={range}/><label>Page<select name="path" defaultValue={path??''}><option value="">All pages</option>{path&&!knownPaths.some(row=>row.path===path)&&<option value={path}>{path}</option>}{knownPaths.map(row=><option key={row.path} value={row.path}>{row.path}</option>)}</select></label><button type="submit">Show page activity</button></form><TrafficPanel report={report} range={range} title={path?'Selected page activity over time':'Page views over time'}/>{path&&<p className="nic-analytics__muted">Page: {path}</p>}{path?<RecentHistory report={report} showPath={false}/>:<RankingChart title="Most visited pages" rows={report.paths.map(row=>({label:row.path,count:row.count}))}/>}</>
+}
+
+async function SectionsTab({payload,user,range,section}:ViewContext & {section?:string}) {
+  const known=SECTIONS.find(row=>row.key===section)
+  const report=await getTrafficTrends(payload,user,range,known?{section:known.key}:{})
+  return <><form method="GET" className="nic-analytics__picker"><input type="hidden" name="tab" value="sections"/><RangeFields range={range}/><label>Section<select name="section" defaultValue={known?.key??''}><option value="">All sections</option>{SECTIONS.map(row=><option key={row.key} value={row.key}>{row.label}</option>)}</select></label><button type="submit">Show section activity</button></form><TrafficPanel report={report} range={range} title={known?known.label+' activity over time':'Section activity over time'}/>{known?<RecentHistory report={report}/>:<RankingChart title="Views by section" rows={report.sections.map(row=>({label:SECTIONS.find(section=>section.key===row.key)?.label??row.key,count:row.count}))}/>}</>
 }
 
 function pct(v: number | null): string {
@@ -285,12 +189,14 @@ function pct(v: number | null): string {
 
 async function PublicationsTab({
   payload,
+  range,
   publicationId,
   dateFrom,
   dateTo,
   keyword,
 }: {
   payload: Payload
+  range: AnalyticsRange
   publicationId?: string
   dateFrom?: string
   dateTo?: string
@@ -314,6 +220,7 @@ async function PublicationsTab({
       })
     : []
   const totals = summarizePublicationStats(rows)
+  const trends = publicationTrends(rows,range)
 
   return (
     <div className="nic-analytics__card">
@@ -324,6 +231,7 @@ async function PublicationsTab({
       </p>
       <form method="GET" className="nic-analytics__picker" style={{ flexWrap: 'wrap' }}>
         <input type="hidden" name="tab" value="publications" />
+        <input type="hidden" name="grain" value={range.grain}/>
         <select name="publicationId" defaultValue={publicationId ?? ''}>
           <option value="">All publications</option>
           {publications.map((p) => (
@@ -342,6 +250,8 @@ async function PublicationsTab({
 
       {hasSearched && (
         <>
+          <TrendChart title="Publication engagement by issue date" description="Cumulative recipients, opens and clicks for sent issues, grouped by issue date—not when each open or click occurred. Historical and current-provider tracking may differ." points={trends.counts} labels={['Recipients','Opens','Clicks']} grain={range.grain}/>
+          <TrendChart title="Publication engagement rates" description="Opens and clicks divided by total recipients in each issue-date period, weighted by audience size. Periods without recipients have no rate. Automated email opens can affect reported engagement." points={trends.rates} labels={['Open rate','Click rate']} grain={range.grain} percent/>
           <div className="nic-analytics__stat-row" style={{ marginTop: 16 }}>
             <div className="nic-analytics__card nic-analytics__stat">
               <div className="nic-analytics__muted">Issues matched</div>
@@ -367,7 +277,7 @@ async function PublicationsTab({
 
           {rows.length === 0 && <p className="nic-analytics__muted">No sent issues match this search.</p>}
           {rows.length > 0 && (
-            <table className="nic-analytics__table">
+            <div className="nic-workspace__table-scroll"><table className="nic-analytics__table">
               <thead>
                 <tr>
                   <th>Issue</th>
@@ -398,7 +308,7 @@ async function PublicationsTab({
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </>
       )}
@@ -420,6 +330,7 @@ async function AdsTab({ payload, publicationId }: { payload: Payload; publicatio
 
   return (
     <div className="nic-analytics__card">
+      <h2>Advertising · all-time campaign totals</h2>
       <p className="nic-analytics__muted">
         &ldquo;Impressions&rdquo; counts issue sends this ad was placed in, not user-level opens — Mailchimp
         doesn&rsquo;t give us a per-recipient delivery count the way SES does, so both providers are counted the
@@ -458,6 +369,7 @@ async function AdsTab({ payload, publicationId }: { payload: Payload; publicatio
       </div>
 
       {rows.length === 0 && <p className="nic-analytics__muted">No ads match this search.</p>}
+      <RankingChart title="Top ads by clicks" rows={rows.slice().sort((a,b)=>b.clicks-a.clicks).slice(0,15).map(row=>({label:`${row.advertiser} · ${row.publicationTitle}`,count:row.clicks}))}/>
       {rows.length > 0 && (
         <table className="nic-analytics__table">
           <thead>

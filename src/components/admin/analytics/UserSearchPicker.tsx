@@ -9,7 +9,7 @@ import { MIN_USER_SEARCH_LENGTH } from '@/lib/userSearch'
 const DEBOUNCE_MS = 300
 
 /** Search-as-you-type user picker for the Analytics "By user" tab — a plain dropdown doesn't work at 1000+ users. */
-export function UserSearchPicker({ initialLabel }: { initialLabel?: string }) {
+export function UserSearchPicker({ initialLabel, rangeQuery = '' }: { initialLabel?: string; rangeQuery?:string }) {
   const [query, setQuery] = useState(initialLabel ?? '')
   const [results, setResults] = useState<SimpleVisitor[]>([])
   const [loading, setLoading] = useState(false)
@@ -64,7 +64,7 @@ export function UserSearchPicker({ initialLabel }: { initialLabel?: string }) {
             results.map((u) => (
               <Link
                 key={u.id}
-                href={`/admin/analytics?tab=users&userId=${u.id}`}
+                href={`/admin/analytics?tab=users&userId=${u.id}${rangeQuery ? `&${rangeQuery}` : ''}`}
                 className="nic-analytics__user-search-result"
                 onClick={() => setDismissed(true)}
               >
