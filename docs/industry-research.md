@@ -18,6 +18,8 @@ The generated issue is a **draft**, titled `Monthly Research Digest - May 2026`,
 
 The PDF uses Nicotine360 branding and includes linked contents, journal sections, full body text, authors, publication dates and clickable DOI links. It follows the content structure of the supplied May 2026 digest; it does not recreate its old typography or pagination. The reference PDF was not automatically imported as historical research records.
 
+The cover omits the article-count/generated-date line. Contents entries use 1.3 line spacing with tighter entry/journal gaps; body spacing remains 1.5. The 47-article September 2026 layout was visually checked: contents decreased from five pages to four with working article links. Regenerate an unsent draft to update its stored PDF; existing published/sent files are not rewritten.
+
 Regenerating a month updates its existing unsent draft rather than creating another issue. Published or sent issues cannot be overwritten. A database transaction and per-month lock protect concurrent generation. Earlier draft PDF uploads remain available to version history. Draft attachments cannot be downloaded by subscribers; published attachments use the existing protected publication-file URL.
 
 The existing `monthly-research-digest` publication is reconfigured in place. Its ID, subscriber preferences and historical issue content are preserved.

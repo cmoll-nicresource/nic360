@@ -81,7 +81,7 @@ const s = StyleSheet.create({
   paragraph: { marginBottom: 9 },
   date: { fontSize: 8, color: '#526174', marginTop: 6, marginBottom: 16 },
   link: { color: '#285888', textDecoration: 'none' },
-  toc: { marginBottom: 6, fontSize: 9 },
+  toc: { marginBottom: 4, fontSize: 9, lineHeight: 1.3 },
 })
 type Node = { text?: string; type?: string; children?: Node[] }
 export function researchParagraphs(body: unknown): string[] {
@@ -101,7 +101,6 @@ export function researchDigestDocument(report: ResearchDigest) {
     data: fs.readFileSync(path.join(process.cwd(), 'public/logo.png')),
     format: 'png' as const,
   }
-  const total = report.groups.reduce((n, g) => n + g.articles.length, 0)
   const chrome = (pageNumber?: number, totalPages?: number) => (
     <>
       {/* eslint-disable-next-line jsx-a11y/alt-text -- PDF primitive */}
@@ -134,10 +133,6 @@ export function researchDigestDocument(report: ResearchDigest) {
         <View wrap={false} style={{ marginBottom: 10 }}>
           <Text style={s.title}>{report.title}</Text>
           <Text style={s.period}>{period}</Text>
-          <Text style={s.authors}>
-            {total} research {total === 1 ? 'article' : 'articles'} · Generated{' '}
-            {formatDate(report.generatedAt.toISOString())}
-          </Text>
         </View>
         <Text id="contents" style={s.journal}>
           Contents
@@ -145,7 +140,7 @@ export function researchDigestDocument(report: ResearchDigest) {
         {report.groups.map((group, index) => (
           <View key={index}>
             <Text
-              style={{ fontWeight: 700, marginTop: 12, marginBottom: 6 }}
+              style={{ fontWeight: 700, marginTop: 9, marginBottom: 4, lineHeight: 1.3 }}
               minPresenceAhead={35}
             >
               <Link src={`#journal-${index}`} style={s.link}>
