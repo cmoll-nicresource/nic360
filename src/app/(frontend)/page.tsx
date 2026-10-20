@@ -127,7 +127,7 @@ export default async function HomePage() {
             [articlesCount.totalDocs, 'articles indexed'],
             [billsCount.totalDocs, 'bills tracked'],
             [trademarksCount.totalDocs, 'trademark filings'],
-            [researchCount.totalDocs, 'research papers indexed'],
+            [researchCount.totalDocs, 'research papers'],
           ].map(([count, label]) => (
             <p key={label}>
               <strong>{Number(count).toLocaleString()}</strong>
