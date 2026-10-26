@@ -24,7 +24,7 @@ export async function signIn(request: APIRequestContext, role: string) {
   ).toBe(200)
 }
 export async function roleContext(browser: Browser, role: string): Promise<BrowserContext> {
-  const ctx = await browser.newContext({ baseURL: 'http://127.0.0.1:3100' })
+  const ctx = await browser.newContext({ baseURL: 'http://127.0.0.1:3100', extraHTTPHeaders: { Origin: 'http://127.0.0.1:3100' } })
   if (role === 'unverified') {
     const response = await ctx.request.post('/api/users/login', { data: { email: fixtures.users.unverified.email, password: fixtures.password } })
     expect([401, 403]).toContain(response.status())

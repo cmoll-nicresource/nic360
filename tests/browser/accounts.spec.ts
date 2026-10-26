@@ -121,9 +121,9 @@ test('verification attempts expire and five wrong guesses cannot be bypassed', a
 })
 
 test('migrated account sets a password without repeating signup or changing its company and preferences', async ({ browser, request }, info) => {
-  const admin = await roleContext(browser, 'admin'), user = await browser.newContext({ baseURL: 'http://127.0.0.1:3100' })
+  const admin = await roleContext(browser, 'admin'), user = await browser.newContext({ baseURL: 'http://127.0.0.1:3100', extraHTTPHeaders: { Origin: 'http://127.0.0.1:3100' } })
   const email = 'migrated-' + info.project.name + '-' + crypto.randomUUID() + '@signup.example.invalid'
-  const oldPassword = crypto.randomUUID(), oldSession = await browser.newContext({ baseURL: 'http://127.0.0.1:3100' })
+  const oldPassword = crypto.randomUUID(), oldSession = await browser.newContext({ baseURL: 'http://127.0.0.1:3100', extraHTTPHeaders: { Origin: 'http://127.0.0.1:3100' } })
   let id: number | undefined
   try {
     const created = await admin.request.post('/api/users', { data: {

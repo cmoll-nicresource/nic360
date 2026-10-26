@@ -6,7 +6,7 @@ import { sortUsersByLogin } from '@/hooks/sortUsersByLogin'
 import { enforceUserResetPassword } from '@/hooks/enforceUserResetPassword'
 import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
-import { SITE_URL } from '@/lib/env'
+import { accountVerificationEmail, passwordResetEmail } from '@/lib/accountEmail'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const Users: CollectionConfig = {
@@ -23,7 +23,10 @@ export const Users: CollectionConfig = {
     description: 'Site accounts. Users may have a subscription through an access provider, register for a conference, both, or neither.',
   },
   auth: {
-    verify: true,
+    verify: {
+      generateEmailSubject: () => 'Confirm your Nicotine360 email address',
+      generateEmailHTML: ({ token, user }) => accountVerificationEmail(token, user?.firstName),
+    },
     forgotPassword: {
       expiration: 60 * 60 * 1000,
       generateEmailSubject: ({ req } = {}) =>
@@ -33,11 +36,8 @@ export const Users: CollectionConfig = {
       // Payload's default reset-password link always points at /admin/reset,
       // which only works for the admin.user collection (staff). Users get
       // their own front-end page instead.
-      generateEmailHTML: ({ token, req } = {}) =>
-        `<p>${req?.context.eventInvitation ? 'A colleague has registered you for an event on Nicotine360. Set your password to access your ticket and event.' : 'You are receiving this because you (or someone else) requested a password reset.'}</p>
-<p><a href="${SITE_URL}/reset-password/${token}">${SITE_URL}/reset-password/${token}</a></p>
-<p>This link expires in one hour. If you request another link, use the newest email. Setting a password does not change your company subscription or publication email preferences.</p>
-<p>${req?.context.eventInvitation ? 'If this was unexpected, contact Nicotine360 staff.' : 'If you did not request this, you can ignore this email.'}</p>`,
+      generateEmailHTML: ({ token, req, user } = {}) =>
+        passwordResetEmail({ token, name: user?.firstName, invitation: Boolean(req?.context.eventInvitation) }),
     },
   },
   access: {

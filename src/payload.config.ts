@@ -18,6 +18,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { buildAccountEmailTransport } from './lib/accountEmailTransport'
+import { accountSiteUrl } from './lib/accountEmail'
 import { assertTestIsolation } from './lib/testIsolation'
 
 import { AccessProviders } from './collections/AccessProviders'
@@ -91,6 +92,7 @@ if (process.env.S3_BUCKET) {
 }
 
 export default buildConfig({
+  serverURL: accountSiteUrl(),
   admin: {
     user: Staff.slug,
     importMap: {

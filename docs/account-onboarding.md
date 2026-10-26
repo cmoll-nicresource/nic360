@@ -2,7 +2,19 @@
 
 Account labels follow [Users, subscribers and attendees](./terminology.md).
 
-Updated October 18, 2026. User accounts use `/login`, `/signup`, `/forgot-password` and `/account`. Staff use the separate `/admin` sign-in.
+Updated October 26, 2026. User accounts use `/login`, `/signup`, `/forgot-password` and `/account`. Staff use the separate `/admin` sign-in.
+
+## Transactional emails
+
+Account emails share the Nicotine360 logo, navy/serif design, prominent action button, copyable full URL, expiry guidance and support footer in `src/lib/accountEmail.ts`. This covers staff and user password recovery, event invitations, signup codes and Payload-native account verification. Staff-created event attendees receive invitation wording too. Publication editions retain their separate editorial template.
+
+`SITE_URL` is the canonical public origin and also supplies Payload's `serverURL`. Previously staff used Payload's default reset email without `serverURL`, producing a relative `/admin/reset/...` link. Staff recovery now explicitly targets the absolute `/admin/reset/{token}` URL; site users and event invitations target `/reset-password/{token}`. Request Host/Origin headers do not determine email destinations. Signup codes remain valid for 15 minutes; staff/user recovery links last one hour. Missing tokens and invalid URL schemes fail rather than sending a broken link.
+
+Recipient safe mode remains applied by the account transport. Template tests inspect the actual collection callbacks as well as signup sending, escaping and all link/image URLs. `tests/browser/account-emails.spec.ts` captures a real staff reset through the local SMTP sink, opens its absolute link and completes a password reset on a disposable synthetic account. Rendered previews cover five variants at phone and desktop widths; they do not replace review in Outlook and other mail clients.
+
+Setting Payload's canonical origin also enables its configured-origin cookie checks. Browser-test HTTP clients now send the trusted local Origin rather than relying on headerless cookie authentication; real same-origin browser navigation is checked separately. During validation, the npm advisory service reported critical Next.js 16.4.0 vulnerabilities. Next.js and its matching ESLint configuration were patched to 16.4.1; the advisory query for that patched version returned no entries.
+
+October 26 validation: 605 offline tests, seven Chromium account/reset journeys and 19 Chromium permission/clipper checks passed, along with the patched production build and lint. Fifteen rendered previews covered the five account-email variants at 320, 390 and 900 pixels without horizontal overflow. Mail was captured only in the local SMTP sink; no live user email was sent.
 
 ## Existing users after migration
 

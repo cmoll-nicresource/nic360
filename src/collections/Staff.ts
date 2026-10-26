@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
+import { passwordResetEmail } from '@/lib/accountEmail'
 
 export const Staff: CollectionConfig = {
   slug: 'staff',
@@ -15,7 +16,14 @@ export const Staff: CollectionConfig = {
     defaultColumns: ['name', 'email', 'role'],
     description: 'The Nic360 employees who can log in to this admin panel.',
   },
-  auth: true,
+  auth: {
+    forgotPassword: {
+      expiration: 60 * 60 * 1000,
+      generateEmailSubject: () => 'Reset your Nicotine360 staff password',
+      generateEmailHTML: ({ token, user } = {}) =>
+        passwordResetEmail({ token, name: user?.name, staff: true }),
+    },
+  },
   access: {
     read: ({ req }) =>
       staffHasRole(req.user, 'admin') ||

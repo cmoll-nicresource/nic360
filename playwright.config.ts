@@ -14,6 +14,8 @@ export default defineConfig({
   ],
   use: {
     baseURL: 'http://127.0.0.1:3100',
+    // Payload's canonical serverURL enables its Origin/Fetch-Metadata cookie checks.
+    extraHTTPHeaders: { Origin: 'http://127.0.0.1:3100' },
     timezoneId: 'America/New_York',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',

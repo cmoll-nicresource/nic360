@@ -94,7 +94,7 @@ test('database expiry, password changes and simultaneous exchanges invalidate cr
   const { default: pg } = await import('pg')
   const { testEnvironment } = await import('../support/environment')
   const pool = new pg.Pool({ connectionString: testEnvironment().DATABASE_URI })
-  const admin = await roleContext(browser, 'admin'), staff = await browser.newContext({ baseURL: site })
+  const admin = await roleContext(browser, 'admin'), staff = await browser.newContext({ baseURL: site, extraHTTPHeaders: { Origin: site } })
   let staffId: number | undefined
   try {
     const email = 'clipper-expiry-' + crypto.randomUUID() + '@example.invalid'

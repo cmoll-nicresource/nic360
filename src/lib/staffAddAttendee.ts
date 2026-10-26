@@ -68,7 +68,7 @@ export async function compRegisterNewUser(
       disableVerificationEmail: true,
     })
     userId = newUser.id
-    await payload.forgotPassword({ collection: 'users', data: { email }, disableEmail: false })
+    await payload.forgotPassword({ collection: 'users', data: { email }, disableEmail: false, context: { eventInvitation: true } })
   }
 
   return createCompOrderAndRegistration(payload, event, {
