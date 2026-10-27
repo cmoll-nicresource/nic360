@@ -26,9 +26,9 @@ describe('isEmailSafeModeEnabled', () => {
 })
 
 describe('emailSafeModeRedirectAddress', () => {
-  it('defaults to the real staff admin address', () => {
+  it('defaults to the demo inbox', () => {
     delete process.env.EMAIL_SAFE_MODE_REDIRECT_TO
-    expect(emailSafeModeRedirectAddress()).toBe('cmoll@nicotineresource.org')
+    expect(emailSafeModeRedirectAddress()).toBe('demo@nicotine360.org')
   })
 
   it('honors an override', () => {
@@ -42,6 +42,7 @@ type FakeTransporter = { use: (step: string, plugin: (mail: { data: Record<strin
 describe('applyEmailSafeMode', () => {
   it('redirects to and notes the real recipient in the subject when enabled', async () => {
     process.env.EMAIL_SAFE_MODE = 'on'
+    delete process.env.EMAIL_SAFE_MODE_REDIRECT_TO
     const calls: { step: string; plugin: Parameters<FakeTransporter['use']>[1] }[] = []
     const transporter: FakeTransporter = { use: (step, plugin) => calls.push({ step, plugin }) }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,7 +53,7 @@ describe('applyEmailSafeMode', () => {
     }
     await new Promise<void>((resolve) => calls[0].plugin(mail, resolve))
 
-    expect(mail.data.to).toBe('cmoll@nicotineresource.org')
+    expect(mail.data.to).toBe('demo@nicotine360.org')
     expect(mail.data.cc).toBeUndefined()
     expect(mail.data.bcc).toBeUndefined()
     expect(mail.data.subject).toBe('[beta safe mode — would go to: real.person@realcompany.com] Your verification code')

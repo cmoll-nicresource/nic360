@@ -7,6 +7,7 @@ const ORIGINAL_ENV = { ...process.env }
 beforeEach(() => {
   // No SES_* set, so this exercises the console transport path — no real
   // network call either way, since safe mode intercepts before send.
+  delete process.env.EMAIL_SAFE_MODE_REDIRECT_TO
   delete process.env.SES_ACCESS_KEY_ID
   delete process.env.SES_SECRET_ACCESS_KEY
 })
@@ -39,7 +40,7 @@ describe('buildAccountEmailTransport', () => {
     const logged = logSpy.mock.calls.map((call) => call.join(' ')).join('\n')
     // Redirected to the safe address; the real recipient is only noted in
     // the subject line (by design — see emailSafeMode.ts), not delivered to.
-    expect(logged).toContain('To: cmoll@nicotineresource.org')
+    expect(logged).toContain('To: demo@nicotine360.org')
     expect(logged).toContain('would go to: real.person@realcompany.com')
   })
 
@@ -56,7 +57,7 @@ describe('buildAccountEmailTransport', () => {
     })
 
     const logged = logSpy.mock.calls.map((call) => call.join(' ')).join('\n')
-    expect(logged).toContain('To: cmoll@nicotineresource.org')
+    expect(logged).toContain('To: demo@nicotine360.org')
   })
 
   it('only delivers to the real recipient with an explicit EMAIL_SAFE_MODE=off', async () => {

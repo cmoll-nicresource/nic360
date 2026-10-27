@@ -15,7 +15,7 @@ export function isEmailSafeModeEnabled(): boolean {
   return process.env.EMAIL_SAFE_MODE !== 'off'
 }
 
-const DEFAULT_REDIRECT_TO = 'cmoll@nicotineresource.org'
+const DEFAULT_REDIRECT_TO = 'demo@nicotine360.org'
 
 export function emailSafeModeRedirectAddress(): string {
   return process.env.EMAIL_SAFE_MODE_REDIRECT_TO || DEFAULT_REDIRECT_TO
