@@ -276,7 +276,7 @@ Every event belongs to a channel, and events in a channel share brand color, hom
 | `infocus` | InFocus | Online (for now) | Webinars |
 | *(future)* `nrc` | NRC Workshops | In person | Small events; may end up under InFocus instead |
 
-Each config entry: `name`, `brandColor`, `homepagePath`, `contactEmail`, `format` (in person · online · hybrid). "Event Type" on today's screen is dropped because format comes from the channel.
+Each config entry: `name`, `fullName`, `summary`, `about` (paragraphs), optional `hostHistory`, `brandColor`, `homepagePath`, `contactEmail`, optional `mediaEmail` and `social` links, `format` (in person · online · hybrid). `homepagePath` (`/events/channels/:key`) is the forum's public home page; see [event marketing](./event-marketing.md). Anything that changes each year belongs on the Event, not here. "Event Type" on today's screen is dropped because format comes from the channel.
 
 ### Event (`events`)
 
@@ -289,13 +289,25 @@ Only **name, start date and end date are required**; everything else is optional
 | Start Date + Start Time | `startsAt` | date with time | ✓ |
 | End Date | `endDate` | date | ✓ |
 | Event Timezone | `timezone` | select (IANA zone, e.g. *Europe/London*) | |
+| *(new)* Page address | `slug` | text, unique; built from the name when empty; the page lives at `/events/:slug` and the id still redirects | |
 | Replay | `hasReplay` | checkbox | |
 | Event Type | dropped | comes from channel | |
 | Tagline | `tagline` | text | |
 | Event Image | `image` | upload → Media | |
 | Event Description | `description` | richText | |
+| *(new)* Receive-updates link | `updatesUrl` | text (URL), optional sign-up form for event news | |
+| *(new)* Agenda shown on the event page | `agendaMode` | select: `draft` · `sessions`; new events default to `draft`, empty on older events means `sessions` | |
+| *(new)* Draft agenda | `draftAgenda` | richText (pasted from Word) | |
+| *(new)* Who attends | `audience.stats` | array: `value`, `label` (e.g. *400+* / *delegates*) | |
+| *(new)* Who you will meet | `audience.intro` | richText | |
+| *(new)* Key dates | `keyDates` | array: `label`, `date`; display only, does not change prices or close registration | |
+| *(new)* Practical information | `faq` | array: `question`, `answer` (richText) | |
+| *(new)* Highlights video | `highlights.videoUrl` | text (public Vimeo or YouTube link) | |
+| *(new)* Highlights photos | `highlights.photos` | upload → Media, hasMany | |
+| *(new)* Delegate quotes | `highlights.testimonials` | array: `quote`, `name`, `organisation` | |
 | Location | `venue.address` | text with address autocomplete (+ geo point) | |
 | Location Description | `venue.description` | richText | |
+| *(new)* Getting there | `venue.transportation` | richText | |
 | Hotel Contact Number | `accommodation.phone` | text | |
 | Hotel Email | `accommodation.email` | email | |
 | Booking Affiliate Link | `accommodation.bookingUrl` | text (URL) | |
@@ -303,6 +315,7 @@ Only **name, start date and end date are required**; everything else is optional
 | Event Days | `days` | array: `date`, `name` (e.g. *Registration Day*) | |
 | *(new)* | `ticketTypes` | array, see Ticketing | |
 | *(new)* | `sponsors` | relationship → Sponsors, hasMany, ordered | |
+| *(new)* Partner with us | `sponsorship` | richText (packages and prices for this event) | |
 | *(new)* | `speakers` | relationship → Speakers, hasMany, ordered | |
 
 - **Admin layout:** today's sections (General, Details, Location, Accommodation, Event Days) map to Payload tabs or collapsible groups.
@@ -388,7 +401,7 @@ One collection for all events' agenda items. Each session has its own Draft/Publ
 | Title | `title` | text | ✓ |
 | Description | `description` | textarea (plain text today; could be richText) | |
 | Day | `day` | date, picked from the event's `days` (shows the day name) | ✓ |
-| Start Time / End Time | `startTime`, `endTime` | time, in the event's timezone | |
+| Start Time / End Time | `startTime`, `endTime` | the venue's clock time, kept in the UTC hour and minute of a date field (`src/lib/sessionTime.ts`); the event's `timezone` says which clock | |
 | Session Type | `type` | select: Keynote · Panel · Break · Other | ✓ |
 | Location | `room` | text (a room or stage within the venue, e.g. *Main Hall*) | |
 | Moderator | `moderators` | relationship → Speakers, hasMany, ordered | |
@@ -424,7 +437,7 @@ Deleting an Event or User while a LivestreamPing references it fails in practice
 
 A section on the existing event-manage dashboard (`AttendeeReportSection.tsx`), built on `src/lib/eventAnalytics.ts`. Since there's no per-session video, "which sessions did they watch" is inferred after the fact by matching each attendee's ping timestamps against the session schedule — not measured directly:
 
-- `combineDayAndTime(day, time)` / `sessionTimeWindow(session)` (pure, tested) — a Session's `day` (date part) and `startTime`/`endTime` (time-of-day part, stored on an otherwise-irrelevant date by Payload's time-only picker) combine into one absolute window. Sessions with no start/end time set can't be matched and are silently skipped.
+- `combineDayAndTime(day, time, timeZone)` / `sessionTimeWindow(session, timeZone)` (pure, tested) — a Session's `day` (date part) and `startTime`/`endTime` (the venue's clock time) are read in the event's timezone to give one absolute window. Sessions with no start/end time set can't be matched and are silently skipped.
 - `matchPingsToSessions(pingTimestamps, sessions)` (pure, tested) — the core correlation: counts how many of an attendee's pings fall inside each session's window. `pingCount × PING_INTERVAL_MINUTES` (2) estimates minutes present. A ping can match more than one session if their windows overlap.
 - `getAttendeeReport(payload, eventId)` — every registration, each virtual attendee enriched with `sessionsAttended` (from the match above) plus `totalPings`/`estimatedTotalMinutes` across the *whole* livestream (some pings may fall outside any session window, e.g. during a break).
 - `summarizeAttendeeReport(rows)` (pure, tested) — registration counts (active/cancelled, in-person/virtual), revenue (active registrations only), and the **virtual engagement rate**: the share of active virtual attendees with at least one ping.

@@ -676,6 +676,10 @@ export interface Event {
         | 'Australia/Sydney'
       )
     | null;
+  /**
+   * The end of the event page link, e.g. gtnf-2027 for /events/gtnf-2027. Leave empty to build it from the name. Changing it later breaks links people have already shared.
+   */
+  slug?: string | null;
   hasReplay?: boolean | null;
   hasLivestream?: boolean | null;
   /**
@@ -699,9 +703,141 @@ export interface Event {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Optional sign-up form for people who want news about this event. Shown as "Receive updates" on the event and channel pages.
+   */
+  updatesUrl?: string | null;
+  /**
+   * Use the draft while the programme is still placeholders. Switch to the full agenda once sessions have times and speakers; the draft text is kept but no longer shown.
+   */
+  agendaMode?: ('draft' | 'sessions') | null;
+  /**
+   * Paste straight from Word: headings, bold text and lists are kept. Shown publicly with a "Draft programme, subject to change" label.
+   */
+  draftAgenda?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  audience?: {
+    /**
+     * Three or four numbers from the last event, shown large on the event and forum pages. For example "400+" and "delegates", or "38" and "countries".
+     */
+    stats?:
+      | {
+          value: string;
+          label: string;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * The kinds of organisations and roles in the room: manufacturers, regulators, researchers, suppliers, investors and so on.
+     */
+    intro?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
+  /**
+   * Deadlines shown beside the ticket prices, such as "Early-bird rate ends" or "Hotel room block closes". These are notices only: they do not change prices or close registration.
+   */
+  keyDates?:
+    | {
+        label: string;
+        date: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Shown as a list visitors can open. Typical topics: dress code, visa invitation letters, refunds and substitutions, accessibility, code of conduct, and whether sessions are recorded or on the record.
+   */
+  faq?:
+    | {
+        question: string;
+        answer: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Shown on this event's page once it has taken place, on the forum home page, and on the next event's page as a look back.
+   */
+  highlights?: {
+    /**
+     * A public Vimeo or YouTube link.
+     */
+    videoUrl?: string | null;
+    /**
+     * Up to eight are shown. Give each a short description for screen readers.
+     */
+    photos?: (number | Media)[] | null;
+    testimonials?:
+      | {
+          quote: string;
+          /**
+           * Leave empty for an unattributed quote.
+           */
+          name?: string | null;
+          organisation?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
   venue?: {
     address?: string | null;
     description?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    /**
+     * Airports, trains, parking, shuttles and local transport.
+     */
+    transportation?: {
       root: {
         type: string;
         children: {
@@ -780,6 +916,24 @@ export interface Event {
       }[]
     | null;
   sponsors?: (number | Sponsor)[] | null;
+  /**
+   * Sponsorship packages, prices and what each includes. Shown in the "Partner with us" section with the channel contact address.
+   */
+  sponsorship?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   /**
    * This event's speaker roster. Sessions pick moderators/speakers independently.
    */
@@ -2794,17 +2948,62 @@ export interface EventsSelect<T extends boolean = true> {
   startsAt?: T;
   endDate?: T;
   timezone?: T;
+  slug?: T;
   hasReplay?: T;
   hasLivestream?: T;
   livestreamUrl?: T;
   tagline?: T;
   image?: T;
   description?: T;
+  updatesUrl?: T;
+  agendaMode?: T;
+  draftAgenda?: T;
+  audience?:
+    | T
+    | {
+        stats?:
+          | T
+          | {
+              value?: T;
+              label?: T;
+              id?: T;
+            };
+        intro?: T;
+      };
+  keyDates?:
+    | T
+    | {
+        label?: T;
+        date?: T;
+        id?: T;
+      };
+  faq?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  highlights?:
+    | T
+    | {
+        videoUrl?: T;
+        photos?: T;
+        testimonials?:
+          | T
+          | {
+              quote?: T;
+              name?: T;
+              organisation?: T;
+              id?: T;
+            };
+      };
   venue?:
     | T
     | {
         address?: T;
         description?: T;
+        transportation?: T;
       };
   accommodation?:
     | T
@@ -2843,6 +3042,7 @@ export interface EventsSelect<T extends boolean = true> {
         id?: T;
       };
   sponsors?: T;
+  sponsorship?: T;
   speakers?: T;
   sessions?: T;
   updatedAt?: T;

@@ -5,22 +5,15 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 
 import type { Event, Session } from '@/payload-types'
+import { clockFromInput, formatClockRange } from '@/lib/sessionTime'
 
 const SESSION_TYPES = ['Keynote', 'Panel', 'Break', 'Other'] as const
 
 function dayLabel(date: string, name?: string | null) {
-  const formatted = new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+  const formatted = new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
   return name ? `${formatted} — ${name}` : formatted
 }
 
-/** Combines a day's date with an "HH:MM" time input into a full ISO datetime. */
-function combineDayAndTime(dayIso: string, time: string): string | undefined {
-  if (!time) return undefined
-  const day = new Date(dayIso)
-  const [hours, minutes] = time.split(':').map(Number)
-  day.setHours(hours, minutes, 0, 0)
-  return day.toISOString()
-}
 
 export function SessionsSection({ event, sessions, totalCount }: { event: Event; sessions: Session[]; totalCount: number }) {
   const router = useRouter()
@@ -43,6 +36,7 @@ export function SessionsSection({ event, sessions, totalCount }: { event: Event;
             <strong><Link href={`/admin/collections/sessions/${s.id}`} aria-label={`Edit session ${s.title}`}>{s.title}</Link></strong>{' '}
             <span className="muted">
               — {day ? dayLabel(day.date, day.name) : new Date(s.day).toLocaleDateString()} · {s.type}
+              {s.startTime ? ` · ${formatClockRange(s.startTime, s.endTime)}` : ''}
               {s.room ? ` · ${s.room}` : ''}
             </span>
           </div>
@@ -62,8 +56,8 @@ export function SessionsSection({ event, sessions, totalCount }: { event: Event;
             e.preventDefault()
             const form = new FormData(e.currentTarget)
             const day = String(form.get('day') || '')
-            const startTime = combineDayAndTime(day, String(form.get('startTime') || ''))
-            const endTime = combineDayAndTime(day, String(form.get('endTime') || ''))
+            const startTime = clockFromInput(String(form.get('startTime') || '')) ?? undefined
+            const endTime = clockFromInput(String(form.get('endTime') || '')) ?? undefined
 
             setBusy(true)
             setError(null)
@@ -121,11 +115,11 @@ export function SessionsSection({ event, sessions, totalCount }: { event: Event;
             </select>
           </div>
           <div className="field">
-            <label>Start time</label>
+            <label>Start time (venue clock)</label>
             <input name="startTime" type="time" />
           </div>
           <div className="field">
-            <label>End time</label>
+            <label>End time (venue clock)</label>
             <input name="endTime" type="time" />
           </div>
           <div className="field">

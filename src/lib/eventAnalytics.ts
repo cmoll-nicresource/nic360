@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { sessionInstant } from '@/lib/sessionTime'
+
 // Matches LivestreamPresence's client-side ping interval — pingCount *
 // PING_INTERVAL_MINUTES is the estimate of minutes an attendee had the
 // livestream page open, assuming roughly continuous pinging. We don't try
@@ -16,29 +18,25 @@ export type SessionTimeInfo = {
   endTime?: string | null
 }
 
-/** Combines a Session's `day` (date part) with `startTime`/`endTime` (time-of-day part, stored as a full timestamp on an otherwise-irrelevant date by Payload's time-only picker) into one absolute instant. Null if either half is missing/invalid. */
+/**
+ * Combines a Session's `day` (date part) with `startTime`/`endTime` (the
+ * event's clock time, see src/lib/sessionTime.ts) into the real moment it
+ * happens in the event's timezone. Null if either half is missing/invalid.
+ */
 export function combineDayAndTime(
   day: string | Date,
   time: string | Date | null | undefined,
+  timeZone = 'UTC',
 ): Date | null {
-  if (!time) return null
-  const dayDate = new Date(day)
-  const timeDate = new Date(time)
-  if (Number.isNaN(dayDate.getTime()) || Number.isNaN(timeDate.getTime())) return null
-
-  const combined = new Date(dayDate)
-  combined.setUTCHours(
-    timeDate.getUTCHours(),
-    timeDate.getUTCMinutes(),
-    timeDate.getUTCSeconds(),
-    0,
-  )
-  return combined
+  return sessionInstant(day, time, timeZone)
 }
 
-export function sessionTimeWindow(session: SessionTimeInfo): { start: Date; end: Date } | null {
-  const start = combineDayAndTime(session.day, session.startTime)
-  const end = combineDayAndTime(session.day, session.endTime)
+export function sessionTimeWindow(
+  session: SessionTimeInfo,
+  timeZone = 'UTC',
+): { start: Date; end: Date } | null {
+  const start = combineDayAndTime(session.day, session.startTime, timeZone)
+  const end = combineDayAndTime(session.day, session.endTime, timeZone)
   if (!start || !end) return null
   return { start, end }
 }
@@ -61,11 +59,12 @@ export type SessionAttendance = {
 export function matchPingsToSessions(
   pingTimestamps: Date[],
   sessions: SessionTimeInfo[],
+  timeZone = 'UTC',
 ): SessionAttendance[] {
   const bySession = new Map<number, { title: string; count: number }>()
 
   for (const session of sessions) {
-    const window = sessionTimeWindow(session)
+    const window = sessionTimeWindow(session, timeZone)
     if (!window) continue
 
     const count = pingTimestamps.filter((t) => t >= window.start && t <= window.end).length
@@ -105,7 +104,8 @@ export async function getAttendeeReport(
   payload: Payload,
   eventId: number,
 ): Promise<AttendeeReportRow[]> {
-  const [{ docs: registrations }, { docs: sessions }, { docs: pings }] = await Promise.all([
+  const [event, { docs: registrations }, { docs: sessions }, { docs: pings }] = await Promise.all([
+    payload.findByID({ collection: 'events', id: eventId, depth: 0, overrideAccess: true }),
     payload.find({
       collection: 'event-registrations',
       where: { event: { equals: eventId } },
@@ -130,6 +130,8 @@ export async function getAttendeeReport(
     }),
   ])
 
+  // Same fallback as eventTiming(): events without a timezone are treated as US Eastern.
+  const timeZone = event.timezone || 'America/New_York'
   const sessionInfos: SessionTimeInfo[] = sessions.map((s) => ({
     id: s.id,
     title: s.title,
@@ -148,7 +150,7 @@ export async function getAttendeeReport(
   return registrations.map((r) => {
     const attendeeId = typeof r.attendee === 'object' ? r.attendee?.id : r.attendee
     const userPings = attendeeId ? (pingsByUser.get(attendeeId) ?? []) : []
-    const sessionsAttended = matchPingsToSessions(userPings, sessionInfos)
+    const sessionsAttended = matchPingsToSessions(userPings, sessionInfos, timeZone)
 
     return {
       registrationId: r.id,

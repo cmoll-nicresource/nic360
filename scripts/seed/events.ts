@@ -3,7 +3,8 @@ import os from 'os'
 import path from 'path'
 import type { Payload } from 'payload'
 
-import { lexicalFromText } from '../../src/lib/lexical'
+import { lexicalFromParagraphs, lexicalFromText } from '../../src/lib/lexical'
+import { clockFromInput, sessionClockAt } from '../../src/lib/sessionTime'
 import { findTicketType, priceOrder, ticketUnitPrice } from '../../src/lib/eventCheckout'
 
 const PLACEHOLDER_PNG_BASE64 =
@@ -47,6 +48,9 @@ export async function seedSpeakersAndSponsors(payload: Payload) {
     { name: 'Altria Group', website: 'https://www.altria.com' },
     { name: 'Philip Morris International', website: 'https://www.pmi.com' },
     { name: 'KT&G', website: 'https://www.ktng.com' },
+    { name: 'Northfield Leaf Co.', website: 'https://example.org/northfield' },
+    { name: 'Harbor Analytics', website: 'https://example.org/harbor' },
+    { name: 'Meridian Packaging', website: 'https://example.org/meridian' },
   ]
   const sponsors: Record<string, number> = {}
   for (const s of sponsorDefs) {
@@ -75,7 +79,67 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
       hasReplay: false,
       tagline: 'The Global Tobacco & Nicotine Forum',
       description: lexicalFromText('Three days of industry research, regulation and innovation.'),
-      venue: { address: 'etc. venues, London' },
+      updatesUrl: 'https://example.org/gtnf-updates',
+      audience: {
+        stats: [
+          { value: '400+', label: 'delegates' },
+          { value: '38', label: 'countries' },
+          { value: '60', label: 'speakers' },
+        ],
+        intro: lexicalFromText(
+          'Manufacturers, regulators, public health researchers, suppliers, investors and the media that covers them.',
+        ),
+      },
+      keyDates: [
+        { label: 'Early-bird rate ends', date: daysFromNow(12) },
+        { label: 'Hotel room block closes', date: daysFromNow(30) },
+        { label: 'Speaker proposals due', date: daysFromNow(-20) },
+      ],
+      faq: [
+        {
+          question: 'What is the dress code?',
+          answer: lexicalFromText('Business casual throughout; the gala dinner is business formal.'),
+        },
+        {
+          question: 'Can I get a visa invitation letter?',
+          answer: lexicalFromText('Yes. Register first, then write to the event team with your passport name and nationality.'),
+        },
+        {
+          question: 'What if I can no longer attend?',
+          answer: lexicalFromText('You may send a colleague in your place at any time. Refund requests are accepted until 30 days before the event.'),
+        },
+        {
+          question: 'Are sessions recorded?',
+          answer: lexicalFromText('Main-stage sessions are recorded. Roundtables are held under the Chatham House Rule and are not.'),
+        },
+      ],
+      agendaMode: 'draft',
+      draftAgenda: lexicalFromParagraphs([
+        'Day one: Registration and welcome reception',
+        'Day two: Opening keynote (speaker to be confirmed)',
+        'Panel: Regulatory trends in Asia-Pacific (panelists to be confirmed)',
+        'Panel: The science of harm reduction (moderator and panelists to be confirmed)',
+        'Day three: Closing conversation and farewell lunch',
+      ]),
+      venue: {
+        address: 'etc. venues, London',
+        description: lexicalFromText('A purpose-built conference venue in central London.'),
+        transportation: lexicalFromParagraphs([
+          'By air: Heathrow and London City airports both connect to the venue by rail.',
+          'By train: the venue is a short walk from the nearest Underground station.',
+          'Parking is limited; public transport is recommended.',
+        ]),
+      },
+      accommodation: {
+        phone: '+44 20 0000 0000',
+        email: 'reservations@example.org',
+        bookingUrl: 'https://example.org/gtnf-hotel',
+        description: lexicalFromText('A block of rooms is held for delegates at the conference hotel until 30 days before the event.'),
+      },
+      sponsorship: lexicalFromParagraphs([
+        'The Ambassador: an engagement space at the event, with your logo on the website and event signage.',
+        'The Patron: a digital display panel, with your logo on the website and event signage.',
+      ]),
       ticketTypes: [
         {
           name: 'General Admission',
@@ -89,13 +153,49 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
           virtual: { price: 100 },
         },
       ],
-      sponsors: [sponsors['Altria Group'], sponsors['Philip Morris International']],
+      sponsors: [
+        sponsors['Altria Group'],
+        sponsors['Philip Morris International'],
+        sponsors['Northfield Leaf Co.'],
+        sponsors['Harbor Analytics'],
+        sponsors['Meridian Packaging'],
+      ],
       speakers: [
         speakers['Dr. Amara Nwosu'],
         speakers['Carlos Mendez'],
         speakers['Hiroshi Tanaka'],
         speakers['Priya Ramaswamy'],
       ],
+      _status: 'published',
+    },
+    overrideAccess: true,
+  })
+
+  // Last year's forum, so the forum page and GTNF 2026 have highlights to look back on.
+  await payload.create({
+    collection: 'events',
+    data: {
+      name: 'GTNF 2025',
+      channel: 'gtnf',
+      startsAt: daysFromNow(-305),
+      endDate: daysFromNow(-303),
+      timezone: 'Europe/Paris',
+      tagline: 'The Global Tobacco & Nicotine Forum',
+      venue: { address: 'Hilton Brussels Grand Place, Brussels' },
+      highlights: {
+        videoUrl: 'https://vimeo.com/76979871',
+        testimonials: [
+          {
+            quote: 'The one meeting where regulators, scientists and manufacturers actually talk to each other.',
+            name: 'Demo delegate',
+            organisation: 'Head of Regulatory Affairs, example manufacturer',
+          },
+          {
+            quote: 'I came for one panel and stayed for all three days.',
+            organisation: 'Public health researcher',
+          },
+        ],
+      },
       _status: 'published',
     },
     overrideAccess: true,
@@ -112,6 +212,7 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
       hasReplay: true,
       tagline: 'The American Tobacco & Nicotine Forum',
       description: lexicalFromText('A two-day American conference, with session replays for registered attendees.'),
+      agendaMode: 'sessions',
       venue: { address: 'Marriott Marquis, Washington DC' },
       ticketTypes: [
         {
@@ -186,10 +287,43 @@ export async function seedEvents(payload: Payload, speakers: Record<string, numb
       event: atnf.id,
       title: 'Keynote: Science of Harm Reduction',
       day: atnf.startsAt,
+      startTime: clockFromInput('09:30'),
+      endTime: clockFromInput('10:15'),
       type: 'Keynote',
       room: 'Grand Ballroom',
       speakers: [speakers['Dr. Lena Fischer']],
       replayEmbed: '<p>[placeholder video embed for registered attendees]</p>',
+      _status: 'published',
+    },
+    overrideAccess: true,
+  })
+  await payload.create({
+    collection: 'sessions',
+    data: {
+      event: atnf.id,
+      title: 'Registration and coffee',
+      day: atnf.startsAt,
+      startTime: clockFromInput('08:30'),
+      endTime: clockFromInput('09:30'),
+      type: 'Break',
+      room: 'Foyer',
+      _status: 'published',
+    },
+    overrideAccess: true,
+  })
+  await payload.create({
+    collection: 'sessions',
+    data: {
+      event: atnf.id,
+      title: 'Panel: What the next decade of regulation looks like',
+      description: 'Regulators, researchers and manufacturers compare notes.',
+      day: atnf.startsAt,
+      startTime: clockFromInput('10:30'),
+      endTime: clockFromInput('11:45'),
+      type: 'Panel',
+      room: 'Grand Ballroom',
+      moderators: [speakers['Carlos Mendez']],
+      speakers: [speakers['Hiroshi Tanaka'], speakers['Priya Ramaswamy']],
       _status: 'published',
     },
     overrideAccess: true,
@@ -349,13 +483,18 @@ export async function seedVirtualAttendeesAndWatchData(payload: Payload, infocus
     overrideAccess: true,
   })
 
+  // Session times are the event's clock time (src/lib/sessionTime.ts), so
+  // "half an hour either side of now" is written as it reads on that clock.
+  // Within half an hour of that clock's midnight the window would straddle
+  // two days and match nothing; run the seed again later if that happens.
   const now = new Date()
-  const sessionStart = new Date(now.getTime() - 30 * 60 * 1000)
-  const sessionEnd = new Date(now.getTime() + 30 * 60 * 1000)
+  const timeZone = infocus.timezone || 'America/New_York'
+  const start = sessionClockAt(new Date(now.getTime() - 30 * 60 * 1000), timeZone)
+  const end = sessionClockAt(new Date(now.getTime() + 30 * 60 * 1000), timeZone)
   await payload.update({
     collection: 'sessions',
     id: session.id,
-    data: { day: now.toISOString(), startTime: sessionStart.toISOString(), endTime: sessionEnd.toISOString() },
+    data: { day: start.day, startTime: start.time, endTime: end.time },
     overrideAccess: true,
   })
 

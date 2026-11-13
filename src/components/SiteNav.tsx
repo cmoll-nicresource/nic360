@@ -1,4 +1,5 @@
 ﻿import { headers } from 'next/headers'
+import { eventPath } from '@/lib/eventLinks'
 import Link from 'next/link'
 import { after } from 'next/server'
 import { frontendContext } from '@/lib/frontendContext'
@@ -116,7 +117,7 @@ export async function SiteNav() {
         </NavDropdown>
         <NavDropdown label="Events" active={pathname.startsWith('/events')}>
           {events.docs.map((event) => (
-            <Link href={`/events/${event.id}`} key={event.id}>
+            <Link href={eventPath(event)} key={event.id}>
               {event.name}
             </Link>
           ))}

@@ -68,6 +68,15 @@ describe('matchPingsToSessions', () => {
     expect(matchPingsToSessions([new Date('2026-06-15T12:00:00.000Z')], sessions)).toEqual([])
   })
 
+  it('reads session times on the event’s clock, not UTC', () => {
+    // A 9:00–10:00 session in New York in June runs 13:00–14:00 UTC.
+    const morning = [new Date('2026-06-15T13:20:00.000Z')]
+    expect(matchPingsToSessions(morning, sessions, 'America/New_York')).toEqual([
+      { sessionId: 1, sessionTitle: 'Morning Keynote', pingCount: 1, estimatedMinutes: PING_INTERVAL_MINUTES },
+    ])
+    expect(matchPingsToSessions([new Date('2026-06-15T09:20:00.000Z')], sessions, 'America/New_York')).toEqual([])
+  })
+
   it('a ping can match more than one session when their windows overlap', () => {
     const overlapping: SessionTimeInfo[] = [
       { id: 1, title: 'Track A', day: '2026-06-15T00:00:00.000Z', startTime: '1970-01-01T09:00:00.000Z', endTime: '1970-01-01T10:00:00.000Z' },

@@ -30,6 +30,7 @@ import { IssueDeliverySummary as IssueDeliverySummary_d235304900cbadb020bea9a57e
 import { SendIssueButtons as SendIssueButtons_f2e6e440952be4366e071120771276c6 } from '../../../components/admin/SendIssueButtons'
 import { ReAddButton as ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705 } from '../../../components/admin/ReAddButton'
 import { ManageEventLink as ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c } from '../../../components/admin/ManageEventLink'
+import { SessionTimeField as SessionTimeField_966c5fca5d179a5d113f050ef4ad7a69 } from '../../../components/admin/SessionTimeField'
 import { WorkspaceNavigation as WorkspaceNavigation_74eddeb5ab912fa47a634b4965d750f4 } from '../../../components/admin/workspace/WorkspaceNav'
 import { Icon as Icon_16e62c7e42dfe7700742ba3a13bf8900 } from '../../../components/admin/graphics/Icon'
 import { Logo as Logo_13338d86bf8cb9661b50b401726320cd } from '../../../components/admin/graphics/Logo'
@@ -47,7 +48,6 @@ import { AccessCheckView as AccessCheckView_63ff882a65d91f75560ed44e3e743a40 } f
 import { WorkspaceAnalyticsView as WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { CompanyReportsView as CompanyReportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
-import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
@@ -83,6 +83,7 @@ export const importMap = {
   "./components/admin/SendIssueButtons#SendIssueButtons": SendIssueButtons_f2e6e440952be4366e071120771276c6,
   "./components/admin/ReAddButton#ReAddButton": ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705,
   "./components/admin/ManageEventLink#ManageEventLink": ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c,
+  "./components/admin/SessionTimeField#SessionTimeField": SessionTimeField_966c5fca5d179a5d113f050ef4ad7a69,
   "./components/admin/workspace/WorkspaceNav#WorkspaceNavigation": WorkspaceNavigation_74eddeb5ab912fa47a634b4965d750f4,
   "./components/admin/graphics/Icon#Icon": Icon_16e62c7e42dfe7700742ba3a13bf8900,
   "./components/admin/graphics/Logo#Logo": Logo_13338d86bf8cb9661b50b401726320cd,
@@ -99,6 +100,5 @@ export const importMap = {
   "./components/admin/workspace/StaffTools#AccessCheckView": AccessCheckView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#WorkspaceAnalyticsView": WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#CompanyReportsView": CompanyReportsView_63ff882a65d91f75560ed44e3e743a40,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
-  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

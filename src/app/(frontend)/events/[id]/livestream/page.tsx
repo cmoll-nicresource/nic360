@@ -9,6 +9,7 @@ import config from '@/payload.config'
 import { hasActiveRegistration } from '@/access/eventAccess'
 import { detectVideoSource } from '@/lib/replayVideo'
 import { LivestreamPresence } from '@/components/LivestreamPresence'
+import { eventPath, eventWhere } from '@/lib/eventLinks'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +20,11 @@ export default async function LivestreamPage({ params }: { params: Promise<{ id:
   const payload = await getPayload({ config: payloadConfig })
   const { user } = await payload.auth({ headers })
 
-  const event = await payload.findByID({ collection: 'events', id, depth: 0, user, overrideAccess: false }).catch(() => null)
+  const event = (
+    await payload
+      .find({ collection: 'events', where: eventWhere(id), limit: 1, depth: 0, user, overrideAccess: false })
+      .catch(() => null)
+  )?.docs[0]
   if (!event) notFound()
 
   const isUser = !!user && 'collection' in user && user.collection === 'users'
@@ -30,7 +35,7 @@ export default async function LivestreamPage({ params }: { params: Promise<{ id:
       <SiteNav />
       <div className="page-wide">
         <p>
-          <Link href={`/events/${event.id}`}>&larr; {event.name}</Link>
+          <Link href={eventPath(event)}>&larr; {event.name}</Link>
         </p>
         <h1>Livestream</h1>
 

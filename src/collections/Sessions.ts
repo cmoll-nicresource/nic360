@@ -32,8 +32,23 @@ export const Sessions: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        { name: 'startTime', type: 'date', admin: { date: { pickerAppearance: 'timeOnly' } } },
-        { name: 'endTime', type: 'date', admin: { date: { pickerAppearance: 'timeOnly' } } },
+        // The venue's clock time, kept in the UTC hour and minute (src/lib/sessionTime.ts).
+        {
+          name: 'startTime',
+          type: 'date',
+          admin: {
+            date: { pickerAppearance: 'timeOnly' },
+            components: { Field: './components/admin/SessionTimeField#SessionTimeField' },
+          },
+        },
+        {
+          name: 'endTime',
+          type: 'date',
+          admin: {
+            date: { pickerAppearance: 'timeOnly' },
+            components: { Field: './components/admin/SessionTimeField#SessionTimeField' },
+          },
+        },
         {
           name: 'type',
           label: 'Session type',

@@ -1,3 +1,4 @@
+import { eventPath } from '@/lib/eventLinks'
 import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 import type { Article, Event, Guide, Publication, PublicationIssue } from '@/payload-types'
@@ -170,7 +171,7 @@ export function EventVisual({ event, eager = false }: { event: Event; eager?: bo
 
 export function EventCard({ event }: { event: Event }) {
   return (
-    <Link href={`/events/${event.id}`} className="edition-event-card">
+    <Link href={eventPath(event)} className="edition-event-card">
       <EventVisual event={event} />
       <div>
         <p className="edition-eyebrow">

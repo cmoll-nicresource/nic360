@@ -1,3 +1,4 @@
+import { eventPath } from '@/lib/eventLinks'
 import { headers as getHeaders } from 'next/headers.js'
 import Link from 'next/link'
 import { getPayload } from 'payload'
@@ -137,7 +138,7 @@ async function EventRegistrationsAsync({ payload, userId }: { payload: Payload; 
           <tr key={r.id}>
             <td>
               {typeof r.event === 'object' ? (
-                <Link href={`/events/${r.event.id}`}>{r.event.name}</Link>
+                <Link href={eventPath(r.event)}>{r.event.name}</Link>
               ) : (
                 r.event
               )}

@@ -1,3 +1,4 @@
+import { eventPath } from '@/lib/eventLinks'
 import Link from 'next/link'
 import type { getPayload } from 'payload'
 import React from 'react'
@@ -45,7 +46,7 @@ export async function NoSubscriptionNotice({ payload }: { payload: Awaited<Retur
             Event tickets are sold individually and don&apos;t require a company subscription.
           </p>
           <p>
-            <Link href={`/events/${nextEvent.id}`} className="btn">
+            <Link href={eventPath(nextEvent)} className="btn">
               View {nextEvent.name} →
             </Link>
           </p>
