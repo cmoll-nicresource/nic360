@@ -8,6 +8,8 @@ The guarded routine in `migration/retireMissingDemoUploads.cjs` removed media 83
 
 PostgreSQL regression tests cover exact asset identity, unexpected references, stale previews, preservation of real PDFs/content and rollback after a failed delete. This is an exact one-time retirement, not a generic orphan-file cleanup. Fresh backups and a strict real-archive recovery rehearsal are required after the change; the audit must not ignore missing attachments.
 
+The fresh post-retirement database snapshot `database-daily/20261113T014844Z` and upload snapshot `uploads/20261113T014827Z` passed [independent recovery run 43347882166](https://github.com/cmoll-nicresource/nic360/actions/runs/43347882166) on November 12, 2026 (New York). All **93 stable tables** matched and **1,203 objects / 80,971,698 bytes** verified in 81 seconds. The temporary restore container had networking disabled and was removed. The job published `verification/20261113T015233944Z/complete.json`, and the independent freshness check returned healthy. Earlier archives still contain the historical demo references; this successful recovery landmark uses the new post-retirement snapshots.
+
 ## November 12 PostgreSQL compatibility repair
 
 CI's floating `postgres:18` source image advanced to 18.7 while the logical-backup client and isolated restore server were pinned to 18.6. A dump of the newer source made by the older client included `pg_attver` column metadata that the older restore server rejected. The failing restore exited before publishing recovery evidence; it did not affect the running beta database.
@@ -52,7 +54,7 @@ The earlier rehearsals found ten CMS records referencing files already absent fr
 - Media 84: `international-tax-rates-5.csv`; media 85: `cigarette-market-share-by-company-5.csv` (old sample CSV uploads).
 - PDF file 13: `nic360-guide-placeholder-5.pdf` (239-byte prototype placeholder).
 
-All 950 objects actually present in the live bucket were protected and recovered. Keep these ten historical missing entries separate from a new backup failure; replacing/removing them is a content-cleanup decision, not part of restoring data.
+All 950 objects actually present during the original October rehearsal were protected and recovered. The approved November retirement resolved those historical missing entries without inventing replacement files or bypassing the attachment check.
 
 ## Repeat the checks
 
@@ -89,7 +91,7 @@ The approved daily logical service is now provisioned at **07:00 UTC**, using `n
 
 At today's small beta data volume, budget roughly **$2/month** for offsite archive storage/requests, the encrypted alarm and brief backup jobs. The current Railway workspace is **Pro**, with a $20/month minimum including $20 usage; observed usage projects to about $7/month but the plan minimum governs. A practical beta-stack budget is **$22–25/month**, excluding existing unrelated AWS workloads, domain/development subscriptions, payment fees and audience email volume. SES base outbound sending is $0.10 per 1,000 messages plus data charges. These are early estimates, not a fixed bill. Recheck after sustained traffic or data growth.
 
-The restore check deliberately fails on missing attachment references, including the ten pre-existing prototype/sample records listed above. No blanket missing-file exception list was introduced. Resolve those source content defects or explicitly review a narrowly scoped exception before claiming a fully healthy recovery. The old rehearsal evidence remains valid for the bytes actually present; it does not recreate absent originals.
+The restore check deliberately fails on any missing attachment references. The ten prototype/sample entries above were retired with staff approval on November 12; no missing-file exception list was introduced. The old rehearsal evidence remains valid for the bytes actually present; it does not recreate absent originals. The fresh post-retirement rehearsal is fully healthy as recorded above.
 
 A fresh real-archive rehearsal on October 16 matched **all 90 stable tables and all 950 uploaded objects**. The strict attachment audit identified exactly the same ten historical prototype/sample gaps; it remained failed rather than publishing a healthy recovery marker. The recovered PostgreSQL container had networking disabled and was removed with its volume; downloaded files were deleted. A socket-only temporary PostgreSQL initialization server exposed a readiness race in the first GitHub attempt; the runner now waits for the final TCP server before creating/restoring the target. GitHub OIDC authentication and encrypted CloudWatch-to-SNS publication were verified separately. The recipient confirmed the SNS subscription on October 16; AWS returned an active subscription ARN, and accepted a controlled verification publication (message `372efd3f-5aed-50a1-9401-9e73a9a4a99d`). This verifies provider acceptance, not inbox receipt.
 

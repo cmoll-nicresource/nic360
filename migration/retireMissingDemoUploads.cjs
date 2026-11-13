@@ -1,5 +1,6 @@
 // One-time, staff-approved beta cleanup. Caller owns the transaction and saves
 // the preview snapshot privately before applying its exact checksum.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- Self-contained CommonJS module executed over private SSH.
 const { createHash } = require('node:crypto')
 
 const media = [
