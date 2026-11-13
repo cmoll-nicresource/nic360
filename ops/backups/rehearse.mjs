@@ -5,6 +5,7 @@ import crypto from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { latest as remoteLatest, getBytes as remoteBytes, assertFresh, recordRecovery, alert } from './health.mjs'
 import { verifyUploads, recoveredPath } from './verify-uploads.mjs'
+import { POSTGRES_IMAGE } from './postgres-image.mjs'
 
 const docker = process.env.DOCKER_BIN || 'docker'
 // The local smoke uses invented fixtures and never contacts AWS or publishes recovery evidence.
@@ -50,7 +51,7 @@ try {
     const hash = crypto.createHash('sha256').update(bytes).digest('hex')
     if (!sums.split(/\r?\n/).includes(hash + '  ' + file)) throw new Error('Recovery archive SHA-256 mismatch')
   }
-  run(['run', '--detach', '--name', name, '--network', 'none', '--env', 'POSTGRES_PASSWORD', 'postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336'])
+  run(['run', '--detach', '--name', name, '--network', 'none', '--env', 'POSTGRES_PASSWORD', POSTGRES_IMAGE])
   created = true
   for (let attempt = 0; ; attempt++) {
     // The image briefly starts a socket-only initialization server; wait for the final TCP server.

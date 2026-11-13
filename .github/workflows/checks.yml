@@ -5,13 +5,13 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:18
+        image: postgres:18.7@sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: nic360_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd pg_isready --health-interval 5s
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
           --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm lint
       - run: pnpm test:coverage
-      - run: node --test ops/backups/health.test.mjs
+      - run: node --test ops/backups/health.test.mjs ops/backups/postgres-image.test.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -67,13 +67,13 @@ jobs:
     timeout-minutes: 25
     services:
       postgres:
-        image: postgres:18
+        image: postgres:18.7@sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: nic360_e2e_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd pg_isready --health-interval 5s
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
           --health-timeout 5s --health-retries 10
     env:
       TEST_DATABASE_URI: postgresql://postgres:postgres@127.0.0.1:5432/nic360_e2e_test

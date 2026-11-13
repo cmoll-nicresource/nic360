@@ -1,5 +1,13 @@
 # Backup and recovery
 
+## November 12 PostgreSQL compatibility repair
+
+CI's floating `postgres:18` source image advanced to 18.7 while the logical-backup client and isolated restore server were pinned to 18.6. A dump of the newer source made by the older client included `pg_attver` column metadata that the older restore server rejected. The failing restore exited before publishing recovery evidence; it did not affect the running beta database.
+
+Backup tools, isolated restore and both CI database services now use PostgreSQL 18.7 at the same immutable image digest, defined for the restore runner in `ops/backups/postgres-image.mjs`. `postgres-image.test.mjs` enforces matching pins and rejects floating source tags. Update the shared module, backup Dockerfile and both workflow service pins together when adopting a new release. Do not remove archive SQL or ignore restore errors to work around incompatibility.
+
+Local isolated rehearsals recovered a 50-table synthetic PostgreSQL 18.7 database using archives exported by both the previous 18.6 backup client and the updated 18.7 client. Stable-table fingerprints and the synthetic uploaded file matched in each case; restore containers had networking disabled and were removed. This verifies archive compatibility, not the completeness of customer attachments. A real-archive rehearsal must still pass the strict attachment audit before recording a successful recovery marker.
+
 Verified October 16, 2026 against Railway beta (`beta.nicotine360.org`). Railway calls the environment `production`; it is still the beta site. Never point a rehearsal restore at that database, its volume, or the live R2 bucket.
 
 ## Protection now configured
