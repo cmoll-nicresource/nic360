@@ -1,3 +1,4 @@
+import { MergeAccessProvider as MergeAccessProvider_5a9ce8afddd4188c8f86894fe46cad17 } from '../../../components/admin/MergeAccessProvider'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -46,9 +47,11 @@ import { AccessCheckView as AccessCheckView_63ff882a65d91f75560ed44e3e743a40 } f
 import { WorkspaceAnalyticsView as WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { CompanyReportsView as CompanyReportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "./components/admin/MergeAccessProvider#MergeAccessProvider": MergeAccessProvider_5a9ce8afddd4188c8f86894fe46cad17,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -96,5 +99,6 @@ export const importMap = {
   "./components/admin/workspace/StaffTools#AccessCheckView": AccessCheckView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#WorkspaceAnalyticsView": WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#CompanyReportsView": CompanyReportsView_63ff882a65d91f75560ed44e3e743a40,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

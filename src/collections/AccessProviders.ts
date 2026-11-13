@@ -88,5 +88,13 @@ export const AccessProviders: CollectionConfig = {
         description: 'Reverse of each user\'s Access Provider field. Edit this from the user.',
       },
     },
+    {
+      name: 'mergeProvider',
+      type: 'ui',
+      admin: {
+        condition: (_data, _siblingData, { user }) => user?.collection === 'staff' && user.role === 'admin',
+        components: { Field: './components/admin/MergeAccessProvider#MergeAccessProvider' },
+      },
+    },
   ],
 }

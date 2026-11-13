@@ -45,6 +45,18 @@ Signup asks for a work email, sends a six-digit code valid for 15 minutes, then 
 
 A verified email matching an existing provider's allowed domain/address can be attached to that company. An unmatched user can enter a company name; that creates a **pending, None-plan** provider for staff review, not a paid subscription. Existing manual company assignments take precedence. Gatekeepers review mismatches, pending companies and address changes before granting access.
 
+## Consolidating access providers
+
+Admins can open an existing access provider and use **Merge into another provider** at the bottom of its edit screen. Search for the organization to keep, select it, and choose **Preview merge**. Save or discard unsaved edits first.
+
+The preview shows both providers' plans, statuses, expiry dates and user counts, plus domains/exact addresses and event discount codes to transfer. Confirm only after reviewing the surviving provider's subscription: its settings will apply to all moved users. This supports both alternate company names and staff-confirmed subsidiary relationships; the system does not infer those relationships.
+
+Confirmation transfers all users and event discount-code assignments, adds missing domains/addresses (case-insensitive, with surrounding whitespace ignored), and deletes the source provider in one database transaction. The target's name and subscription settings stay intact. Passwords, verification, suspension, publication preferences, event registrations and user IDs are preserved; no email hooks run. Usage history remains attached to those user IDs and appears under the surviving provider in company reports. A merge is rejected if either provider, domains or assignments changed since preview. Errors roll back all writes. Only admins can call the merge endpoint; a successful operation logs the actor and transfer counts.
+
+No real providers are merged automatically. Deleting the source is permanent through this interface; there is no one-click undo. Correct the target subscription before merging if needed.
+
+Regression coverage includes ID validation, admin-only/same-origin requests, confirmation, stale previews, PostgreSQL reference transfers and rollback, and the actual admin edit-screen flow (`tests/browser/provider-merge.spec.ts`). PostgreSQL merge checks run in CI with `DATASET_INTEGRATION=1` using temporary tables.
+
 ## Launch plan
 
 1. **Keep beta email safe mode on.** Current automated tests use a loopback mail inbox; beta account email is redirected to the designated safe mailbox. This is not yet general user delivery.

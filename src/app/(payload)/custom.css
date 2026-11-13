@@ -420,3 +420,24 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
 .nic-company-report__table small { display: block; margin-top: 6px; }
 .nic-company-report__table details { margin-top: 8px; }
 .nic-company-report__stats .nic-analytics__card { display: flex; flex-direction: column; border-radius: 10px; margin-top: 12px; }
+/* Provider consolidation is a deliberate review action, separate from editing. */
+.nic-provider-merge { font-size: 14px; line-height: 1.6; }
+.nic-provider-merge h3 { margin: 0 0 12px; font-size: 20px; }
+.nic-provider-merge h4 { margin: 24px 0 12px; font-size: 17px; }
+.nic-provider-merge p { margin: 12px 0; }
+.nic-provider-merge button {
+  min-height: 40px; padding: 8px 14px; border-radius: 4px;
+  border: 1px solid var(--theme-elevation-300);
+  background: var(--theme-elevation-100); color: var(--theme-text);
+  font: inherit; cursor: pointer;
+}
+.nic-provider-merge button:disabled { opacity: .5; cursor: default; }
+.nic-provider-merge button:focus-visible { outline: 2px solid #4e91bc; outline-offset: 3px; }
+.nic-provider-merge__comparison {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;
+  margin-bottom: 16px;
+}
+.nic-provider-merge__comparison p {
+  margin: 0; padding: 16px; background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-elevation-200); border-radius: 4px;
+}
