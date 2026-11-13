@@ -1,5 +1,13 @@
 # Backup and recovery
 
+## November 12 retirement of missing demo uploads
+
+Staff approved retiring the ten historical demo uploads listed below. A foreign-key audit found their stale links in current guide thumbnails, dataset sample-import metadata, speaker headshots, sponsor logos and old guide versions. The real current guides already referenced PDFs 24–28; those files and guides were preserved.
+
+The guarded routine in `migration/retireMissingDemoUploads.cjs` removed media 83–91, PDF 13 and five obsolete non-latest guide versions containing that demo PDF. It cleared the placeholder links on five current guides and their five latest versions, two datasets, five speakers and three sponsors. It did not delete current guides, dataset rows, speakers, sponsors or any stored objects. A checksum-protected private rollback snapshot is retained in ignored `migration/data`; every surviving field was checked against the snapshot, allowing only the approved link changes. The temporary SSH key was revoked immediately after verification.
+
+PostgreSQL regression tests cover exact asset identity, unexpected references, stale previews, preservation of real PDFs/content and rollback after a failed delete. This is an exact one-time retirement, not a generic orphan-file cleanup. Fresh backups and a strict real-archive recovery rehearsal are required after the change; the audit must not ignore missing attachments.
+
 ## November 12 PostgreSQL compatibility repair
 
 CI's floating `postgres:18` source image advanced to 18.7 while the logical-backup client and isolated restore server were pinned to 18.6. A dump of the newer source made by the older client included `pg_attver` column metadata that the older restore server rejected. The failing restore exited before publishing recovery evidence; it did not affect the running beta database.
@@ -36,9 +44,9 @@ The pinned image and non-secret service configuration are in [service-config.jso
 
 The tested database path is the **logical archive**, not a native in-place volume rollback. Native snapshots were created/configured/inspected; beta was never rolled back to prove them. Railway documents volume restore as an in-place operation, including removal of newer backups, so do not use it for a casual rehearsal. For a future native/PITR rehearsal, first establish a provider-supported separate destination; do not restore to beta. [Railway backup/restore guide](https://docs.railway.com/guides/postgres-backups-restores).
 
-### Pre-existing missing prototype assets
+### Historical missing prototype assets (retired November 12)
 
-Ten CMS records reference files already absent from R2. Backup cannot recreate those missing source bytes. These were not deleted by the backup or restore:
+The earlier rehearsals found ten CMS records referencing files already absent from R2. They were not deleted by backup or restore. Staff approved their retirement on November 12 as recorded above:
 
 - Media 83, 86–91: one-pixel trademark/guide/ad/headshot/sponsor placeholder PNGs.
 - Media 84: `international-tax-rates-5.csv`; media 85: `cigarette-market-share-by-company-5.csv` (old sample CSV uploads).
