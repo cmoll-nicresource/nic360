@@ -34,3 +34,7 @@ ttb-trade
 
 # Licensed full-resolution photography masters; deploy only optimized web copies.
 /assets/photography/originals/
+
+# Editor settings and locally generated guide PDFs (not part of the repo).
+/.vscode/
+/docs-local/
