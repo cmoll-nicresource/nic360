@@ -24,6 +24,8 @@ export type SesEvent = {
   messageId?: string
   test?: boolean
   deliveryId?: number
+  /** Set when the message was an account email (password reset, etc.), not a publication. */
+  accountEmailId?: number
 }
 
 /**

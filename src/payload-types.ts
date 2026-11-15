@@ -97,6 +97,7 @@ export interface Config {
     'ses-outbox': SesOutbox;
     'newsletter-deliveries': NewsletterDelivery;
     'ses-events': SesEvent;
+    'account-emails': AccountEmail;
     'operational-alerts': OperationalAlert;
     speakers: Speaker;
     sponsors: Sponsor;
@@ -166,6 +167,7 @@ export interface Config {
     'ses-outbox': SesOutboxSelect<false> | SesOutboxSelect<true>;
     'newsletter-deliveries': NewsletterDeliveriesSelect<false> | NewsletterDeliveriesSelect<true>;
     'ses-events': SesEventsSelect<false> | SesEventsSelect<true>;
+    'account-emails': AccountEmailsSelect<false> | AccountEmailsSelect<true>;
     'operational-alerts': OperationalAlertsSelect<false> | OperationalAlertsSelect<true>;
     speakers: SpeakersSelect<false> | SpeakersSelect<true>;
     sponsors: SponsorsSelect<false> | SponsorsSelect<true>;
@@ -392,6 +394,7 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1483,6 +1486,7 @@ export interface Guide {
  */
 export interface GuideFile {
   id: number;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1827,6 +1831,35 @@ export interface SesEvent {
   createdAt: string;
 }
 /**
+ * Every account email the site sends, with its delivery status. Open a row to see the message and, while its link still works, copy it to send another way.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "account-emails".
+ */
+export interface AccountEmail {
+  id: number;
+  recipient: string;
+  kind: 'reset' | 'invitation' | 'account-ready' | 'signup-code' | 'verification' | 'staff-reset' | 'staff-link';
+  subject: string;
+  /**
+   * “Delivered” means the recipient’s mail server accepted it, not that a person saw it. Corporate filters can still hold or hide accepted mail.
+   */
+  status: 'sent' | 'delivered' | 'bounced' | 'complained' | 'failed';
+  statusAt?: string | null;
+  /**
+   * This was the second or later message to this address within 24 hours.
+   */
+  stuck?: boolean | null;
+  linkExpiresAt?: string | null;
+  messageId?: string | null;
+  error?: string | null;
+  note?: string | null;
+  issuedBy?: (number | null) | Staff;
+  html?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Automatic checks every five minutes. Alerts clear when the underlying condition is fixed. Email notifications are deduplicated.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2119,6 +2152,10 @@ export interface PayloadLockedDocument {
         value: number | SesEvent;
       } | null)
     | ({
+        relationTo: 'account-emails';
+        value: number | AccountEmail;
+      } | null)
+    | ({
         relationTo: 'operational-alerts';
         value: number | OperationalAlert;
       } | null)
@@ -2305,6 +2342,7 @@ export interface AccessProvidersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -2619,6 +2657,7 @@ export interface GuidesSelect<T extends boolean = true> {
  * via the `definition` "guide-files_select".
  */
 export interface GuideFilesSelect<T extends boolean = true> {
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -2891,6 +2930,26 @@ export interface SesEventsSelect<T extends boolean = true> {
   kind?: T;
   messageId?: T;
   isTest?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "account-emails_select".
+ */
+export interface AccountEmailsSelect<T extends boolean = true> {
+  recipient?: T;
+  kind?: T;
+  subject?: T;
+  status?: T;
+  statusAt?: T;
+  stuck?: T;
+  linkExpiresAt?: T;
+  messageId?: T;
+  error?: T;
+  note?: T;
+  issuedBy?: T;
+  html?: T;
   updatedAt?: T;
   createdAt?: T;
 }

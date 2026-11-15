@@ -3,6 +3,8 @@ import { Journals } from './collections/Journals'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { NewsletterDeliveries } from './collections/NewsletterDeliveries'
 import { SesEvents } from './collections/SesEvents'
+import { AccountEmails } from './collections/AccountEmails'
+import { withAccountEmailLog } from './lib/loggedEmailAdapter'
 import { newsletterSendTask } from './jobs/newsletterSendTask'
 import { operationsMonitorTask } from './jobs/operationsMonitorTask'
 import { eventInvitationsTask } from './jobs/eventInvitationsTask'
@@ -206,6 +208,7 @@ export default buildConfig({
     SesOutbox,
     NewsletterDeliveries,
     SesEvents,
+    AccountEmails,
     OperationalAlerts,
     Speakers,
     Sponsors,
@@ -246,7 +249,7 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI || '',
     },
   }),
-  email: nodemailerAdapter({
+  email: withAccountEmailLog(nodemailerAdapter({
     // Deliberately separate from SES_FROM_ADDRESS (used for publication
     // bulk sends, src/lib/ses/) — different MAIL FROM domain so a
     // newsletter send's bounce/complaint rate can't drag down deliverability
@@ -257,6 +260,6 @@ export default buildConfig({
     // unit-tested there) rather than inline, so the safe-mode wiring itself
     // is regression-tested — see accountEmailTransport.test.ts.
     transport: buildAccountEmailTransport(),
-  }),
+  })),
   sharp,
 })

@@ -9,10 +9,13 @@ export type SubscriptionPlan = 'none' | 'base' | 'premium'
  * license expiry. Pending and expired providers grant nothing, whatever
  * their plan says.
  */
-function providerIsEffective(provider: AccessProvider): boolean {
+export function providerIsEffective(
+  provider: Pick<AccessProvider, 'status' | 'licenseExpiresAt'>,
+  now: number = Date.now(),
+): boolean {
   if (provider.status !== 'trial' && provider.status !== 'live') return false
   if (provider.licenseExpiresAt) {
-    if (new Date(provider.licenseExpiresAt).getTime() < Date.now()) return false
+    if (new Date(provider.licenseExpiresAt).getTime() < now) return false
   }
   return true
 }

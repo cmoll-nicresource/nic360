@@ -1,3 +1,5 @@
+import { AccountEmailHelp as AccountEmailHelp_02dad0471c84d1f89b51a29f37195ced } from '../../../components/admin/AccountEmailHelp'
+import { UserAccessBadge as UserAccessBadge_decc9e39ffcf42e5fb38554f84b4e0c7 } from '../../../components/admin/UserAccessBadge'
 import { MergeAccessProvider as MergeAccessProvider_5a9ce8afddd4188c8f86894fe46cad17 } from '../../../components/admin/MergeAccessProvider'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -29,6 +31,7 @@ import { BuildFromRulesButton as BuildFromRulesButton_98e18b5c6bc086120f80ba3668
 import { IssueDeliverySummary as IssueDeliverySummary_d235304900cbadb020bea9a57e1f1874 } from '../../../components/admin/IssueDeliverySummary'
 import { SendIssueButtons as SendIssueButtons_f2e6e440952be4366e071120771276c6 } from '../../../components/admin/SendIssueButtons'
 import { ReAddButton as ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705 } from '../../../components/admin/ReAddButton'
+import { AccountEmailPreview as AccountEmailPreview_e5008601005f491b21e2fa36195c8185 } from '../../../components/admin/AccountEmailPreview'
 import { ManageEventLink as ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c } from '../../../components/admin/ManageEventLink'
 import { SessionTimeField as SessionTimeField_966c5fca5d179a5d113f050ef4ad7a69 } from '../../../components/admin/SessionTimeField'
 import { WorkspaceNavigation as WorkspaceNavigation_74eddeb5ab912fa47a634b4965d750f4 } from '../../../components/admin/workspace/WorkspaceNav'
@@ -48,9 +51,12 @@ import { AccessCheckView as AccessCheckView_63ff882a65d91f75560ed44e3e743a40 } f
 import { WorkspaceAnalyticsView as WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { CompanyReportsView as CompanyReportsView_63ff882a65d91f75560ed44e3e743a40 } from '../../../components/admin/workspace/StaffTools'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "./components/admin/AccountEmailHelp#AccountEmailHelp": AccountEmailHelp_02dad0471c84d1f89b51a29f37195ced,
+  "./components/admin/UserAccessBadge#UserAccessBadge": UserAccessBadge_decc9e39ffcf42e5fb38554f84b4e0c7,
   "./components/admin/MergeAccessProvider#MergeAccessProvider": MergeAccessProvider_5a9ce8afddd4188c8f86894fe46cad17,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -82,6 +88,7 @@ export const importMap = {
   "./components/admin/IssueDeliverySummary#IssueDeliverySummary": IssueDeliverySummary_d235304900cbadb020bea9a57e1f1874,
   "./components/admin/SendIssueButtons#SendIssueButtons": SendIssueButtons_f2e6e440952be4366e071120771276c6,
   "./components/admin/ReAddButton#ReAddButton": ReAddButton_4a5fd908b6c3fc8544d23cc52f10f705,
+  "./components/admin/AccountEmailPreview#AccountEmailPreview": AccountEmailPreview_e5008601005f491b21e2fa36195c8185,
   "./components/admin/ManageEventLink#ManageEventLink": ManageEventLink_e5be46f09d53958eeb5cf34a023eb63c,
   "./components/admin/SessionTimeField#SessionTimeField": SessionTimeField_966c5fca5d179a5d113f050ef4ad7a69,
   "./components/admin/workspace/WorkspaceNav#WorkspaceNavigation": WorkspaceNavigation_74eddeb5ab912fa47a634b4965d750f4,
@@ -100,5 +107,6 @@ export const importMap = {
   "./components/admin/workspace/StaffTools#AccessCheckView": AccessCheckView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#WorkspaceAnalyticsView": WorkspaceAnalyticsView_63ff882a65d91f75560ed44e3e743a40,
   "./components/admin/workspace/StaffTools#CompanyReportsView": CompanyReportsView_63ff882a65d91f75560ed44e3e743a40,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

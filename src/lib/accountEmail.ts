@@ -52,10 +52,18 @@ ${url ? `<p style="margin:22px 0 8px;font-size:13px;line-height:1.6;color:#596a7
 
 const paragraph = (text: string) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.65;">${escape(text)}</p>`
 
-export function passwordResetEmail({ token, name, staff = false, invitation = false }: {
-  token?: string; name?: string | null; staff?: boolean; invitation?: boolean
+export function passwordResetEmail({ token, name, staff = false, invitation = false, accountInvite = false }: {
+  token?: string; name?: string | null; staff?: boolean; invitation?: boolean; accountInvite?: boolean
 }): string {
   if (!token) throw new Error('A password reset token is required.')
+  if (accountInvite) return render({
+    title: 'Your Nicotine360 account is ready',
+    preview: 'Set your password to sign in to your new Nicotine360 account. This link expires in one hour.',
+    name,
+    content: paragraph('The Nicotine360 team has created an account for you. Choose a password to finish setting it up. Following the link also confirms your email address.') + paragraph('If you weren’t expecting an account, you can ignore this email or contact our team.'),
+    action: { label: 'Set your password', path: `/reset-password/${encodeURIComponent(token)}` },
+    note: 'This link expires in one hour. If it has expired, request a fresh one from the “Set a new password” link on the sign-in page.',
+  })
   return render({
     title: invitation ? 'Your event registration is ready' : 'Reset your password',
     preview: invitation ? 'Set your password to access your Nicotine360 event registration.' : 'Choose a new password for your Nicotine360 account. This link expires in one hour.',
@@ -78,13 +86,13 @@ export function signupCodeEmail(code: string): string {
   })
 }
 
-/** Payload's native verification screen handles staff-created, unverified site accounts. */
+/** Confirmation lands on the site's own page, which then points to the user sign-in. */
 export function accountVerificationEmail(token: string, name?: string | null): string {
   if (!token) throw new Error('An email verification token is required.')
   return render({
     title: 'Confirm your email address', preview: 'Confirm your email address for your Nicotine360 account.', name,
     content: paragraph('An account has been created for you on Nicotine360. Confirm your email address to verify that it belongs to you.'),
-    action: { label: 'Confirm email address', path: `/admin/users/verify/${encodeURIComponent(token)}` },
+    action: { label: 'Confirm email address', path: `/verify-email/${encodeURIComponent(token)}` },
     note: 'If you weren’t expecting this account, you can ignore this email or contact our team.',
   })
 }

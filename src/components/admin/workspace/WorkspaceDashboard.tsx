@@ -6,6 +6,7 @@ import {
   canSeeUserWorkspace,
   workspaceRole,
 } from '@/config/workspaceVisibility'
+import { STUCK_WINDOW_MS, stuckRecipients } from '@/lib/accountEmailLog'
 import { requireWorkspaceRole, TaskIcon, WorkspacePage } from './WorkspaceShell'
 
 const date = (value: string) =>
@@ -14,6 +15,44 @@ const date = (value: string) =>
     day: 'numeric',
     timeZone: 'America/New_York',
   }).format(new Date(value))
+
+/** Addresses sent two or more account emails in the last day who have not signed in since. */
+async function findStuckRecipients(
+  payload: AdminViewServerProps['initPageResult']['req']['payload'],
+  options: { depth: number; req: AdminViewServerProps['initPageResult']['req']; overrideAccess: false },
+) {
+  const since = new Date(Date.now() - STUCK_WINDOW_MS).toISOString()
+  const recent = await payload.find({
+    collection: 'account-emails',
+    where: { and: [{ stuck: { equals: true } }, { createdAt: { greater_than: since } }] },
+    sort: '-createdAt',
+    limit: 200,
+    pagination: false,
+    ...options,
+  })
+  const emails = [...new Set(recent.docs.map((row) => row.recipient.toLowerCase()))]
+  if (!emails.length) return []
+  const people = await payload.find({
+    collection: 'users',
+    where: { email: { in: emails } },
+    limit: emails.length,
+    pagination: false,
+    ...options,
+  })
+  const lastLogin = Object.fromEntries(people.docs.map((u) => [u.email.toLowerCase(), u.lastLoginAt]))
+  // `stuck` marks the second and later message, so count the full window for each address.
+  const all = await payload.find({
+    collection: 'account-emails',
+    where: { and: [{ recipient: { in: emails } }, { createdAt: { greater_than: since } }] },
+    limit: 500,
+    pagination: false,
+    ...options,
+  })
+  return stuckRecipients(
+    all.docs.map((row) => ({ recipient: row.recipient, kind: row.kind, createdAt: row.createdAt })),
+    lastLogin,
+  )
+}
 
 export async function WorkspaceDashboard(props: AdminViewServerProps) {
   const req = requireWorkspaceRole(props),
@@ -84,6 +123,7 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
         })
       : null,
   ])
+  const stuck = userOperations ? await findStuckRecipients(payload, options) : []
   const tasks = staffTasksFor(req.user)
   const title =
     role === 'admin'
@@ -182,6 +222,18 @@ export async function WorkspaceDashboard(props: AdminViewServerProps) {
               <span>Orders to review</span>
               <strong>{orders?.totalDocs.toLocaleString()}</strong>
               <small>Pending payments or fulfillment errors</small>
+            </Link>
+            <Link href="/admin/collections/account-emails?where[stuck][equals]=true">
+              <span>Not receiving email</span>
+              <strong>{stuck.length.toLocaleString()}</strong>
+              <small>
+                {stuck.length
+                  ? `${stuck
+                      .slice(0, 2)
+                      .map((s) => s.email)
+                      .join(', ')}${stuck.length > 2 ? '…' : ''}`
+                  : 'No one has asked twice in 24 hours'}
+              </small>
             </Link>
             <Link href="/admin/collections/email-flags">
               <span>Email flags to resolve</span>

@@ -4,6 +4,8 @@ import { assignAccessProviderOnVerify } from '@/hooks/assignAccessProviderOnVeri
 import { setLastLoginAt } from '@/hooks/setLastLoginAt'
 import { sortUsersByLogin } from '@/hooks/sortUsersByLogin'
 import { enforceUserResetPassword } from '@/hooks/enforceUserResetPassword'
+import { inviteStaffCreatedUser, skipVerificationForStaffCreated } from '@/hooks/inviteStaffCreatedUser'
+import { verifyOnPasswordReset } from '@/hooks/verifyOnPasswordReset'
 import { syncMailchimpOnUserChange } from '@/hooks/syncMailchimpOnUserChange'
 import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
 import { accountVerificationEmail, passwordResetEmail } from '@/lib/accountEmail'
@@ -32,12 +34,19 @@ export const Users: CollectionConfig = {
       generateEmailSubject: ({ req } = {}) =>
         req?.context.eventInvitation
           ? 'Your Nicotine360 event invitation'
-          : 'Reset your Nicotine360 password',
+          : req?.context.accountInvitation
+            ? 'Your Nicotine360 account is ready'
+            : 'Reset your Nicotine360 password',
       // Payload's default reset-password link always points at /admin/reset,
       // which only works for the admin.user collection (staff). Users get
       // their own front-end page instead.
       generateEmailHTML: ({ token, req, user } = {}) =>
-        passwordResetEmail({ token, name: user?.firstName, invitation: Boolean(req?.context.eventInvitation) }),
+        passwordResetEmail({
+          token,
+          name: user?.firstName,
+          invitation: Boolean(req?.context.eventInvitation),
+          accountInvite: Boolean(req?.context.accountInvitation),
+        }),
     },
   },
   access: {
@@ -54,12 +63,26 @@ export const Users: CollectionConfig = {
     delete: staffHasMinRole('gatekeeper'),
   },
   hooks: {
-    beforeOperation: [enforceUserResetPassword],
-    afterChange: [assignAccessProviderOnVerify, syncMailchimpOnUserChange],
+    beforeOperation: [enforceUserResetPassword, skipVerificationForStaffCreated],
+    afterChange: [inviteStaffCreatedUser, assignAccessProviderOnVerify, syncMailchimpOnUserChange],
     afterLogin: [setLastLoginAt],
-    afterOperation: [sortUsersByLogin],
+    afterOperation: [sortUsersByLogin, verifyOnPasswordReset],
   },
   fields: [
+    {
+      name: 'accountEmailHelp',
+      type: 'ui',
+      admin: {
+        components: { Field: './components/admin/AccountEmailHelp#AccountEmailHelp' },
+      },
+    },
+    {
+      name: 'accessSummary',
+      type: 'ui',
+      admin: {
+        components: { Field: './components/admin/UserAccessBadge#UserAccessBadge' },
+      },
+    },
     {
       type: 'row',
       fields: [

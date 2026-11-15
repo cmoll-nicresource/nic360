@@ -22,7 +22,7 @@ async function render(role: string) {
 describe('staff dashboard daily workflows', () => {
   it('queries and presents only user operations for gatekeepers', async () => {
     const { html, find, count } = await render('gatekeeper')
-    expect(find.mock.calls.map(([query]) => query.collection).sort()).toEqual(['orders', 'users'])
+    expect(find.mock.calls.map(([query]) => query.collection).sort()).toEqual(['account-emails', 'orders', 'users'])
     expect(count.mock.calls.map(([query]) => query.collection)).toEqual(['email-flags'])
     for (const text of [
       'Manage subscriptions',

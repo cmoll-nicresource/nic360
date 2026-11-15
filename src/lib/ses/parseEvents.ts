@@ -31,6 +31,7 @@ export function parseSesEvent(body: unknown): SesEvent | null {
   const issueTag = mail.tags?.issueId?.[0]
   const issueId = issueTag ? Number(issueTag) : undefined
   const deliveryId = Number(mail.tags?.deliveryId?.[0])
+  const accountEmailId = Number(mail.tags?.accountEmailId?.[0])
 
   const rawEmails = recipientsFor(type, b, mail)
   const emails = Array.isArray(rawEmails)
@@ -59,6 +60,7 @@ export function parseSesEvent(body: unknown): SesEvent | null {
     ...(mail.messageId ? { messageId: mail.messageId } : {}),
     ...(mail.tags?.newsletterTest?.[0] === 'true' ? { test: true } : {}),
     ...(Number.isSafeInteger(deliveryId) && deliveryId > 0 ? { deliveryId } : {}),
+    ...(Number.isSafeInteger(accountEmailId) && accountEmailId > 0 ? { accountEmailId } : {}),
   }
 }
 

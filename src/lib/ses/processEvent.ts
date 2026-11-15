@@ -5,6 +5,25 @@ import { flagUserByEmail } from '@/lib/emailFlags'
 import { incrementPublicationIssueStat, type PublicationIssueStatColumn } from '@/lib/incrementStat'
 import type { SesEvent } from './types'
 
+/** Account email events only update that message's delivery status; they never touch newsletter preferences. */
+async function recordAccountEmailEvent(payload: Payload, event: SesEvent, req: Parameters<Parameters<typeof inPayloadTransaction>[1]>[0]) {
+  const status = ({ Delivery: 'delivered', Bounce: 'bounced', Complaint: 'complained' } as const)[event.type as 'Delivery' | 'Bounce' | 'Complaint']
+  if (!status) return
+  const row = await payload
+    .findByID({ collection: 'account-emails', id: event.accountEmailId!, depth: 0, overrideAccess: true, req })
+    .catch(() => null)
+  if (!row || !event.emails.includes(row.recipient.toLowerCase())) return
+  // A bounce or complaint is final; a late delivery notice must not overwrite it.
+  if (status === 'delivered' && (row.status === 'bounced' || row.status === 'complained')) return
+  await payload.update({
+    collection: 'account-emails',
+    id: row.id,
+    data: { status, statusAt: event.occurredAt, ...(event.messageId && !row.messageId ? { messageId: event.messageId } : {}) },
+    overrideAccess: true,
+    req,
+  })
+}
+
 export async function processSesEvent(payload: Payload, event: SesEvent, eventKey: string) {
   return inPayloadTransaction(payload, async (req) => {
     await transactionDb(payload, await req.transactionID).execute(
@@ -19,7 +38,8 @@ export async function processSesEvent(payload: Payload, event: SesEvent, eventKe
       req,
     })
     if (existing.docs.length) return { duplicate: true }
-    if (!event.test) {
+    if (event.accountEmailId) await recordAccountEmailEvent(payload, event, req)
+    else if (!event.test) {
       if (event.deliveryId && event.messageId) {
         const delivery = await payload
           .findByID({

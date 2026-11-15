@@ -59,7 +59,7 @@ describe('account email delivery contracts', () => {
     if (!auth || typeof auth !== 'object' || typeof auth.verify !== 'object' || !auth.verify.generateEmailHTML)
       throw new Error('Verification email must be configured.')
     const html = await auth.verify.generateEmailHTML({ token: 'verify-token', user: {}, req: {} as PayloadRequest })
-    expect(html).toContain('https://beta.nicotine360.org/admin/users/verify/verify-token')
+    expect(html).toContain('https://beta.nicotine360.org/verify-email/verify-token')
     expect(html).toContain('Confirm email address')
   })
 })
@@ -90,5 +90,17 @@ describe('safe, self-contained account email markup', () => {
     }
     vi.stubEnv('SITE_URL', 'http://127.0.0.1:3100/')
     expect(passwordResetEmail({ token: 'local' })).toContain('http://127.0.0.1:3100/reset-password/local')
+  })
+})
+
+describe('staff-created account invitation', () => {
+  it('invites the user to set a password, with no password in the email', async () => {
+    const req = { context: { accountInvitation: true }, headers: new Headers() } as unknown as PayloadRequest
+    const html = await resetGenerator(Users)({ token: 'acct-token', req, user: { firstName: 'Sam' } })
+    expect(html).toContain('Your Nicotine360 account is ready')
+    expect(html).toContain('https://beta.nicotine360.org/reset-password/acct-token')
+    expect(html).toContain('Set your password')
+    expect(html).not.toContain('We received a request to reset')
+    expect(html).not.toContain('/admin/')
   })
 })

@@ -45,6 +45,28 @@ Signup asks for a work email, sends a six-digit code valid for 15 minutes, then 
 
 A verified email matching an existing provider's allowed domain/address can be attached to that company. An unmatched user can enter a company name; that creates a **pending, None-plan** provider for staff review, not a paid subscription. Existing manual company assignments take precedence. Gatekeepers review mismatches, pending companies and address changes before granting access.
 
+## Users created by staff
+
+When staff create a user in the admin (Users, Create New), the password typed on that form is only a placeholder. The user receives **Your Nicotine360 account is ready** with a **Set your password** button (a one-hour link to `/reset-password/{token}`); nothing containing the password is emailed, and Payload's separate "confirm your email address" message is not sent. Choosing a password through that link also marks the email verified, which lets the access-provider domain match run. If the link expires, the user requests another from the sign-in page. The same completion verifies any unverified user who finishes a password reset, since the link proves control of the mailbox.
+
+Accounts created outside the admin that still need confirmation send a confirmation link to `/verify-email/{token}`, which confirms the address and points to the user `/login`, not the staff sign-in.
+
+On a user's edit screen a banner shows Premium, Base, non-subscribing or no access (with the reason). Run `migration/assignProvidersByDomain.sql` (preview by default, `-v apply=1` to commit) to attach existing provider-less users to a provider whose allowed domain matches their email; ambiguous matches are skipped. Beta was previewed November 14, 2026: three users had no provider and none matched.
+
+## When someone is not receiving email
+
+Many subscribers sit behind corporate filters that drop mail without a trace, so every account email is recorded in **Account emails** (Audience & access; gatekeeper and above). Passwords, invitations, signup codes and confirmations are logged with the intended recipient (even when safe mode redirects delivery), the time, a delivery status and the message as sent. Staff password resets are logged without their content, because those links open the admin. Operations alerts and newsletters are not logged here.
+
+- **Seeing the message.** Opening a row shows the email while its link still works (one hour; 15 minutes for signup codes). After that the link is dead and the message is hidden. Copy the link from the message to pass it on another way.
+- **A fresh link.** A user's edit screen lists their recent account email and its status, with **Create a password link to send another way**. That makes a new one-hour link without sending any email, replaces any earlier link, and is recorded as "Link issued by …". Using it also confirms the address, so send it only to the person it belongs to. Gatekeepers and above only.
+- **Likely not receiving email.** The second action email to one address within 24 hours (a repeat reset request, for example) marks the row. The dashboard card **Not receiving email** counts addresses with two or more in the last day and no sign-in since the latest; it opens the filtered list.
+- **Delivery status** reads Handed to the mail service, Delivered, Bounced, Complaint or Failed to send. Delivered means the recipient's server accepted it, not that a person saw it. Updates need the SES setup below; without it rows stay at "handed to the mail service".
+- Deleting log rows is admin-only. There is no automatic clean-up yet; message bodies stay until deleted.
+
+AWS setup for delivery status (not yet done on beta): create an SES configuration set for account email (for example `nic360-beta-account`) with an SNS event destination for **Delivery, Bounce and Complaint** pointing at the existing newsletter topic, then set `SES_ACCOUNT_CONFIGURATION_SET` to its name. Messages are tagged `accountEmailId`; the existing `/api/ses/webhook` updates only that log row, and never changes newsletter preferences or suppression. While safe mode is on, deliveries go to the safe mailbox, so statuses will not match the intended recipient and are ignored.
+
+Apply `migration/accountEmails.sql` (`pnpm tsx migration/prepareAccountEmails.ts`, then `--apply`; or pipe the SQL through `railway ssh` as with earlier migrations) **before** deploying this code to an existing database. It only adds a new table.
+
 ## Consolidating access providers
 
 Admins can open an existing access provider and use **Merge into another provider** at the bottom of its edit screen. Search for the organization to keep, select it, and choose **Preview merge**. Save or discard unsaved edits first.
