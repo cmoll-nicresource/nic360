@@ -93,6 +93,7 @@ Legislation tracked via StateNet, summarized and categorized. Admin screen has t
 | Bill Session | `session` | text/select, e.g. *Regular* | ✓ |
 | Law Number | `lawNumber` | text | ✓* |
 | Government Level | `governmentLevel` | select | |
+| Milestone | `milestone` | select: Introduced · Passed 1 chamber · Passed 2 chambers · Approved · Enacted (`src/config/billMilestones.ts`); furthest point reached, set by hand | |
 | Action URL | `actionUrl` | text (URL) | ✓* |
 | Bill URL | `billUrl` | group: `title`, `url` | ✓ (title blank in example) |
 | Carried By | `carriedBy` | text (sponsor) | ✓* |
@@ -884,6 +885,8 @@ Six tabs, mostly server-rendered (plain `<form method="GET">`s, no client JS) ex
 1. **Unsubscribe follow-up:** what happens with an EmailFlag (e.g. email the relationship manager), to be defined later.
 
 ## Changelog
+
+- 2026-11-16: Added `Bill.milestone` (optional select, existing bills blank). Production schema: apply `migration/billMilestone.sql` (additive, idempotent) before deploying.
 
 - 2026-10-14: Replaced estimated PDF row chunks with measured pagination and table-scoped repeated titles/headers, fixing mid-page duplicate headers and headerless continuations. Added Nicotine360 cover/running-header branding from the existing logo and total-page counts. Regenerated the August 2026 report (119 pages), checked the cigarette-paper transitions, and added an adjacent-category pagination/logo regression.
 

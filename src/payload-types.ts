@@ -1143,6 +1143,9 @@ export interface Article {
   locations?: (number | Location)[] | null;
   sectors?: (number | Sector)[] | null;
   products?: (number | Product)[] | null;
+  /**
+   * Only top-level (ALL CAPS) subjects can be primary. Add more specific terms under Subjects.
+   */
   primarySubject?: (number | null) | Subject;
   subjects?: (number | Subject)[] | null;
   /**
@@ -1233,6 +1236,10 @@ export interface Bill {
   locations?: (number | Location)[] | null;
   session?: string | null;
   governmentLevel?: ('Federal' | 'State/Province' | 'Local' | 'International') | null;
+  /**
+   * Furthest point this bill has reached. Update it as the bill advances.
+   */
+  milestone?: ('introduced' | 'passed-one-chamber' | 'passed-two-chambers' | 'approved' | 'enacted') | null;
   billDate: string;
   approvalDate?: string | null;
   effectiveDate?: string | null;
@@ -1278,6 +1285,9 @@ export interface Bill {
   };
   sectors?: (number | Sector)[] | null;
   products?: (number | Product)[] | null;
+  /**
+   * Only top-level (ALL CAPS) subjects can be primary. Add more specific terms under Subjects.
+   */
   primarySubject?: (number | null) | Subject;
   subjects?: (number | Subject)[] | null;
   relatedArticles?: (number | Article)[] | null;
@@ -2490,6 +2500,7 @@ export interface BillsSelect<T extends boolean = true> {
   locations?: T;
   session?: T;
   governmentLevel?: T;
+  milestone?: T;
   billDate?: T;
   approvalDate?: T;
   effectiveDate?: T;

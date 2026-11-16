@@ -5,6 +5,7 @@ import { indexTermFields } from '@/fields/indexTerms'
 import { ingestionField } from '@/fields/ingestion'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 import { buildSearchTextHook } from '@/hooks/buildSearchText'
+import { BILL_MILESTONES } from '@/config/billMilestones'
 
 export const Bills: CollectionConfig = {
   slug: 'bills',
@@ -82,6 +83,15 @@ export const Bills: CollectionConfig = {
                   options: ['Federal', 'State/Province', 'Local', 'International'],
                 },
               ],
+            },
+            {
+              name: 'milestone',
+              label: 'Milestone',
+              type: 'select',
+              options: BILL_MILESTONES.map((m) => ({ label: m.label, value: m.value })),
+              admin: {
+                description: 'Furthest point this bill has reached. Update it as the bill advances.',
+              },
             },
             {
               type: 'row',

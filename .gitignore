@@ -38,3 +38,6 @@ ttb-trade
 # Editor settings and locally generated guide PDFs (not part of the repo).
 /.vscode/
 /docs-local/
+
+# Input files for processing & seeding
+/input/
