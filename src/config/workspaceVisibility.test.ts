@@ -24,10 +24,18 @@ describe('role-specific admin presentation and management', () => {
       'datasets',
       'subjects',
       'staff',
-      'speakers',
     ])
       expect(workspaceCollectionVisible(slug, user('gatekeeper'))).toBe(false)
-    for (const slug of ['users', 'access-providers', 'orders', 'event-registrations', 'events'])
+    for (const slug of [
+      'users',
+      'access-providers',
+      'orders',
+      'event-registrations',
+      'events',
+      'speakers',
+      'sponsors',
+      'sessions',
+    ])
       expect(workspaceCollectionVisible(slug, user('gatekeeper'))).toBe(true)
     expect(staffCanWrite({ req: { user: user('gatekeeper') } } as never)).toBe(true)
     expect(workspaceCollectionVisible('articles', user('editor'))).toBe(true)

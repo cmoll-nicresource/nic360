@@ -29,7 +29,10 @@ describe('staff workspace navigation', () => {
     expect(editor).not.toContain('/admin/trademark-reports')
     expect(editor).not.toContain('/admin/access-check')
     const gatekeeper = staffTasksFor(staff('gatekeeper'))
-    expect(gatekeeper.every((task) => task.audience === 'users')).toBe(true)
+    expect(gatekeeper.every((task) => task.audience === 'users' || task.audience === 'shared')).toBe(
+      true,
+    )
+    expect(gatekeeper.map((task) => task.href)).toContain('/admin/collections/events')
     expect(gatekeeper.filter((task) => task.daily).map((task) => task.label)).toEqual([
       'Manage subscriptions',
       'Register a user',

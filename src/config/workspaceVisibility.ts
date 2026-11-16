@@ -19,6 +19,10 @@ const GATEKEEPER_COLLECTIONS = new Set([
   'access-providers',
   'email-flags',
   'events',
+  // Gatekeepers also act as content editors for events.
+  'speakers',
+  'sponsors',
+  'sessions',
   'event-registrations',
   'orders',
   'discount-codes',

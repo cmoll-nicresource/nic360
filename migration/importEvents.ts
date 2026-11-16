@@ -276,6 +276,9 @@ async function main() {
   let sessionsCreated = 0
   let sessionsUpdated = 0
   let sessionsSkipped = 0
+  // The old site had no event-level speaker list; each Event's roster is the
+  // union of the speakers/moderators on its sessions.
+  const rosterByEventId = new Map<string | number, Set<string | number>>()
   await streamTable('agendas', async (f) => {
     const oldAgendaId = f[AGENDA_COL.id]
     const title = clean(f[AGENDA_COL.title])
@@ -292,6 +295,10 @@ async function main() {
     const moderators = roles.filter((r) => r.role === 'moderator').map((r) => speakerIdByOldId.get(r.speakerId)).filter(Boolean)
     const speakerIds = roles.filter((r) => r.role !== 'moderator').map((r) => speakerIdByOldId.get(r.speakerId)).filter(Boolean)
     const sponsors = [...(sponsorIdsByAgendaId.get(oldAgendaId) ?? [])].map((id) => sponsorIdByOldId.get(id)).filter(Boolean)
+
+    const roster = rosterByEventId.get(newEventId) ?? new Set<string | number>()
+    for (const id of [...moderators, ...speakerIds]) roster.add(id as string | number)
+    rosterByEventId.set(newEventId, roster)
 
     const data = {
       event: newEventId,
@@ -321,6 +328,16 @@ async function main() {
     }
   })
   console.log(`  ${sessionsCreated} created, ${sessionsUpdated} updated, ${sessionsSkipped} skipped (missing day/event/title)`)
+
+  for (const [eventId, ids] of rosterByEventId) {
+    await payload.update({
+      collection: 'events',
+      id: eventId,
+      data: { speakers: [...ids] as number[] },
+      overrideAccess: true,
+    })
+  }
+  console.log(`  speaker rosters set on ${rosterByEventId.size} events`)
 
   process.exit(0)
 }

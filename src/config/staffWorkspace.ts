@@ -8,7 +8,8 @@ type Task = {
   category: string
   role: StaffRole
   icon: string
-  audience: 'editorial' | 'users' | 'admin'
+  /** 'shared' tasks appear for both editors and gatekeepers. */
+  audience: 'editorial' | 'users' | 'shared' | 'admin'
   daily?: boolean
 }
 export const STAFF_TASKS: readonly Task[] = [
@@ -203,11 +204,11 @@ export const STAFF_TASKS: readonly Task[] = [
   {
     href: '/admin/collections/events',
     label: 'Event programs',
-    description: 'Maintain event details, speakers and schedules.',
+    description: 'Maintain event details, speakers, sponsors and schedules.',
     category: 'Publishing & resources',
     role: 'editor',
     icon: 'event',
-    audience: 'editorial',
+    audience: 'shared',
   },
   {
     href: '/admin/analytics',
@@ -253,6 +254,7 @@ export function staffTasksFor(user: PayloadRequest['user']) {
     (task) =>
       staffHasRole(user, task.role) &&
       (user.role === 'admin' ||
+        task.audience === 'shared' ||
         (user.role === 'gatekeeper' ? task.audience === 'users' : task.audience === 'editorial')),
   )
 }

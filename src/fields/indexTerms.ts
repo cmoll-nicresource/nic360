@@ -1,4 +1,4 @@
-import type { Field } from 'payload'
+import type { Field, Where } from 'payload'
 
 /**
  * Index terms shared by Article and Bill (Trademarks stay unindexed).
@@ -35,6 +35,23 @@ export function indexTermFields(): Field[] {
       label: 'Primary subject',
       type: 'relationship',
       relationTo: 'subjects',
+      admin: {
+        description:
+          'Only top-level (ALL CAPS) subjects can be primary. Add more specific terms under Subjects.',
+      },
+      // Top-level subjects only. A value already saved on the document is kept
+      // selectable so legacy records with a non-top-level primary still save.
+      filterOptions: ({ siblingData }): Where => {
+        const current = (siblingData as { primarySubject?: unknown } | undefined)?.primarySubject
+        const currentId =
+          current && typeof current === 'object' && 'id' in current
+            ? (current as { id: number | string }).id
+            : current
+        const topLevel: Where = { parent: { exists: false } }
+        return typeof currentId === 'number' || typeof currentId === 'string'
+          ? { or: [topLevel, { id: { equals: currentId } }] }
+          : topLevel
+      },
     },
     {
       name: 'subjects',
