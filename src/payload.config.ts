@@ -43,6 +43,8 @@ import { Orders } from './collections/Orders'
 import { PageViews } from './collections/PageViews'
 import { Products } from './collections/Products'
 import { PublicationAds } from './collections/PublicationAds'
+import { SummaryHeadings } from './collections/SummaryHeadings'
+import { SummaryStories } from './collections/SummaryStories'
 import { PublicationIssues } from './collections/PublicationIssues'
 import { Publications } from './collections/Publications'
 import { Sectors } from './collections/Sectors'
@@ -201,6 +203,8 @@ export default buildConfig({
     Publications,
     PublicationIssues,
     PublicationAds,
+    SummaryStories,
+    SummaryHeadings,
     EmailFlags,
     TrademarkImportRuns,
     TradeImportRuns,

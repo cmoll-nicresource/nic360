@@ -8,7 +8,8 @@ import {
 } from '@/lib/publicationEdition'
 import { formatDate } from '@/lib/formatDate'
 import { sentenceCase } from '@/lib/textCase'
-import type { Article, Publication, PublicationAd, PublicationIssue } from '@/payload-types'
+import type { Article, Publication, PublicationAd, PublicationIssue, SummaryStory } from '@/payload-types'
+import { sanitizeStoryHtml } from '@/lib/summaryStories/tobaccoReporter'
 import { SITE_URL } from '@/lib/env'
 
 // Inline styles, tables and web-safe fonts carry the design in Outlook.
@@ -42,7 +43,11 @@ function link(url: string, label: string, style = '') {
 }
 function richText(data: Article['excerpt'] | null | undefined) {
   if (!data) return ''
-  return convertLexicalToHTML({ data }).replace(
+  return styleEmailHtml(convertLexicalToHTML({ data }))
+}
+/** Inline styles for body HTML, which email clients need in place of a stylesheet. */
+function styleEmailHtml(html: string) {
+  return html.replace(
     /<(p|ul|ol|li|blockquote|h[1-6]|a|img)(\s[^>]*?)?>/gi,
     (_original, tag: string, attrs = '') => {
       const styles: Record<string, string> = {
@@ -149,6 +154,53 @@ export function renderExcerptListBody(
   return parts.join('\n')
 }
 
+/** Populated stories of a story-list issue, in running order (unpopulated ids are skipped). */
+export function issueStories(issue: Pick<PublicationIssue, 'stories'>): SummaryStory[] {
+  return (issue.stories || []).filter((story): story is SummaryStory => !!story && typeof story === 'object')
+}
+
+function renderStoryHtml(story: SummaryStory, index: number) {
+  const image = story.image && typeof story.image === 'object' ? story.image : null
+  const imageUrl = image?.url ? publicationHttpUrl(absolute(image.url)) : null
+  const sources = (story.sources || [])
+    .filter((source) => source.name?.trim())
+    .map((source) => {
+      const url = publicationHttpUrl(source.url)
+      return `<div>Source: ${url ? link(url, source.name) : escapeHtml(source.name)}</div>`
+    })
+    .join('')
+  const trUrl = publicationHttpUrl(story.wordpress?.url)
+  const foot = [
+    trUrl ? link(trUrl, 'Tobacco Reporter') : '',
+    story.publishedAt ? escapeHtml(formatDate(story.publishedAt)) : '',
+  ]
+    .filter(Boolean)
+    .join(' &nbsp;·&nbsp; ')
+  return `<table id="story-${index + 1}" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout:fixed;"><tr><td style="padding:22px 0 24px;border-bottom:1px solid ${C.border};color:${C.ink};overflow-wrap:break-word;word-wrap:break-word;">
+<h2 style="font:700 22px/1.3 ${SERIF};color:${C.navy};margin:0 0 14px;">${escapeHtml(story.headline)}</h2>
+${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(image?.alt || '')}" width="616" border="0" style="display:block;width:100%;max-width:616px;height:auto;margin:0 0 16px;">` : ''}
+<div style="font:15px/1.7 ${SANS};color:${C.ink};">${styleEmailHtml(sanitizeStoryHtml(story.bodyHtml || ''))}</div>
+${sources ? `<div style="font:13px/1.7 ${SANS};color:${C.ink};margin-top:6px;">${sources}</div>` : ''}
+${foot ? `<div style="font:12px/1.6 ${SANS};color:${C.muted};margin-top:10px;">${foot}</div>` : ''}
+</td></tr></table>`
+}
+
+/**
+ * Daily Executive Summary body: a flat run of stories with an ad before
+ * story 1, 3, 5… (the same rule as excerpt lists). Shared by email, preview and web.
+ */
+export function renderStoryListBody(issue: PublicationIssue, ads: PublicationAd[]): string {
+  const parts = [
+    issue.intro ? `<div style="font:15px/1.7 ${SANS};margin-bottom:24px;">${richText(issue.intro)}</div>` : '',
+  ]
+  let adIndex = 0
+  for (const [index, story] of issueStories(issue).entries()) {
+    if (isAdSlotBeforeIndex(index) && adIndex < ads.length) parts.push(renderPublicationAdHtml(ads[adIndex++]))
+    parts.push(renderStoryHtml(story, index))
+  }
+  return parts.join('\n')
+}
+
 /** Existing queued sends retain their saved HTML; this renders new previews/sends. */
 export function renderIssueEmailHtml(
   issue: PublicationIssue,
@@ -163,12 +215,13 @@ export function renderIssueEmailHtml(
     return `<!doctype html>\n<html>\n<head><meta charset="utf-8"><title>${escapeHtml(subject)}</title></head>\n<body style="margin:0;padding:0;">\n${preheader}${issue.body || ''}\n</body>\n</html>`
   const webPath = editionWebPath(issue, publication)
   const legislation = publication.category?.includes('legislation')
-  const count = (issue.sections || []).reduce(
-    (total, section) => total + (section.items?.length || 0),
-    0,
-  )
+  const count =
+    issue.format === 'story-list'
+      ? issueStories(issue).length
+      : (issue.sections || []).reduce((total, section) => total + (section.items?.length || 0), 0)
   let bodyHtml = ''
   if (issue.format === 'excerpt-list') bodyHtml = renderExcerptListBody(issue, publication, ads)
+  else if (issue.format === 'story-list') bodyHtml = renderStoryListBody(issue, ads)
   else if (issue.format === 'pdf-report') {
     const fileUrl =
       issue.file && typeof issue.file === 'object' && issue.file.url
@@ -189,7 +242,7 @@ export function renderIssueEmailHtml(
 <!--[if mso]><table role="presentation" width="680" align="center"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:680px;background:#ffffff;border-top:4px solid ${C.navy};">
 <tr><td class="pub-pad" style="padding:24px 32px 22px;border-bottom:1px solid ${C.border};"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="middle"><a href="${escapeHtml(SITE_URL)}"><img src="${escapeHtml(absolute('/logo.png'))}" width="168" alt="Nicotine360" border="0" style="display:block;width:168px;max-width:100%;height:auto;"></a></td><td align="right" valign="middle" style="font:11px/1.6 ${SANS};color:${C.muted};">${escapeHtml(formatDate(issue.issueDate))}${webPath ? `<br>${link(absolute(webPath), 'View web edition')}` : ''}</td></tr></table></td></tr>
-<tr><td class="pub-pad" style="padding:28px 32px 24px;border-bottom:3px solid ${C.teal};"><div style="font:10px ${SANS};font-weight:700;letter-spacing:1.7px;color:${C.teal};text-transform:uppercase;margin-bottom:12px;">${legislation ? 'Legislative intelligence' : 'Industry intelligence'}</div><h1 class="pub-title" style="font:700 36px/1.15 ${SERIF};color:${C.navy};margin:0 0 14px;">${escapeHtml(publication.title || issue.title)}</h1>${publication.description ? `<p style="font:14px/1.65 ${SANS};color:${C.muted};margin:0 0 14px;">${escapeHtml(publication.description)}</p>` : ''}${issue.title && !issue.title.toLowerCase().startsWith((publication.title || '').toLowerCase()) ? `<p style="font:700 14px/1.6 ${SANS};margin:0 0 12px;">${escapeHtml(issue.title)}</p>` : ''}${issue.format === 'excerpt-list' && count ? `<div style="font:11px ${SANS};color:${C.muted};">${count} ${legislation ? (count === 1 ? 'update' : 'updates') : count === 1 ? 'story' : 'stories'} &nbsp;·&nbsp; ${issue.sections?.length || 0} ${(issue.sections?.length || 0) === 1 ? 'section' : 'sections'}</div>` : ''}</td></tr>
+<tr><td class="pub-pad" style="padding:28px 32px 24px;border-bottom:3px solid ${C.teal};"><div style="font:10px ${SANS};font-weight:700;letter-spacing:1.7px;color:${C.teal};text-transform:uppercase;margin-bottom:12px;">${legislation ? 'Legislative intelligence' : 'Industry intelligence'}</div><h1 class="pub-title" style="font:700 36px/1.15 ${SERIF};color:${C.navy};margin:0 0 14px;">${escapeHtml(publication.title || issue.title)}</h1>${publication.description ? `<p style="font:14px/1.65 ${SANS};color:${C.muted};margin:0 0 14px;">${escapeHtml(publication.description)}</p>` : ''}${issue.title && !issue.title.toLowerCase().startsWith((publication.title || '').toLowerCase()) ? `<p style="font:700 14px/1.6 ${SANS};margin:0 0 12px;">${escapeHtml(issue.title)}</p>` : ''}${issue.format === 'story-list' && count ? `<div style="font:11px ${SANS};color:${C.muted};">${count} ${count === 1 ? 'story' : 'stories'}</div>` : ''}${issue.format === 'excerpt-list' && count ? `<div style="font:11px ${SANS};color:${C.muted};">${count} ${legislation ? (count === 1 ? 'update' : 'updates') : count === 1 ? 'story' : 'stories'} &nbsp;·&nbsp; ${issue.sections?.length || 0} ${(issue.sections?.length || 0) === 1 ? 'section' : 'sections'}</div>` : ''}</td></tr>
 ${publication.header ? `<tr><td class="pub-pad" style="padding:24px 32px 0;font:14px/1.6 ${SANS};">${publication.header}</td></tr>` : ''}
 <tr><td class="pub-pad" style="padding:28px 32px 32px;font:15px/1.7 ${SANS};color:${C.ink};">${bodyHtml}</td></tr>
 ${publication.footer ? `<tr><td class="pub-pad" style="padding:20px 32px;border-top:1px solid ${C.border};font:13px/1.6 ${SANS};">${publication.footer}</td></tr>` : ''}

@@ -12,7 +12,7 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
       throw new Error('Select a publication and valid content references.')
     return Number(id)
   }
-  if (!['excerpt-list', 'pdf-report', 'custom-html'].includes(data.format || ''))
+  if (!['excerpt-list', 'story-list', 'pdf-report', 'custom-html'].includes(data.format || ''))
     throw new Error('Choose an issue format first.')
   const publication = await payload.findByID({
     collection: 'publications',
@@ -53,6 +53,16 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
         items: items as NonNullable<NonNullable<PublicationIssue['sections']>[number]['items']>,
       })
     }
+  }
+  if (data.format === 'story-list') {
+    const ids = (data.stories || []).map(idOf)
+    if (ids.length > 200) throw new Error('Preview supports up to 200 stories.')
+    const found = ids.length
+      ? (await payload.find({ collection: 'summary-stories', where: { id: { in: ids } }, limit: ids.length, depth: 1 })).docs
+      : []
+    const byId = new Map(found.map((story) => [story.id, story]))
+    issue.stories = ids.flatMap((id) => byId.get(id) ?? [])
+    itemCount = issue.stories.length
   }
   if (data.format === 'pdf-report' && data.file)
     issue.file = await payload.findByID({

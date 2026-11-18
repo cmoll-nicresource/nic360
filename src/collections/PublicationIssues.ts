@@ -100,6 +100,7 @@ export const PublicationIssues: CollectionConfig = {
       required: true,
       options: [
         { label: 'Excerpt list', value: 'excerpt-list' },
+        { label: 'Tobacco Reporter stories', value: 'story-list' },
         { label: 'PDF report', value: 'pdf-report' },
         { label: 'Custom HTML', value: 'custom-html' },
       ],
@@ -118,7 +119,7 @@ export const PublicationIssues: CollectionConfig = {
     {
       name: 'intro',
       type: 'richText',
-      admin: { condition: (data) => data?.format === 'excerpt-list' },
+      admin: { condition: (data) => data?.format === 'excerpt-list' || data?.format === 'story-list' },
     },
     {
       name: 'sections',
@@ -137,6 +138,20 @@ export const PublicationIssues: CollectionConfig = {
           hasMany: true,
         },
       ],
+    },
+
+    // Tobacco Reporter stories (Daily Executive Summary)
+    {
+      name: 'stories',
+      type: 'relationship',
+      relationTo: 'summary-stories',
+      hasMany: true,
+      admin: {
+        condition: (data) => data?.format === 'story-list',
+        description:
+          'Copied from Tobacco Reporter, in running order. An ad goes before story 1, 3, 5…',
+        components: { Field: './components/admin/summaryStories/StoryListField#StoryListField' },
+      },
     },
 
     // PDF report

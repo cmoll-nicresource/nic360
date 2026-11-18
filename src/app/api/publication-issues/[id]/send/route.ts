@@ -5,7 +5,7 @@ import { requireStaff } from '@/lib/requireStaff'
 import { incrementAdImpressions } from '@/lib/adStats'
 import { renderIssueEmailHtml } from '@/lib/issueEmail'
 import { getMailchimpClient } from '@/lib/mailchimp'
-import { adSlotCount, getActiveAdsForPublication } from '@/lib/publicationAds'
+import { adSlotCount, getActiveAdsForPublication, issueAdItemCount } from '@/lib/publicationAds'
 import { getSesClient } from '@/lib/ses'
 import { getPublicationRecipients } from '@/lib/publicationRecipients'
 import type { Publication, PublicationAd, PublicationIssue } from '@/payload-types'
@@ -17,10 +17,6 @@ import { newsletterLiveConfig } from '@/lib/ses/live'
 function emailProvider(): 'mailchimp' | 'ses' {
   return process.env.EMAIL_PROVIDER === 'mailchimp' ? 'mailchimp' : 'ses'
 }
-
-// pdf-report issues have no "story" list to slot ads between, so instead of
-// a real item count we just allow a flat handful of ad slots.
-const PDF_REPORT_AD_ITEM_CAP = 10
 
 type SendArgs = {
   payload: Payload
@@ -73,13 +69,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const publication = typeof issue.publication === 'object' ? issue.publication : null
     if (!publication) return NextResponse.json({ error: 'Publication not found.' }, { status: 404 })
 
-    const adItemCount =
-      issue.format === 'excerpt-list'
-        ? (issue.sections ?? []).reduce((n, s) => n + (s.items?.length ?? 0), 0)
-        : issue.format === 'pdf-report'
-          ? PDF_REPORT_AD_ITEM_CAP
-          : 0
-    const ads = await getActiveAdsForPublication(payload, publication.id, adSlotCount(adItemCount))
+    const ads = await getActiveAdsForPublication(payload, publication.id, adSlotCount(issueAdItemCount(issue)))
 
     const args: SendArgs = {
       payload,

@@ -10,8 +10,8 @@ import { PublicationCover } from '@/components/frontend/Editorial'
 import config from '@/payload.config'
 import { getSubscriptionPlan, planSatisfies } from '@/access/subscriptionPlan'
 import { staffHasRole } from '@/access/staffRoles'
-import { adSlotCount, getActiveAdsForPublication } from '@/lib/publicationAds'
-import { renderExcerptListBody } from '@/lib/issueEmail'
+import { adSlotCount, getActiveAdsForPublication, issueAdItemCount } from '@/lib/publicationAds'
+import { renderExcerptListBody, renderStoryListBody } from '@/lib/issueEmail'
 import { formatDate } from '@/lib/formatDate'
 import type { PublicationAd } from '@/payload-types'
 
@@ -52,11 +52,6 @@ export default async function IssueDetailPage({
   )
 }
 
-// pdf-report issues have no "story" list to slot ads between, so instead of
-// a real item count we just allow a flat handful of ad slots — matches the
-// email renderer's PDF_REPORT_AD_ITEM_CAP.
-const PDF_REPORT_AD_ITEM_CAP = 10
-
 function AdCard({ ad }: { ad: PublicationAd }) {
   const image = typeof ad.image === 'object' ? ad.image : null
   if (!image?.url) return null
@@ -95,15 +90,11 @@ async function IssueDetail({
   const publication = typeof issue.publication === 'object' ? issue.publication : null
   if (publication?.slug !== slug) notFound()
 
-  const adItemCount =
-    issue.format === 'excerpt-list'
-      ? (issue.sections ?? []).reduce((n, s) => n + (s.items?.length ?? 0), 0)
-      : issue.format === 'pdf-report'
-        ? PDF_REPORT_AD_ITEM_CAP
-        : 0
   const ads = publication
-    ? await getActiveAdsForPublication(payload, publication.id, adSlotCount(adItemCount))
+    ? await getActiveAdsForPublication(payload, publication.id, adSlotCount(issueAdItemCount(issue)))
     : []
+
+  const webEdition = issue.format === 'excerpt-list' || issue.format === 'story-list'
 
   return (
     <>
@@ -115,8 +106,8 @@ async function IssueDetail({
 
       {publication?.header && <div dangerouslySetInnerHTML={{ __html: publication.header }} />}
 
-      <header className={issue.format === 'excerpt-list' ? 'publication-web-masthead' : undefined}>
-        {issue.format === 'excerpt-list' && (
+      <header className={webEdition ? 'publication-web-masthead' : undefined}>
+        {webEdition && (
           <p className="edition-eyebrow">
             {publication?.category?.includes('legislation')
               ? 'Legislative intelligence'
@@ -124,7 +115,7 @@ async function IssueDetail({
           </p>
         )}
         <h1>{issue.title}</h1>
-        {issue.format === 'excerpt-list' && publication?.description && (
+        {webEdition && publication?.description && (
           <p className="publication-deck">{publication.description}</p>
         )}
         <p className="excerpt-meta">
@@ -138,6 +129,13 @@ async function IssueDetail({
         <div
           className="card publication-web-content"
           dangerouslySetInnerHTML={{ __html: renderExcerptListBody(issue, publication!, ads) }}
+        />
+      )}
+
+      {issue.format === 'story-list' && (
+        <div
+          className="card publication-web-content"
+          dangerouslySetInnerHTML={{ __html: renderStoryListBody(issue, ads) }}
         />
       )}
 

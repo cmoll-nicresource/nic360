@@ -441,3 +441,38 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
   margin: 0; padding: 16px; background: var(--theme-elevation-50);
   border: 1px solid var(--theme-elevation-200); border-radius: 4px;
 }
+
+/* Daily Executive Summary stories (issue field) and story text preview */
+.nic-stories, .nic-story-preview { margin: 0 0 24px; }
+.nic-stories__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.nic-stories__count, .nic-stories__help { color: var(--theme-elevation-650); font-size: 13px; }
+.nic-stories__help { margin: 4px 0 12px; }
+.nic-stories__error { color: var(--theme-error-600); font-size: 13px; }
+.nic-stories__list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.nic-stories__ad { padding: 4px 12px; border: 1px dashed var(--theme-elevation-300); border-radius: 6px; color: var(--theme-elevation-600); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.nic-stories__item { display: grid; grid-template-columns: auto auto 1fr auto; gap: 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--theme-elevation-150); border-radius: 8px; background: var(--theme-elevation-0); }
+.nic-stories__grip { cursor: grab; color: var(--theme-elevation-400); padding-top: 8px; user-select: none; }
+.nic-stories__number { min-width: 22px; padding-top: 8px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--theme-elevation-650); }
+.nic-stories__body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.nic-stories__headline { width: 100%; padding: 7px 9px; border: 1px solid var(--theme-elevation-150); border-radius: 6px; background: var(--theme-input-bg, var(--theme-elevation-0)); color: inherit; font: inherit; font-weight: 600; }
+.nic-stories__meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12px; color: var(--theme-elevation-650); }
+.nic-stories__meta select { padding: 4px 6px; border: 1px solid var(--theme-elevation-200); border-radius: 6px; background: var(--theme-elevation-0); color: inherit; font: inherit; }
+.nic-stories__meta select.nic-stories__unfiled { border-color: var(--theme-warning-500, #d48806); }
+.nic-stories__status { font-style: italic; }
+.nic-stories__actions { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.nic-stories button, .nic-story-preview button { padding: 5px 10px; border: 1px solid var(--theme-elevation-300); border-radius: 6px; background: var(--theme-elevation-50); color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+.nic-stories button:disabled, .nic-story-preview button:disabled { opacity: .5; cursor: default; }
+.nic-stories .nic-stories__add { padding: 9px 15px; border-color: var(--theme-elevation-800); background: var(--theme-elevation-800); color: var(--theme-elevation-0); font-size: 14px; font-weight: 600; }
+.nic-stories__picker { padding: 16px; border: 1px solid var(--theme-elevation-200); border-radius: 10px; background: var(--theme-elevation-50); }
+.nic-stories__picker header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.nic-stories__search { display: flex; gap: 6px; margin-bottom: 8px; }
+.nic-stories__search input { flex: 1; min-width: 0; padding: 7px 9px; border: 1px solid var(--theme-elevation-200); border-radius: 6px; background: var(--theme-elevation-0); color: inherit; font: inherit; }
+.nic-stories__results { list-style: none; margin: 8px 0; padding: 0; max-height: 420px; overflow-y: auto; }
+.nic-stories__results li { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--theme-elevation-150); }
+.nic-stories__results li > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.nic-stories__results a { font-weight: 600; }
+.nic-stories__results small { color: var(--theme-elevation-650); font-size: 12px; }
+.nic-story-preview__body { max-width: 720px; padding: 16px 20px; border: 1px solid var(--theme-elevation-150); border-radius: 8px; background: var(--theme-elevation-0); font-size: 15px; line-height: 1.65; }
+.nic-story-preview__body p { margin: 0 0 12px; }
+@media (max-width: 640px) { .nic-stories__item { grid-template-columns: auto 1fr; } .nic-stories__grip { display: none; } .nic-stories__actions { grid-column: 1 / -1; justify-content: flex-start; } }
+.nic-stories__unfiled-text { color: var(--theme-warning-650, #ad6800); }

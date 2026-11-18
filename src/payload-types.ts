@@ -90,6 +90,8 @@ export interface Config {
     publications: Publication;
     'publication-issues': PublicationIssue;
     'publication-ads': PublicationAd;
+    'summary-stories': SummaryStory;
+    'summary-headings': SummaryHeading;
     'email-flags': EmailFlag;
     'trademark-import-runs': TrademarkImportRun;
     'trade-import-runs': TradeImportRun;
@@ -160,6 +162,8 @@ export interface Config {
     publications: PublicationsSelect<false> | PublicationsSelect<true>;
     'publication-issues': PublicationIssuesSelect<false> | PublicationIssuesSelect<true>;
     'publication-ads': PublicationAdsSelect<false> | PublicationAdsSelect<true>;
+    'summary-stories': SummaryStoriesSelect<false> | SummaryStoriesSelect<true>;
+    'summary-headings': SummaryHeadingsSelect<false> | SummaryHeadingsSelect<true>;
     'email-flags': EmailFlagsSelect<false> | EmailFlagsSelect<true>;
     'trademark-import-runs': TrademarkImportRunsSelect<false> | TrademarkImportRunsSelect<true>;
     'trade-import-runs': TradeImportRunsSelect<false> | TradeImportRunsSelect<true>;
@@ -461,7 +465,7 @@ export interface Publication {
    * Which tracking categories this publication draws from — a publication can belong to more than one (e.g. an executive summary covering news and legislation). Groups this publication in the main nav's Publications dropdown and on the Publications page.
    */
   category: ('news' | 'research' | 'legislation' | 'trademarks')[];
-  format: 'excerpt-list' | 'pdf-report' | 'custom-html';
+  format: 'excerpt-list' | 'story-list' | 'pdf-report' | 'custom-html';
   frequency: 'daily' | 'weekly' | 'monthly';
   /**
    * Manual for every publication except the automated trademark and trade-barometer reports.
@@ -1522,7 +1526,7 @@ export interface PublicationIssue {
    * Suggested from the publication and issue date. You can enter a custom title.
    */
   title: string;
-  format: 'excerpt-list' | 'pdf-report' | 'custom-html';
+  format: 'excerpt-list' | 'story-list' | 'pdf-report' | 'custom-html';
   intro?: {
     root: {
       type: string;
@@ -1563,6 +1567,10 @@ export interface PublicationIssue {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Copied from Tobacco Reporter, in running order. An ad goes before story 1, 3, 5…
+   */
+  stories?: (number | SummaryStory)[] | null;
   summary?: {
     root: {
       type: string;
@@ -1633,6 +1641,63 @@ export interface PublicationIssue {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Copied from Tobacco Reporter when added to a Daily Executive Summary. Edit the article on Tobacco Reporter, then use "Refresh from Tobacco Reporter" on the issue.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "summary-stories".
+ */
+export interface SummaryStory {
+  id: number;
+  /**
+   * Shown in the Executive Summary. Starts as the Tobacco Reporter headline; change it here if needed.
+   */
+  headline: string;
+  /**
+   * Section of the weekly Executive Summary this story goes under. Not shown in the daily email.
+   */
+  heading?: (number | null) | SummaryHeading;
+  bodyHtml?: string | null;
+  /**
+   * Copied from the post's featured image. Remove it to send the story without an image.
+   */
+  image?: (number | null) | Media;
+  /**
+   * From the "Nicotine360 sources" box on Tobacco Reporter. Refreshing replaces this list.
+   */
+  sources?:
+    | {
+        name: string;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  publishedAt?: string | null;
+  wordpress?: {
+    postId?: number | null;
+    url?: string | null;
+    headline?: string | null;
+    author?: string | null;
+    imageUrl?: string | null;
+    modifiedAt?: string | null;
+    copiedAt?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Sections of the weekly Executive Summary, in the order they appear. Drag to reorder. Each Daily Executive Summary story is filed under one of these; they are not shown in the daily email.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "summary-headings".
+ */
+export interface SummaryHeading {
+  id: number;
+  _order?: string | null;
+  title: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Image ads sold per publication. While its campaign is active, a ranked ad rotates into the slot before story 1, 3, 5… of every issue sent (rank 1 fills the earliest slot).
@@ -2132,6 +2197,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'publication-ads';
         value: number | PublicationAd;
+      } | null)
+    | ({
+        relationTo: 'summary-stories';
+        value: number | SummaryStory;
+      } | null)
+    | ({
+        relationTo: 'summary-headings';
+        value: number | SummaryHeading;
       } | null)
     | ({
         relationTo: 'email-flags';
@@ -2760,6 +2833,7 @@ export interface PublicationIssuesSelect<T extends boolean = true> {
         items?: T;
         id?: T;
       };
+  stories?: T;
   summary?: T;
   file?: T;
   body?: T;
@@ -2813,6 +2887,47 @@ export interface PublicationAdsSelect<T extends boolean = true> {
         impressions?: T;
         clicks?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "summary-stories_select".
+ */
+export interface SummaryStoriesSelect<T extends boolean = true> {
+  headline?: T;
+  heading?: T;
+  bodyHtml?: T;
+  image?: T;
+  sources?:
+    | T
+    | {
+        name?: T;
+        url?: T;
+        id?: T;
+      };
+  publishedAt?: T;
+  wordpress?:
+    | T
+    | {
+        postId?: T;
+        url?: T;
+        headline?: T;
+        author?: T;
+        imageUrl?: T;
+        modifiedAt?: T;
+        copiedAt?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "summary-headings_select".
+ */
+export interface SummaryHeadingsSelect<T extends boolean = true> {
+  _order?: T;
+  title?: T;
   updatedAt?: T;
   createdAt?: T;
 }

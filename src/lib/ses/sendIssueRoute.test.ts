@@ -12,6 +12,7 @@ vi.mock('@/lib/issueEmail', () => ({ renderIssueEmailHtml: () => '<body>Snapshot
 vi.mock('@/lib/publicationAds', () => ({
   adSlotCount: () => 0,
   getActiveAdsForPublication: () => [],
+  issueAdItemCount: () => 0,
 }))
 vi.mock('@/lib/ses', () => ({ getSesClient: vi.fn() }))
 vi.mock('./live', () => ({ newsletterLiveConfig: vi.fn() }))

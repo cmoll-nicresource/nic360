@@ -586,7 +586,7 @@ Known publications: Daily Executive Summary, Weekly Executive Summary, Global Ne
 | `slug` | text, unique | |
 | `description` | textarea | e.g. *A weekly summary of key US industry news* |
 | `thumbnail` | upload → Media | |
-| `format` | select: Excerpt list · PDF report · Custom HTML | each issue copies it as its default |
+| `format` | select: Excerpt list · Tobacco Reporter stories · PDF report · Custom HTML | each issue copies it as its default |
 | `frequency` | select: daily · weekly · monthly | sets the default date window |
 | `selectionRules` | group, excerpt-list only (below) | |
 | `groupingRules` | group, excerpt-list only (below) | |
@@ -637,9 +637,29 @@ A location rule matches the place and everything inside it (*United States* matc
 
 Rule builds include each excerpt record once. Migrated articles with different IDs are also selected once when the normalized title, HTTP(S) source URL and full rich-text excerpt agree. A changed excerpt or different source URL remains a separate selection; missing URLs/excerpts are not inferred to be duplicates. This operates after geographic eligibility and does not delete or merge CMS records. Beta inspection on October 17 confirmed the reported drought story had two records and the vape-shop story four, with identical excerpts and source URLs in each set. Draft issue 3254 was backed up and repaired from 44 selections to 17, preserving section order and all underlying articles. A read-only check of the deployed builder returned the same 17 selections on two consecutive builds.
 
+**Tobacco Reporter stories** (Daily Executive Summary): `intro` (richText, optional) and `stories` (relationship → SummaryStories, hasMany, ordered). A flat list with an ad before story 1, 3, 5… like excerpt lists. Editors add stories with **Add from Tobacco Reporter** (search or a pasted link), set each story's weekly heading, and reorder. See [executive-summary-stories.md](./executive-summary-stories.md).
+
 **PDF report**: `summary` (richText), `file` (upload → protected PDF collection, same approach as GuideFiles).
 
 **Custom HTML**: `body` as a code field holding sanitized HTML, since these are designed outside the CMS. No header/footer or ads — fully custom, designed outside the CMS.
+
+### SummaryStory (`summary-stories`): a Daily Executive Summary story
+
+A copy of one Tobacco Reporter (WordPress) post, made when an editor adds it to an issue, so the archived issue keeps its text if the post later changes. Staff-only: subscribers read stories only inside an issue, and there is no news section for them.
+
+| Field | Payload type | Notes |
+|---|---|---|
+| `headline` | text, required | starts as the Tobacco Reporter headline; editors may change it, and a refresh keeps the change |
+| `heading` | relationship → SummaryHeadings | weekly Executive Summary section; not shown in the daily email |
+| `bodyHtml` | textarea (hidden) | post body, sanitized to paragraphs, lists, emphasis, headings and links; re-sanitized when rendered |
+| `image` | upload → Media | copy of the featured image |
+| `sources` | array: `name` (required), `url` | from the post's `n360_sources` field (one "Name | link" per line) |
+| `publishedAt` | date | Tobacco Reporter publish time |
+| `wordpress` | group: `postId` (number, unique), `url`, `headline` (original), `author`, `imageUrl`, `modifiedAt`, `copiedAt` | sync bookkeeping, read-only |
+
+### SummaryHeading (`summary-headings`)
+
+The weekly Executive Summary's section headings, in running order (`orderable`, drag to reorder). One field: `title` (text, unique). Seeded with the 13 headings of the 2026-11-06 edition.
 
 ### PublicationAd (`publication-ads`)
 
@@ -886,6 +906,7 @@ Six tabs, mostly server-rendered (plain `<form method="GET">`s, no client JS) ex
 
 ## Changelog
 
+- 2026-11-18: Added `summary-stories`, `summary-headings`, the `story-list` issue/publication format and `PublicationIssue.stories`. Production schema: apply `migration/executiveSummaryStories.sql` (additive, idempotent; also seeds the headings) before deploying.
 - 2026-11-16: Added `Bill.milestone` (optional select, existing bills blank). Production schema: apply `migration/billMilestone.sql` (additive, idempotent) before deploying.
 
 - 2026-10-14: Replaced estimated PDF row chunks with measured pagination and table-scoped repeated titles/headers, fixing mid-page duplicate headers and headerless continuations. Added Nicotine360 cover/running-header branding from the existing logo and total-page counts. Regenerated the August 2026 report (119 pages), checked the cigarette-paper transitions, and added an adjacent-category pagination/logo regression.

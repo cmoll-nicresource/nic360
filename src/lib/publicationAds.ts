@@ -1,11 +1,23 @@
 import type { Payload, Where } from 'payload'
 
-import type { PublicationAd } from '@/payload-types'
+import type { PublicationAd, PublicationIssue } from '@/payload-types'
 
 /** How many ad slots an issue has: one before item 1, then one more every 2 items after. */
 export function adSlotCount(itemCount: number): number {
   if (itemCount <= 0) return 0
   return Math.ceil(itemCount / 2)
+}
+
+// pdf-report issues have no story list to slot ads between, so they allow a
+// flat handful of ad slots instead of a real item count.
+export const PDF_REPORT_AD_ITEM_CAP = 10
+
+/** The item count that sizes an issue's ad slots (see adSlotCount). */
+export function issueAdItemCount(issue: Pick<PublicationIssue, 'format' | 'sections' | 'stories'>): number {
+  if (issue.format === 'excerpt-list') return (issue.sections ?? []).reduce((n, s) => n + (s.items?.length ?? 0), 0)
+  if (issue.format === 'story-list') return issue.stories?.length ?? 0
+  if (issue.format === 'pdf-report') return PDF_REPORT_AD_ITEM_CAP
+  return 0
 }
 
 /** True if an ad slot falls immediately before the item at this 0-indexed position (before item 0, 2, 4, …). Shared by the email and web renderers so both place ads the same way. */
