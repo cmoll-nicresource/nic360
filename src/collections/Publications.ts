@@ -75,6 +75,7 @@ export const Publications: CollectionConfig = {
       options: [
         { label: 'Excerpt list', value: 'excerpt-list' },
         { label: 'Tobacco Reporter stories', value: 'story-list' },
+        { label: 'Tobacco Reporter stories (weekly PDF)', value: 'story-digest' },
         { label: 'PDF report', value: 'pdf-report' },
         { label: 'Custom HTML', value: 'custom-html' },
       ],

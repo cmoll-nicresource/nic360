@@ -67,3 +67,24 @@ describe('Daily Executive Summary story lists', () => {
     expect(html).not.toContain('sections')
   })
 })
+
+describe('weekly Executive Summary (story-digest) issues', () => {
+  const weekly = {
+    id: 41,
+    title: 'Weekly Executive Summary - November 6, 2026',
+    issueDate: '2026-11-06T12:00:00Z',
+    format: 'story-digest',
+    stories: [story(1), story(2), story(3)],
+    file: { id: 9, url: '/api/publication-files/file/weekly.pdf' },
+  } as PublicationIssue
+  it('has one ad slot, for the advertiser after the PDF contents', () => {
+    expect(adSlotCount(issueAdItemCount(weekly))).toBe(1)
+  })
+  it('emails like a PDF report: the ad and a download link, not the stories', () => {
+    const html = renderIssueEmailHtml(weekly, { ...publication, title: 'Weekly Executive Summary' } as Publication, ads.slice(0, 1))
+    expect(html).toContain('Download the full report (PDF)')
+    expect(html).toContain('/api/publication-files/file/weekly.pdf')
+    expect(html.match(/\/api\/ads\//g)).toHaveLength(1)
+    expect(html).not.toContain('Story 1 &amp; more')
+  })
+})

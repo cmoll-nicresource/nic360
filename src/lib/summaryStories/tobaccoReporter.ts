@@ -5,6 +5,10 @@
  */
 import sanitizeHtml from 'sanitize-html'
 
+import { decodeHtmlEntities } from './entities'
+
+export { decodeHtmlEntities }
+
 /** The subset of a WordPress REST post (`/wp-json/wp/v2/posts`) we read. */
 export type WpPost = {
   id: number
@@ -34,23 +38,6 @@ export type CopiedPost = {
   modifiedAt: string | null
   author: string | null
   image: { url: string; alt: string } | null
-}
-
-const NAMED_ENTITIES: Record<string, string> = {
-  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', hellip: '…', ndash: '–', mdash: '—',
-  lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', laquo: '«', raquo: '»', copy: '©', reg: '®', trade: '™',
-  euro: '€', pound: '£', yen: '¥', deg: '°', middot: '·', bull: '•',
-}
-
-/** Decodes the entities WordPress puts in rendered titles ("Point&#8217;s", "KT&#038;G"). */
-export function decodeHtmlEntities(text: string): string {
-  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
-    if (entity[0] === '#') {
-      const code = entity[1] === 'x' || entity[1] === 'X' ? parseInt(entity.slice(2), 16) : Number(entity.slice(1))
-      return Number.isFinite(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match
-    }
-    return NAMED_ENTITIES[entity.toLowerCase()] ?? match
-  })
 }
 
 /** Plain text of a rendered title or excerpt: tags removed, entities decoded, whitespace collapsed. */

@@ -17,6 +17,8 @@ export function issueAdItemCount(issue: Pick<PublicationIssue, 'format' | 'secti
   if (issue.format === 'excerpt-list') return (issue.sections ?? []).reduce((n, s) => n + (s.items?.length ?? 0), 0)
   if (issue.format === 'story-list') return issue.stories?.length ?? 0
   if (issue.format === 'pdf-report') return PDF_REPORT_AD_ITEM_CAP
+  // The weekly story PDF carries one advertiser (after its contents); the email shows the same ad.
+  if (issue.format === 'story-digest') return 1
   return 0
 }
 

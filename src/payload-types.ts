@@ -465,7 +465,7 @@ export interface Publication {
    * Which tracking categories this publication draws from — a publication can belong to more than one (e.g. an executive summary covering news and legislation). Groups this publication in the main nav's Publications dropdown and on the Publications page.
    */
   category: ('news' | 'research' | 'legislation' | 'trademarks')[];
-  format: 'excerpt-list' | 'story-list' | 'pdf-report' | 'custom-html';
+  format: 'excerpt-list' | 'story-list' | 'story-digest' | 'pdf-report' | 'custom-html';
   frequency: 'daily' | 'weekly' | 'monthly';
   /**
    * Manual for every publication except the automated trademark and trade-barometer reports.
@@ -1526,7 +1526,7 @@ export interface PublicationIssue {
    * Suggested from the publication and issue date. You can enter a custom title.
    */
   title: string;
-  format: 'excerpt-list' | 'story-list' | 'pdf-report' | 'custom-html';
+  format: 'excerpt-list' | 'story-list' | 'story-digest' | 'pdf-report' | 'custom-html';
   intro?: {
     root: {
       type: string;
@@ -1568,7 +1568,7 @@ export interface PublicationIssue {
       }[]
     | null;
   /**
-   * Copied from Tobacco Reporter, in running order. An ad goes before story 1, 3, 5…
+   * Copied from Tobacco Reporter. Daily: running order, with an ad before story 1, 3, 5… Weekly: grouped under the weekly headings for the PDF.
    */
   stories?: (number | SummaryStory)[] | null;
   summary?: {
@@ -1586,6 +1586,9 @@ export interface PublicationIssue {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * For a weekly story PDF, filled in by “Generate PDF”.
+   */
   file?: (number | null) | GuideFile;
   /**
    * Sanitized HTML, designed outside the CMS.

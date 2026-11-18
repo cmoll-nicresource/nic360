@@ -586,7 +586,7 @@ Known publications: Daily Executive Summary, Weekly Executive Summary, Global Ne
 | `slug` | text, unique | |
 | `description` | textarea | e.g. *A weekly summary of key US industry news* |
 | `thumbnail` | upload → Media | |
-| `format` | select: Excerpt list · Tobacco Reporter stories · PDF report · Custom HTML | each issue copies it as its default |
+| `format` | select: Excerpt list · Tobacco Reporter stories · Tobacco Reporter stories (weekly PDF) · PDF report · Custom HTML | each issue copies it as its default |
 | `frequency` | select: daily · weekly · monthly | sets the default date window |
 | `selectionRules` | group, excerpt-list only (below) | |
 | `groupingRules` | group, excerpt-list only (below) | |
@@ -638,6 +638,8 @@ A location rule matches the place and everything inside it (*United States* matc
 Rule builds include each excerpt record once. Migrated articles with different IDs are also selected once when the normalized title, HTTP(S) source URL and full rich-text excerpt agree. A changed excerpt or different source URL remains a separate selection; missing URLs/excerpts are not inferred to be duplicates. This operates after geographic eligibility and does not delete or merge CMS records. Beta inspection on October 17 confirmed the reported drought story had two records and the vape-shop story four, with identical excerpts and source URLs in each set. Draft issue 3254 was backed up and repaired from 44 selections to 17, preserving section order and all underlying articles. A read-only check of the deployed builder returned the same 17 selections on two consecutive builds.
 
 **Tobacco Reporter stories** (Daily Executive Summary): `intro` (richText, optional) and `stories` (relationship → SummaryStories, hasMany, ordered). A flat list with an ad before story 1, 3, 5… like excerpt lists. Editors add stories with **Add from Tobacco Reporter** (search or a pasted link), set each story's weekly heading, and reorder. See [executive-summary-stories.md](./executive-summary-stories.md).
+
+**Tobacco Reporter stories (weekly PDF)** (weekly Executive Summary, `story-digest`): `stories` (same field), shown grouped under the weekly headings; `summary` and `file` as for PDF reports. **Add this week's DES stories** collects the stories of the published story-list issues dated in the seven days ending on the issue date; **Generate PDF** renders the saved draft (contents with page numbers, one ad after the contents, headings and stories with sources) into `file`. Emails and web pages render like PDF reports, with one ad slot.
 
 **PDF report**: `summary` (richText), `file` (upload → protected PDF collection, same approach as GuideFiles).
 
@@ -906,6 +908,7 @@ Six tabs, mostly server-rendered (plain `<form method="GET">`s, no client JS) ex
 
 ## Changelog
 
+- 2026-11-18: Added the `story-digest` (weekly Executive Summary PDF) format. Production schema: apply `migration/weeklyExecutiveSummary.sql` (enum values only, idempotent) before deploying.
 - 2026-11-18: Added `summary-stories`, `summary-headings`, the `story-list` issue/publication format and `PublicationIssue.stories`. Production schema: apply `migration/executiveSummaryStories.sql` (additive, idempotent; also seeds the headings) before deploying.
 - 2026-11-16: Added `Bill.milestone` (optional select, existing bills blank). Production schema: apply `migration/billMilestone.sql` (additive, idempotent) before deploying.
 

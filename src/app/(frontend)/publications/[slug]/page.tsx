@@ -96,7 +96,7 @@ export default async function PublicationDetailPage({
                   <div>
                     <p className="edition-meta">
                       {formatDate(issue.issueDate)} ·{' '}
-                      {issue.format === 'pdf-report' ? 'PDF report' : 'Briefing'}
+                      {issue.format === 'pdf-report' || issue.format === 'story-digest' ? 'PDF report' : 'Briefing'}
                     </p>
                     <h3>{issue.title}</h3>
                   </div>

@@ -101,6 +101,7 @@ export const PublicationIssues: CollectionConfig = {
       options: [
         { label: 'Excerpt list', value: 'excerpt-list' },
         { label: 'Tobacco Reporter stories', value: 'story-list' },
+        { label: 'Tobacco Reporter stories (weekly PDF)', value: 'story-digest' },
         { label: 'PDF report', value: 'pdf-report' },
         { label: 'Custom HTML', value: 'custom-html' },
       ],
@@ -140,17 +141,17 @@ export const PublicationIssues: CollectionConfig = {
       ],
     },
 
-    // Tobacco Reporter stories (Daily Executive Summary)
+    // Tobacco Reporter stories: the Daily Executive Summary email, or the weekly Executive Summary PDF
     {
       name: 'stories',
       type: 'relationship',
       relationTo: 'summary-stories',
       hasMany: true,
       admin: {
-        condition: (data) => data?.format === 'story-list',
+        condition: (data) => data?.format === 'story-list' || data?.format === 'story-digest',
         description:
-          'Copied from Tobacco Reporter, in running order. An ad goes before story 1, 3, 5…',
-        components: { Field: './components/admin/summaryStories/StoryListField#StoryListField' },
+          'Copied from Tobacco Reporter. Daily: running order, with an ad before story 1, 3, 5… Weekly: grouped under the weekly headings for the PDF.',
+        components: { Field: './components/admin/summaryStories/StoriesField#StoriesField' },
       },
     },
 
@@ -158,14 +159,17 @@ export const PublicationIssues: CollectionConfig = {
     {
       name: 'summary',
       type: 'richText',
-      admin: { condition: (data) => data?.format === 'pdf-report' },
+      admin: { condition: (data) => data?.format === 'pdf-report' || data?.format === 'story-digest' },
     },
     {
       name: 'file',
       label: 'PDF file',
       type: 'upload',
       relationTo: 'guide-files',
-      admin: { condition: (data) => data?.format === 'pdf-report' },
+      admin: {
+        condition: (data) => data?.format === 'pdf-report' || data?.format === 'story-digest',
+        description: 'For a weekly story PDF, filled in by “Generate PDF”.',
+      },
     },
 
     // Custom HTML

@@ -476,3 +476,10 @@ html[data-theme='dark'] .nic-workspace-nav__brand img { filter: brightness(0) in
 .nic-story-preview__body p { margin: 0 0 12px; }
 @media (max-width: 640px) { .nic-stories__item { grid-template-columns: auto 1fr; } .nic-stories__grip { display: none; } .nic-stories__actions { grid-column: 1 / -1; justify-content: flex-start; } }
 .nic-stories__unfiled-text { color: var(--theme-warning-650, #ad6800); }
+.nic-stories__toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 14px; }
+.nic-stories__toolbar small { color: var(--theme-elevation-650); font-size: 12px; }
+.nic-stories .nic-stories__primary { border-color: var(--theme-elevation-800); background: var(--theme-elevation-800); color: var(--theme-elevation-0); font-weight: 600; }
+.nic-stories__group { margin: 0 0 16px; }
+.nic-stories__group h4 { margin: 0 0 6px; padding: 6px 10px; border-radius: 6px; background: var(--theme-elevation-100); font-size: 14px; }
+.nic-stories__group h4 small { margin-left: 6px; color: var(--theme-elevation-650); font-weight: 400; }
+.nic-stories__group--unfiled h4 { background: var(--theme-warning-100, #fff4e0); color: var(--theme-warning-750, #7a4a00); }

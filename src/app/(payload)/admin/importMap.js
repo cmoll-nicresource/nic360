@@ -28,7 +28,7 @@ import { ImportDataLink as ImportDataLink_ad0ba29dad1742e54ea075b1abe92653 } fro
 import { IssuePreview as IssuePreview_7d478cab3427b49dccf27329fb312b04 } from '../../../components/admin/IssuePreview'
 import { IssueTitleDefault as IssueTitleDefault_ca3e83e30666678bff56b4946b16ac39 } from '../../../components/admin/IssueTitleDefault'
 import { BuildFromRulesButton as BuildFromRulesButton_98e18b5c6bc086120f80ba3668b17121 } from '../../../components/admin/BuildFromRulesButton'
-import { StoryListField as StoryListField_222d746091c5d9c985bf2e89116d46de } from '../../../components/admin/summaryStories/StoryListField'
+import { StoriesField as StoriesField_fa3548ea69b26ea79152d0eea707dbee } from '../../../components/admin/summaryStories/StoriesField'
 import { IssueDeliverySummary as IssueDeliverySummary_d235304900cbadb020bea9a57e1f1874 } from '../../../components/admin/IssueDeliverySummary'
 import { SendIssueButtons as SendIssueButtons_f2e6e440952be4366e071120771276c6 } from '../../../components/admin/SendIssueButtons'
 import { StoryBodyPreview as StoryBodyPreview_5125fdfaeaadca302208a5f424a6cdaf } from '../../../components/admin/summaryStories/StoryBodyPreview'
@@ -87,7 +87,7 @@ export const importMap = {
   "./components/admin/IssuePreview#IssuePreview": IssuePreview_7d478cab3427b49dccf27329fb312b04,
   "./components/admin/IssueTitleDefault#IssueTitleDefault": IssueTitleDefault_ca3e83e30666678bff56b4946b16ac39,
   "./components/admin/BuildFromRulesButton#BuildFromRulesButton": BuildFromRulesButton_98e18b5c6bc086120f80ba3668b17121,
-  "./components/admin/summaryStories/StoryListField#StoryListField": StoryListField_222d746091c5d9c985bf2e89116d46de,
+  "./components/admin/summaryStories/StoriesField#StoriesField": StoriesField_fa3548ea69b26ea79152d0eea707dbee,
   "./components/admin/IssueDeliverySummary#IssueDeliverySummary": IssueDeliverySummary_d235304900cbadb020bea9a57e1f1874,
   "./components/admin/SendIssueButtons#SendIssueButtons": SendIssueButtons_f2e6e440952be4366e071120771276c6,
   "./components/admin/summaryStories/StoryBodyPreview#StoryBodyPreview": StoryBodyPreview_5125fdfaeaadca302208a5f424a6cdaf,

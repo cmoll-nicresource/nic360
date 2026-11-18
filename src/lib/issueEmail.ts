@@ -222,7 +222,7 @@ export function renderIssueEmailHtml(
   let bodyHtml = ''
   if (issue.format === 'excerpt-list') bodyHtml = renderExcerptListBody(issue, publication, ads)
   else if (issue.format === 'story-list') bodyHtml = renderStoryListBody(issue, ads)
-  else if (issue.format === 'pdf-report') {
+  else if (issue.format === 'pdf-report' || issue.format === 'story-digest') {
     const fileUrl =
       issue.file && typeof issue.file === 'object' && issue.file.url
         ? publicationHttpUrl(absolute(issue.file.url))

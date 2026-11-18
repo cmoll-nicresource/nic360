@@ -109,7 +109,7 @@ export function IssueCard({ issue }: { issue: PublicationIssue }) {
       <PublicationCover publication={publication} date={issue.issueDate} compact />
       <div>
         <p className="edition-eyebrow">
-          {publication.frequency} · {issue.format === 'pdf-report' ? 'PDF report' : 'Briefing'}
+          {publication.frequency} · {issue.format === 'pdf-report' || issue.format === 'story-digest' ? 'PDF report' : 'Briefing'}
         </p>
         <h3>{issue.title}</h3>
         <p className="edition-meta">{formatDate(issue.issueDate)}</p>

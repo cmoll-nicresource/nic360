@@ -139,7 +139,7 @@ async function IssueDetail({
         />
       )}
 
-      {issue.format === 'pdf-report' && (
+      {(issue.format === 'pdf-report' || issue.format === 'story-digest') && (
         <div className="card">
           {publication && (
             <PublicationCover publication={publication} date={issue.issueDate} compact />

@@ -12,7 +12,7 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
       throw new Error('Select a publication and valid content references.')
     return Number(id)
   }
-  if (!['excerpt-list', 'story-list', 'pdf-report', 'custom-html'].includes(data.format || ''))
+  if (!['excerpt-list', 'story-list', 'story-digest', 'pdf-report', 'custom-html'].includes(data.format || ''))
     throw new Error('Choose an issue format first.')
   const publication = await payload.findByID({
     collection: 'publications',
@@ -64,7 +64,7 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
     issue.stories = ids.flatMap((id) => byId.get(id) ?? [])
     itemCount = issue.stories.length
   }
-  if (data.format === 'pdf-report' && data.file)
+  if ((data.format === 'pdf-report' || data.format === 'story-digest') && data.file)
     issue.file = await payload.findByID({
       collection: 'guide-files',
       id: idOf(data.file),
@@ -73,7 +73,7 @@ export async function previewIssue(payload: Payload, data: Partial<PublicationIs
   const ads = await getActiveAdsForPublication(
     payload,
     publication.id,
-    adSlotCount(data.format === 'pdf-report' ? 10 : itemCount),
+    adSlotCount(data.format === 'pdf-report' ? 10 : data.format === 'story-digest' ? 1 : itemCount),
   )
   // Disable live ad tracking endpoints so preview clicks cannot inflate metrics.
   let html = newsletterMessageHtml(renderIssueEmailHtml(issue, publication, ads), '#', '#')
