@@ -2,6 +2,7 @@ import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
 import { requireBasePlanForPublished, staffCanWrite } from '@/access/excerptAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
+import { PUBLICATION_FORMAT_OPTIONS } from '@/config/publicationFormats'
 import { staffHasMinRole } from '@/access/staffRoles'
 import { preserveIssueStats } from '@/hooks/preserveIssueStats'
 import { defaultIssueFields } from '@/hooks/defaultIssueFields'
@@ -98,13 +99,14 @@ export const PublicationIssues: CollectionConfig = {
       name: 'format',
       type: 'select',
       required: true,
-      options: [
-        { label: 'Excerpt list', value: 'excerpt-list' },
-        { label: 'Tobacco Reporter stories', value: 'story-list' },
-        { label: 'Tobacco Reporter stories (weekly PDF)', value: 'story-digest' },
-        { label: 'PDF report', value: 'pdf-report' },
-        { label: 'Custom HTML', value: 'custom-html' },
-      ],
+      // Set from the publication's settings (IssueTitleDefault in the form, defaultIssueFields on save).
+      admin: { hidden: true },
+      options: [...PUBLICATION_FORMAT_OPTIONS],
+    },
+    {
+      name: 'formatNote',
+      type: 'ui',
+      admin: { components: { Field: './components/admin/IssueFormatNote#IssueFormatNote' } },
     },
 
     {

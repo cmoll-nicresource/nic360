@@ -12,7 +12,7 @@ Going forward, everything in the DES is posted on Tobacco Reporter first.
 
 ## Editor workflow
 
-1. Set the Daily Executive Summary publication's **Format** to *Tobacco Reporter stories* (once). New issues then default to it.
+1. Set the Daily Executive Summary publication's **Format** to *Tobacco Reporter stories* (once). Every new issue then takes it; the issue form shows the format but does not ask for it.
 2. Create an issue. Under **Stories**, click **+ Add from Tobacco Reporter**: the newest posts are listed; search, or paste a Tobacco Reporter link.
 3. For each story, change the headline if needed and choose its **weekly heading**. Both save to the story immediately. The heading is only for the weekly Executive Summary; it is not shown in the daily email.
 4. Drag (or use ↑ ↓) to set the running order. The list marks the ad slots: before story 1, 3, 5…, the same rule as other publications. Save the issue.

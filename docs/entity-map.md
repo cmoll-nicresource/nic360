@@ -586,7 +586,7 @@ Known publications: Daily Executive Summary, Weekly Executive Summary, Global Ne
 | `slug` | text, unique | |
 | `description` | textarea | e.g. *A weekly summary of key US industry news* |
 | `thumbnail` | upload → Media | |
-| `format` | select: Excerpt list · Tobacco Reporter stories · Tobacco Reporter stories (weekly PDF) · PDF report · Custom HTML | each issue copies it as its default |
+| `format` | select: Excerpt list · Tobacco Reporter stories · Tobacco Reporter stories (weekly PDF) · PDF report · Custom HTML | every new issue takes it; changing it does not alter existing issues |
 | `frequency` | select: daily · weekly · monthly | sets the default date window |
 | `selectionRules` | group, excerpt-list only (below) | |
 | `groupingRules` | group, excerpt-list only (below) | |
@@ -623,7 +623,7 @@ A location rule matches the place and everything inside it (*United States* matc
 | `publication` | relationship → Publications | ✓ |
 | `title` | text, defaults to "*Publication* - *date*" | ✓ |
 | `issueDate` | date | ✓ |
-| `format` | select, defaults from the publication | ✓ |
+| `format` | select, set from the publication and hidden in the issue form (a saved issue keeps its stored format unless its publication changes) | ✓ |
 | `_status` | Payload drafts | |
 
 **Excerpt list**: a **Build from rules** button runs the publication's selection rules over the date window, groups and sorts the results, and fills `sections`. Editors then remove, add or reorder items before publishing.

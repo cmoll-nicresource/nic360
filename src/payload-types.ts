@@ -465,6 +465,9 @@ export interface Publication {
    * Which tracking categories this publication draws from — a publication can belong to more than one (e.g. an executive summary covering news and legislation). Groups this publication in the main nav's Publications dropdown and on the Publications page.
    */
   category: ('news' | 'research' | 'legislation' | 'trademarks')[];
+  /**
+   * Every new issue of this publication uses this format. Changing it does not alter existing issues.
+   */
   format: 'excerpt-list' | 'story-list' | 'story-digest' | 'pdf-report' | 'custom-html';
   frequency: 'daily' | 'weekly' | 'monthly';
   /**

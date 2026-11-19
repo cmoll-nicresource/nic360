@@ -27,6 +27,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { ImportDataLink as ImportDataLink_ad0ba29dad1742e54ea075b1abe92653 } from '../../../components/admin/ImportDataLink'
 import { IssuePreview as IssuePreview_7d478cab3427b49dccf27329fb312b04 } from '../../../components/admin/IssuePreview'
 import { IssueTitleDefault as IssueTitleDefault_ca3e83e30666678bff56b4946b16ac39 } from '../../../components/admin/IssueTitleDefault'
+import { IssueFormatNote as IssueFormatNote_ea1eaa7276379052e5ccdcf4a230d45c } from '../../../components/admin/IssueFormatNote'
 import { BuildFromRulesButton as BuildFromRulesButton_98e18b5c6bc086120f80ba3668b17121 } from '../../../components/admin/BuildFromRulesButton'
 import { StoriesField as StoriesField_fa3548ea69b26ea79152d0eea707dbee } from '../../../components/admin/summaryStories/StoriesField'
 import { IssueDeliverySummary as IssueDeliverySummary_d235304900cbadb020bea9a57e1f1874 } from '../../../components/admin/IssueDeliverySummary'
@@ -86,6 +87,7 @@ export const importMap = {
   "./components/admin/ImportDataLink#ImportDataLink": ImportDataLink_ad0ba29dad1742e54ea075b1abe92653,
   "./components/admin/IssuePreview#IssuePreview": IssuePreview_7d478cab3427b49dccf27329fb312b04,
   "./components/admin/IssueTitleDefault#IssueTitleDefault": IssueTitleDefault_ca3e83e30666678bff56b4946b16ac39,
+  "./components/admin/IssueFormatNote#IssueFormatNote": IssueFormatNote_ea1eaa7276379052e5ccdcf4a230d45c,
   "./components/admin/BuildFromRulesButton#BuildFromRulesButton": BuildFromRulesButton_98e18b5c6bc086120f80ba3668b17121,
   "./components/admin/summaryStories/StoriesField#StoriesField": StoriesField_fa3548ea69b26ea79152d0eea707dbee,
   "./components/admin/IssueDeliverySummary#IssueDeliverySummary": IssueDeliverySummary_d235304900cbadb020bea9a57e1f1874,

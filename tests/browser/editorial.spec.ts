@@ -31,8 +31,9 @@ test('daily editor workflow: excerpt, dated issue, build and unsent preview', as
   await date.press('Enter')
   await date.press('Tab')
   await expect(page.locator('#field-title')).toHaveValue('US News Clippings - October 16, 2090')
-  await page.locator('#field-format').getByRole('combobox').fill('Excerpt list')
-  await page.getByRole('option', { name: 'Excerpt list', exact: true }).click()
+  // The format comes from the publication's settings and is not editable on the issue.
+  await expect(page.locator('#field-format')).toBeHidden()
+  await expect(page.locator('.nic-issue-format-note')).toContainText('Excerpt list')
   await expect(page.getByRole('button', { name: 'Build from rules', exact: true })).toBeVisible()
   // Build before the first save; retain the editor's other unsaved work.
   await page.locator('#field-title').fill('Custom unsaved issue title')
@@ -135,14 +136,13 @@ test('issue layout hides email controls, displays metrics and rebuilds unsaved s
   const stats = { recipientCount: 1234, delivered: 1230, opens: 1777, clicks: 250, bounces: 4, complaints: 1 }
   const created = await context.request.post('/api/publication-issues', { data: {
     publication: f.publications['us-news-clippings'], issueDate: '2090-10-16T00:00:00Z', title: 'Saved before form build',
-    format: 'custom-html', body: '<p>Synthetic original body</p>', _status: 'draft', stats,
+    format: 'excerpt-list', sections: [], _status: 'draft', stats,
     email: { subject: 'Preserved email subject', previewText: 'Preserved preview text' },
   } })
   expect(created.status()).toBe(201)
   const id = (await created.json()).doc.id
   try {
     await page.goto('/admin/collections/publication-issues/' + id)
-    await expect(page.getByRole('button', { name: 'Build from rules', exact: true })).toHaveCount(0)
     await expect(page.locator('#field-email')).toBeHidden()
     await expect(page.locator('#field-stats')).toBeHidden()
     const summary = page.getByRole('region', { name: 'Delivery stats', exact: true })
@@ -150,8 +150,6 @@ test('issue layout hides email controls, displays metrics and rebuilds unsaved s
     await expect(summary.getByText('1,777', { exact: true })).toBeVisible()
     await expect(summary.locator('input,select,textarea')).toHaveCount(0)
     await summary.screenshot({ path: '.test-artifacts/issue-delivery-' + info.project.name + '.png' })
-    await page.locator('#field-format').getByRole('combobox').fill('Excerpt list')
-    await page.getByRole('option', { name: 'Excerpt list', exact: true }).click()
     await page.locator('#field-title').fill('Unsaved title survives building')
     const date = page.locator('.date-time-field input').first()
     await date.fill('09/01/2090'); await date.press('Enter'); await date.press('Tab')
@@ -159,11 +157,30 @@ test('issue layout hides email controls, displays metrics and rebuilds unsaved s
     await expect(page.getByText('Built 0 section(s), 0 item(s). Review the sections and save your draft.', { exact: true })).toBeVisible()
     await expect(page.locator('#field-title')).toHaveValue('Unsaved title survives building')
     const beforeSave = await (await context.request.get('/api/publication-issues/' + id + '?draft=true&depth=0')).json()
-    expect(beforeSave.title).toBe('Saved before form build'); expect(beforeSave.format).toBe('custom-html')
+    expect(beforeSave.title).toBe('Saved before form build'); expect(beforeSave.format).toBe('excerpt-list')
     await page.getByRole('button', { name: /^Save Draft$/i }).click()
     await expect.poll(async () => (await (await context.request.get('/api/publication-issues/' + id + '?draft=true&depth=0')).json()).title).toBe('Unsaved title survives building')
     const saved = await (await context.request.get('/api/publication-issues/' + id + '?draft=true&depth=0')).json()
     expect(saved.format).toBe('excerpt-list'); expect(saved.sections).toEqual([]); expect(saved.stats).toEqual(stats)
     expect(saved.email).toMatchObject({ subject: 'Preserved email subject', previewText: 'Preserved preview text', status: 'not sent' })
+  } finally { await context.request.delete('/api/publication-issues/' + id) }
+})
+
+test('a saved issue keeps its own format when it differs from the publication setting', async ({ page, context }) => {
+  await signIn(context.request, 'editor')
+  const created = await context.request.post('/api/publication-issues', { data: {
+    publication: f.publications['us-news-clippings'], issueDate: '2090-10-17T00:00:00Z', title: 'Historical custom issue',
+    format: 'custom-html', body: '<p>Synthetic historical body</p>', _status: 'draft',
+  } })
+  expect(created.status()).toBe(201)
+  const id = (await created.json()).doc.id
+  try {
+    await page.goto('/admin/collections/publication-issues/' + id)
+    await expect(page.locator('.nic-issue-format-note')).toContainText('Custom HTML')
+    await expect(page.getByRole('button', { name: 'Build from rules', exact: true })).toHaveCount(0)
+    await page.locator('#field-title').fill('Historical custom issue, edited')
+    await page.getByRole('button', { name: /^Save Draft$/i }).click()
+    await expect.poll(async () => (await (await context.request.get('/api/publication-issues/' + id + '?draft=true&depth=0')).json()).title).toBe('Historical custom issue, edited')
+    expect((await (await context.request.get('/api/publication-issues/' + id + '?draft=true&depth=0')).json()).format).toBe('custom-html')
   } finally { await context.request.delete('/api/publication-issues/' + id) }
 })

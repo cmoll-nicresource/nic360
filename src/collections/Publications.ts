@@ -3,6 +3,7 @@ import type { CollectionConfig, CollectionSlug, Field } from 'payload'
 import { requireBasePlanToRead, staffCanWrite } from '@/access/excerptAccess'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 import { publicationGroupingRules } from '@/lib/publicationGrouping'
+import { PUBLICATION_FORMAT_OPTIONS } from '@/config/publicationFormats'
 
 function includeExclude(name: string, relationTo: CollectionSlug): Field {
   return {
@@ -72,13 +73,10 @@ export const Publications: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'excerpt-list',
-      options: [
-        { label: 'Excerpt list', value: 'excerpt-list' },
-        { label: 'Tobacco Reporter stories', value: 'story-list' },
-        { label: 'Tobacco Reporter stories (weekly PDF)', value: 'story-digest' },
-        { label: 'PDF report', value: 'pdf-report' },
-        { label: 'Custom HTML', value: 'custom-html' },
-      ],
+      admin: {
+        description: 'Every new issue of this publication uses this format. Changing it does not alter existing issues.',
+      },
+      options: [...PUBLICATION_FORMAT_OPTIONS],
     },
     {
       name: 'frequency',
