@@ -45,7 +45,7 @@ export function workspaceMenuFor(user: PayloadRequest['user'], data: WorkspaceMe
     ...(data.past ? [{ label: `Manage ${data.past.name}`, href: `/admin/events/${data.past.id}/manage` }] : []),
     ...data.current.map(event => ({ label: `Manage ${event.name} (underway)`, href: `/admin/events/${event.id}/manage` })),
     ...(data.upcoming ? [{ label: `Manage ${data.upcoming.name}`, href: `/admin/events/${data.upcoming.id}/manage` }] : []),
-    ...(editorial ? [collection('events', 'Create new event', true)] : []),
+    collection('events', 'Create new event', true),
     { label: 'Past events', href: '/admin/events?period=past' }, { label: 'All events', href: '/admin/events' },
   ] })
   if (userOperations) groups.push({ label: 'Analytics', links: [

@@ -32,7 +32,6 @@ export type EventManageDashboardProps = {
   registrations: EventRegistration[]
   accessProviders: SimpleAccessProvider[]
   canManageRegistrations: boolean
-  operationsOnly?: boolean
   adminEditUrl: string
   attendeeReport: AttendeeReportRow[]
   attendeeReportTotals: AttendeeReportTotals

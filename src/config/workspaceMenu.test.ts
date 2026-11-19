@@ -13,6 +13,7 @@ it('presents the requested order and resolves guide/event links to actual record
 })
 it('keeps editorial work away from gatekeepers and user/admin work away from editors', () => {
   expect(workspaceMenuFor(staff('gatekeeper'), data).map(group => group.label)).toEqual(['Users', 'Events', 'Analytics'])
+  expect(workspaceMenuFor(staff('gatekeeper'), data).find(group => group.label === 'Events')!.links.map(link => link.label)).toContain('Create new event')
   const editor = workspaceMenuFor(staff('editor'), data)
   expect(editor.map(group => group.label)).toEqual(['News', 'Industry Research', 'Bills', 'Publications', 'Guides', 'Data', 'Events'])
   expect(editor.flatMap(group => group.links).map(link => link.href)).not.toContain('/admin/trademark-reports')

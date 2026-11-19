@@ -7,10 +7,10 @@ Updated October 18, 2026. `/admin` presents daily work according to the signed-i
 | Role | Daily actions | Secondary work |
 | --- | --- | --- |
 | Editor | Add news excerpts, research and legislation; create publication issues | Drafts, content libraries, publication definitions, reports and imports |
-| Gatekeeper | Manage subscriptions, register users, register attendees, review orders | User accounts, access checks, email follow-up and event attendance |
+| Gatekeeper | Manage subscriptions, register users, register attendees, review orders, edit event programs | User accounts, access checks, email follow-up, event programs and attendance |
 | Admin | Both workflows | Staff accounts, taxonomy and reference data, analytics and administration |
 
-Gatekeepers do not see editorial dashboard data, task links or navigation. Their existing inherited editorial permissions remain in place; this is a workspace visibility change. Event management puts attendees first and hides program-editing sections for gatekeepers.
+Gatekeepers do not see editorial dashboard data, task links or navigation. Their existing inherited editorial permissions remain in place; this is a workspace visibility change. Gatekeepers also edit event programs: their event dashboard is the same as an admin's, with settings, speakers, sponsors, agenda and tickets as well as attendee operations (since 2026-11-19; previously the program sections were hidden from them).
 
 Only admins can open taxonomy management screens or create, update or delete sectors, products, subjects, locations, sources, countries and journals. Editors can still read and select existing terms in content forms. Public taxonomy lookups used by user filters remain available.
 
@@ -32,7 +32,7 @@ Article, bill and publication issue lists default to newest first by source date
 
 Users default to most recent Last login first, with users who have never logged in placed after dated users. The native list keeps all users, filters, access rules and pagination; selecting another column sort remains available.
 
-Events links are selected from actual records: the most recently completed event, the next upcoming event, and any event underway. The sidebar and Past events list use the staff calendar in America/New_York; each event dashboard formats its dates and countdown in the event's own timezone. Create new event is editorial/admin work; gatekeepers continue using attendee operations. Past events is filtered and paginated, and All events keeps the full archive reachable.
+Events links are selected from actual records: the most recently completed event, the next upcoming event, and any event underway. The sidebar and Past events list use the staff calendar in America/New_York; each event dashboard formats its dates and countdown in the event's own timezone. Create new event is available to all staff. Past events is filtered and paginated, and All events keeps the full archive reachable.
 
 Additional links preserve existing workflows: Publication settings, All guides/events, user access checks, Email follow-up, Company usage, Connected browsers and Media library. There is no separate duplicate collection menu below these groups.
 
@@ -42,7 +42,7 @@ Additional links preserve existing workflows: Publication settings, All guides/e
 
 Program sections list the event's attached speakers/sponsors with direct edit links, plus create/attach/remove controls. Profiles are shared across events, so profile edits affect every event using that record. Agenda sessions include drafts, can be created in the dashboard, and link to their full edit screen; Browse all agenda sessions remains scoped to the event.
 
-Attendee operations include name/email/ticket filtering, direct registration edits, a full event-filtered registration list, full-directory user search, registration of new users, discounts, ticket settings and attendance reports. The inline registration list shows at most the latest 500 records, with an explicit link to search the complete list; the headline active count is not capped. Gatekeepers see these operational sections first, with program editing hidden. Existing registration actions and account emails use the existing permissions and safe-mode transport.
+Attendee operations include name/email/ticket filtering, direct registration edits, a full event-filtered registration list, full-directory user search, registration of new users, discounts, ticket settings and attendance reports. The inline registration list shows at most the latest 500 records, with an explicit link to search the complete list; the headline active count is not capped. Gatekeepers see the same sections as admins. Existing registration actions and account emails use the existing permissions and safe-mode transport.
 
 Analytics → Events summarizes active in-person/virtual registrations for the latest 24 events and links to each event's complete dashboard and report. Older events remain accessible in the paginated event archive.
 
