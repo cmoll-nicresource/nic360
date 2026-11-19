@@ -39,7 +39,7 @@ export function MergeAccessProvider() {
     return () => { clearTimeout(timer); controller.abort() }
   }, [open, search, id])
 
-  if (!id || user?.collection !== 'staff' || user.role !== 'admin') return null
+  if (!id || user?.collection !== 'staff' || !['gatekeeper', 'admin'].includes(user.role as string)) return null
 
   async function run(action: 'preview' | 'merge') {
     if (!target || modified) return

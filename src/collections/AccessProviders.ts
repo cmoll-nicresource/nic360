@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { staffHasMinRole } from '@/access/staffRoles'
+import { staffHasMinRole, staffHasRole } from '@/access/staffRoles'
 import { ADMIN_GROUPS } from '@/config/adminGroups'
 
 export const AccessProviders: CollectionConfig = {
@@ -92,7 +92,7 @@ export const AccessProviders: CollectionConfig = {
       name: 'mergeProvider',
       type: 'ui',
       admin: {
-        condition: (_data, _siblingData, { user }) => user?.collection === 'staff' && user.role === 'admin',
+        condition: (_data, _siblingData, { user }) => staffHasRole(user, 'gatekeeper'),
         components: { Field: './components/admin/MergeAccessProvider#MergeAccessProvider' },
       },
     },

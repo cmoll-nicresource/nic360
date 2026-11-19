@@ -1,21 +1,30 @@
 import { test, expect } from '@playwright/test'
 import { fixtures as f, roleContext, signIn } from '../support/fixtures'
 
-test('provider merge rejects non-admin accounts, including gatekeepers', async ({ browser }) => {
-  for (const role of ['anonymous', 'premium', 'editor', 'gatekeeper']) {
+test('provider merge rejects accounts below gatekeeper, including editors', async ({ browser }) => {
+  for (const role of ['anonymous', 'premium', 'editor']) {
     const context = await roleContext(browser, role)
     try {
       const response = await context.request.post('/api/admin/access-providers/merge', { data: { action: 'preview', sourceId: f.providers.base, targetId: f.providers.premium } })
       expect(response.status()).toBe(403)
-      if (role === 'gatekeeper') {
-        const page = await context.newPage()
-        await page.goto(`/admin/collections/access-providers/${f.providers.base}`)
-        await page.waitForLoadState('networkidle')
-        await expect(page.getByLabel('Company name')).toBeVisible()
-        await expect(page.getByRole('region', { name: 'Merge access provider' })).toHaveCount(0)
-      }
     } finally { await context.close() }
   }
+})
+
+test('gatekeepers see the merge panel and can preview a merge', async ({ browser }) => {
+  const context = await roleContext(browser, 'gatekeeper')
+  try {
+    const target = await (await context.request.get(`/api/access-providers/${f.providers.premium}?depth=0`)).json()
+    const page = await context.newPage()
+    await page.goto(`/admin/collections/access-providers/${f.providers.base}`)
+    await page.waitForLoadState('networkidle')
+    const panel = page.getByRole('region', { name: 'Merge access provider' })
+    await panel.getByRole('button', { name: 'Merge into another provider…' }).click()
+    await panel.getByLabel('Find the provider to keep').fill(target.name)
+    await panel.getByRole('button', { name: `${target.name} (#${target.id})`, exact: true }).click()
+    await panel.getByRole('button', { name: 'Preview merge', exact: true }).click()
+    await expect(panel.getByRole('heading', { name: 'Review the merge' })).toBeVisible()
+  } finally { await context.close() }
 })
 
 test('admin previews and confirms a merge in the provider edit screen', async ({ page }) => {

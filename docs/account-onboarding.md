@@ -69,15 +69,15 @@ Apply `migration/accountEmails.sql` (`pnpm tsx migration/prepareAccountEmails.ts
 
 ## Consolidating access providers
 
-Admins can open an existing access provider and use **Merge into another provider** at the bottom of its edit screen. Search for the organization to keep, select it, and choose **Preview merge**. Save or discard unsaved edits first.
+Gatekeepers and admins can open an existing access provider and use **Merge into another provider** at the bottom of its edit screen. Search for the organization to keep, select it, and choose **Preview merge**. Save or discard unsaved edits first.
 
 The preview shows both providers' plans, statuses, expiry dates and user counts, plus domains/exact addresses and event discount codes to transfer. Confirm only after reviewing the surviving provider's subscription: its settings will apply to all moved users. This supports both alternate company names and staff-confirmed subsidiary relationships; the system does not infer those relationships.
 
-Confirmation transfers all users and event discount-code assignments, adds missing domains/addresses (case-insensitive, with surrounding whitespace ignored), and deletes the source provider in one database transaction. The target's name and subscription settings stay intact. Passwords, verification, suspension, publication preferences, event registrations and user IDs are preserved; no email hooks run. Usage history remains attached to those user IDs and appears under the surviving provider in company reports. A merge is rejected if either provider, domains or assignments changed since preview. Errors roll back all writes. Only admins can call the merge endpoint; a successful operation logs the actor and transfer counts.
+Confirmation transfers all users and event discount-code assignments, adds missing domains/addresses (case-insensitive, with surrounding whitespace ignored), and deletes the source provider in one database transaction. The target's name and subscription settings stay intact. Passwords, verification, suspension, publication preferences, event registrations and user IDs are preserved; no email hooks run. Usage history remains attached to those user IDs and appears under the surviving provider in company reports. A merge is rejected if either provider, domains or assignments changed since preview. Errors roll back all writes. Only gatekeepers and admins can call the merge endpoint (changed from admin-only on 2026-11-19); a successful operation logs the actor and transfer counts.
 
 No real providers are merged automatically. Deleting the source is permanent through this interface; there is no one-click undo. Correct the target subscription before merging if needed.
 
-Regression coverage includes ID validation, admin-only/same-origin requests, confirmation, stale previews, PostgreSQL reference transfers and rollback, and the actual admin edit-screen flow (`tests/browser/provider-merge.spec.ts`). PostgreSQL merge checks run in CI with `DATASET_INTEGRATION=1` using temporary tables.
+Regression coverage includes ID validation, gatekeeper-or-above/same-origin requests, confirmation, stale previews, PostgreSQL reference transfers and rollback, and the actual admin and gatekeeper edit-screen flows (`tests/browser/provider-merge.spec.ts`). PostgreSQL merge checks run in CI with `DATASET_INTEGRATION=1` using temporary tables.
 
 ## Launch plan
 

@@ -3,7 +3,7 @@ import { applyProviderMerge, inspectProviderMerge, providerMergeIds, ProviderMer
 
 export async function POST(request: Request) {
   try {
-    const { payload, user } = await requireStaff('admin')
+    const { payload, user } = await requireStaff('gatekeeper')
     // Next's internal URL can differ behind a proxy; use the configured public origin.
     if (request.headers.get('origin') !== new URL(payload.config.serverURL || 'http://localhost:3000').origin)
       return Response.json({ error: 'A same-origin request is required.' }, { status: 403 })

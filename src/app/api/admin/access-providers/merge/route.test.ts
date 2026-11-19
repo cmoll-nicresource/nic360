@@ -15,10 +15,10 @@ beforeEach(() => {
   mocks.inspect.mockResolvedValue({ preview })
   mocks.apply.mockResolvedValue(preview)
 })
-it('requires admin authorization before opening a database connection', async () => {
+it('requires gatekeeper authorization before opening a database connection', async () => {
   mocks.requireStaff.mockRejectedValue(new Response('Forbidden', { status: 403 }))
   expect((await POST(request({ action: 'preview', sourceId: 1, targetId: 2 }))).status).toBe(403)
-  expect(mocks.requireStaff).toHaveBeenCalledWith('admin')
+  expect(mocks.requireStaff).toHaveBeenCalledWith('gatekeeper')
   expect(mocks.connect).not.toHaveBeenCalled()
 })
 it('rejects cross-origin requests, self merges and unconfirmed writes before accessing the database', async () => {
